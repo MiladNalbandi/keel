@@ -70,6 +70,13 @@ Checks and commits
   keel triage "<description>"         size proposal for /keel:change
   keel check-size                     escalation triggers on the current branch
 
+Bug hunt
+  keel hunt start [--scope all|diff|<paths>] [--lenses a,b,c] [--new]
+  keel hunt lenses [--confirm a,b,c]  the lens set; confirming it opens the sweep
+  keel hunt add --lens L --json <f>    ingest one lens agent's candidates
+  keel hunt list [--open] [--lens L]  the backlog
+  keel hunt status                    counts, groups, and what blocks the report
+
 Simulation and hooks
   keel simulate [name] | --sandbox    run the built-in scenarios, or keep a sandbox repo
   keel doctor [--hooks]               environment and hook self-test
@@ -108,6 +115,7 @@ switch (cmd) {
   case 'smoke': cli.smokeCmd(); break;
   case 'pr': cli.prCmd(rest); break;
   case 'triage': cli.triageCmd(rest); break;
+  case 'hunt': cli.huntCmd(rest); break;
   case 'check-size': cli.checkSizeCmd(rest); break;
   case 'models': cli.models(rest); break;
   case 'stall': cli.stall(rest); break;
