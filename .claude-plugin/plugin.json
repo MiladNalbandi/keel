@@ -1,0 +1,116 @@
+{
+  "name": "keel",
+  "displayName": "keel",
+  "version": "0.3.1",
+  "description": "Spec-and-AC driven workflow for Kotlin/Spring Boot backends with a TypeScript frontend: enforced RED/GREEN loops, guarded commits, review and ship blueprint.",
+  "author": {
+    "name": "Milad Nalbandi"
+  },
+  "license": "MIT",
+  "keywords": [
+    "kotlin",
+    "spring-boot",
+    "typescript",
+    "tdd",
+    "workflow",
+    "hooks"
+  ],
+  "userConfig": {
+    "model_reviewer": {
+      "type": "string",
+      "title": "Reviewer model",
+      "description": "Model for keel:reviewer",
+      "default": "opus",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_explorer": {
+      "type": "string",
+      "title": "Explorer model",
+      "description": "Model for keel:explorer",
+      "default": "sonnet",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_investigator": {
+      "type": "string",
+      "title": "Investigator model",
+      "description": "Model for keel:investigator",
+      "default": "opus",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_e2e_author": {
+      "type": "string",
+      "title": "E2E author model",
+      "description": "Model for keel:e2e-author",
+      "default": "sonnet",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_implementer": {
+      "type": "string",
+      "title": "Implementer model",
+      "description": "Model for keel:implementer",
+      "default": "sonnet",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_bulk_reader": {
+      "type": "string",
+      "title": "Bulk reader model",
+      "description": "Model for keel:bulk-reader",
+      "default": "haiku",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_test_author": {
+      "type": "string",
+      "title": "Test author model",
+      "description": "Model for keel:test-author",
+      "default": "sonnet",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_setup_doctor": {
+      "type": "string",
+      "title": "Setup doctor model",
+      "description": "Model for keel:setup-doctor",
+      "default": "sonnet",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    }
+  }
+}

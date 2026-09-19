@@ -1,1 +1,7 @@
 .serena/
+node_modules/
+.keel/state.json
+.keel/coverage.json
+.keel/logs/
+.keel/format-queue.txt
+.keel/last-fast-check

@@ -1,0 +1,89 @@
+#!/usr/bin/env node
+'use strict';
+const cli = require('../lib/cli');
+const hooks = require('../lib/hooks');
+
+const argv = process.argv.slice(2);
+const cmd = argv[0];
+const rest = argv.slice(1);
+
+function usage() {
+  process.stdout.write(`keel 0.3.1 — enforced spec/AC workflow for Kotlin + TypeScript
+
+Flows and state
+  keel init [--write] [--new] [--refresh] [--dev-container]
+  keel state show|start|phase|ac      inspect or move the flow state
+  keel state red-done                 confirm a real RED for the current AC
+  keel state green-done               confirm the AC and suite are green
+  keel state repro-done               confirm a bug reproduction
+  keel gate <ac|R|F|final> <decision> record a human gate decision
+  keel escalate [--override "why"]    turn a small change into a spec flow
+  keel status                         board, ACs, stalls, flaky tests
+  keel stall [reset]                  repeated-failure counter and the stall ladder
+  keel models show|set-all <model>    subagent models (writes user settings with --yes)
+
+Project setup
+  keel discover                       what the repo says about how it runs
+  keel ladder [--plan|--resume]       prove every run step, write docs/RUNNING.md
+  keel scaffold [compose|dev-container|playwright|smoke|spec|claude-md|all]
+  keel stack up|down|status|logs|migrate|reset [--lane web]
+  keel lane start|status|merge <name> [--background]
+
+Checks and commits
+  keel verify fast|ac|module|contract|full|e2e|release|coverage
+  keel commit <type> <ID> "<msg>"     stage and commit with phase rules enforced
+  keel trace [--strict]               AC to tests to commits
+  keel audit [--base main]            commit composition and test integrity
+  keel unlock <path> --reason "..."   one-phase exception, logged
+  keel env                            required variable names and whether they are set
+  keel smoke                          run the smoke checks
+  keel pr [--dry-run]                 checks, then push and open the PR
+  keel triage "<description>"         size proposal for /keel:change
+  keel check-size                     escalation triggers on the current branch
+
+Simulation and hooks
+  keel simulate [name] | --sandbox    run the built-in scenarios, or keep a sandbox repo
+  keel doctor [--hooks]               environment and hook self-test
+  keel hook <event>                   hook dispatchers (used by hooks/hooks.json)
+`);
+}
+
+switch (cmd) {
+  case 'hook': hooks.dispatch(rest[0]); break;
+  case 'init': cli.init(rest); break;
+  case 'state': cli.stateCmd(rest); break;
+  case 'commit': cli.commit(rest); break;
+  case 'gate': cli.gate(rest); break;
+  case 'escalate': cli.escalate(rest); break;
+  case 'trace': cli.traceCmd(rest); break;
+  case 'audit': cli.auditCmd(rest); break;
+  case 'status': cli.status(); break;
+  case 'verify': cli.verifyCmd(rest); break;
+  case 'unlock': cli.unlock(rest); break;
+  case 'env': cli.env(); break;
+  case 'ladder': cli.ladderCmd(rest); break;
+  case 'discover': cli.discoverCmd(); break;
+  case 'scaffold': cli.scaffoldCmd(rest); break;
+  case 'stack': cli.stackCmd(rest); break;
+  case 'lane': cli.laneCmd(rest); break;
+  case 'smoke': cli.smokeCmd(); break;
+  case 'pr': cli.prCmd(rest); break;
+  case 'triage': cli.triageCmd(rest); break;
+  case 'check-size': cli.checkSizeCmd(rest); break;
+  case 'models': cli.models(rest); break;
+  case 'stall': cli.stall(rest); break;
+  case 'simulate': {
+    const sim = require('../lib/sim');
+    if (rest.includes('--sandbox')) sim.keepRepo();
+    else sim.runAll(rest.find((a) => !a.startsWith('--')));
+    break;
+  }
+  case 'doctor': {
+    const sim = require('../lib/sim');
+    if (rest.includes('--hooks')) sim.runAll('always:');
+    else cli.init([]);
+    break;
+  }
+  case '--help': case '-h': case undefined: usage(); break;
+  default: process.stdout.write(`keel: unknown command "${cmd}"\n`); usage(); process.exit(1);
+}
