@@ -2,6 +2,23 @@
 
 Interview first, write second. Use `AskUserQuestion` and cover: edge cases, validation rules, authorization rules, data rules, error states, and what is explicitly out of scope. Three question rounds maximum — then write the spec and list whatever is still open inside it.
 
+## Ask with real options, not open questions
+
+`AskUserQuestion` takes 2–4 options per question, and the options are the work. "What should happen on a duplicate URL?" is a prose question wearing a selection box; the useful version names the actual candidate behaviours and their consequences:
+
+```
+Q  A URL already saved — what should saving it again do?
+   · Reject with 409 (recommended)   the list stays unique; the client shows the existing entry
+   · Update the existing entry       last-write-wins; the original timestamp is lost
+   · Allow a duplicate row           simplest; the list can show the same link twice
+```
+
+Each option says what it *means*, not just what it is called. Put your recommendation first and mark it, so answering is one keypress when the default is right.
+
+Good questions to ask this way, because each has a small set of real answers: what an empty state shows, whether a failed save keeps the user's input, who may read another user's record, whether a limit is enforced or advisory, and what is explicitly out of scope. Ask open-ended only for the one thing a list cannot capture — usually "what is this for".
+
+Two rules that keep it short: never ask what the code already answers (read it), and never ask what the mockup will force you to decide anyway — draw it and ask about the drawing.
+
 ## The spec file
 
 `specs/NNN-slug.md`, from `templates/spec.md`. Sections: Context, Acceptance criteria, **UI mockup**, **Request path**, Data and migrations, Validation and security rules, Contract changes, Out of scope, Smoke checks, Decisions.
