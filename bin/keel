@@ -74,6 +74,11 @@ Bug hunt
   keel hunt start [--scope all|diff|<paths>] [--lenses a,b,c] [--new]
   keel hunt lenses [--confirm a,b,c]  the lens set; confirming it opens the sweep
   keel hunt add --lens L --json <f>    ingest one lens agent's candidates
+  keel hunt prove <id> --verdict proven|unproven|false --evidence "..." --repro <f>
+  keel hunt group <id...> --cause "..."  one cause, many symptoms
+  keel hunt report [--out <path>]     deterministic markdown from the backlog
+  keel hunt next [--take]             the top group, and the command to start it
+  keel hunt close <id> --as fixed|accepted|wontfix --note "..."
   keel hunt list [--open] [--lens L]  the backlog
   keel hunt status                    counts, groups, and what blocks the report
 
