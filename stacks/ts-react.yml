@@ -24,6 +24,29 @@ commands:
 
 coverage_report: coverage/lcov.info
 
+# Same keys as every other pack's devcontainer block, so a generator can merge them without
+# knowing which stack it is looking at. `primary: false` means this pack does not supply the
+# Dockerfile's FROM — when it is matched alongside a primary pack it contributes its
+# `toolchain_install` lines to that base image instead.
+devcontainer:
+  primary: false
+  image: mcr.microsoft.com/devcontainers/typescript-node:20
+  # Adds Node to someone else's base image; one `run:` becomes one Dockerfile RUN, as root.
+  # Written as `run:` maps rather than bare strings because a bare list item containing a
+  # colon — any URL — is read as a map by keel's YAML reader. Here the URL sits in the
+  # value, where its colons survive.
+  toolchain_install:
+    - run: curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/*
+  volumes:
+    - name: npm-cache
+      at: /root/.npm
+  ports:
+    - host: 5173
+      container: 5173
+  env:
+    # Vite binds to localhost by default, which is unreachable from outside the container.
+    VITE_HOST: 0.0.0.0
+
 skills:
   testing: keel:web-testing
   implementation: keel:web-implementation
