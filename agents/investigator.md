@@ -2,7 +2,7 @@
 name: investigator
 description: Finds the root cause of a bug from evidence, read-only. Use in the bug flow after the failing test is committed, and when a loop stalls.
 tools: Read, Grep, Glob, Bash
-model: ${user_config.model_investigator}
+model: opus
 effort: high
 maxTurns: 40
 disallowedTools: Write, Edit

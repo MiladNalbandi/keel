@@ -2,7 +2,7 @@
 name: arch-surveyor
 description: Decides which architecture style a codebase actually follows when detection is ambiguous, read-only. Use at init when `keel arch detect` reports low confidence, and at ship for the architecture review lens.
 tools: Read, Grep, Glob, Bash
-model: ${user_config.model_arch_surveyor}
+model: sonnet
 effort: medium
 maxTurns: 25
 disallowedTools: Write, Edit

@@ -2,7 +2,7 @@
 name: dependency-triager
 description: Judges whether a reported dependency vulnerability is reachable from this codebase, read-only. Use in the security phase, pipeline B, after keel verify deps.
 tools: Read, Grep, Glob, Bash
-model: ${user_config.model_dependency_triager}
+model: sonnet
 effort: medium
 maxTurns: 20
 disallowedTools: Write, Edit

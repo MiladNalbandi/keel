@@ -15,7 +15,7 @@ const cmd = argv[0];
 const rest = argv.slice(1);
 
 function usage() {
-  process.stdout.write(`keel 0.6.1 — enforced spec/AC workflow for Kotlin + TypeScript
+  process.stdout.write(`keel 0.6.2 — enforced spec/AC workflow for Kotlin + TypeScript
 
 Flows and state
   keel init [--write] [--new] [--refresh] [--dev-container]

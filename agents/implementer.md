@@ -2,7 +2,7 @@
 name: implementer
 description: Writes the minimum production code to make one acceptance criterion's failing test pass, in a fresh context. Use for the GREEN step of long features.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: ${user_config.model_implementer}
+model: sonnet
 effort: high
 maxTurns: 40
 ---

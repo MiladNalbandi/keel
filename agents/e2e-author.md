@@ -2,7 +2,7 @@
 name: e2e-author
 description: Writes and runs Playwright end-to-end specs for the E2E acceptance criteria, exploring the running app with playwright-cli. Use in the E2E phase and for user-visible bug regressions.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: ${user_config.model_e2e_author}
+model: sonnet
 effort: medium
 maxTurns: 40
 ---
