@@ -30,8 +30,10 @@ Project setup
   keel stack up|down|status|logs|migrate|reset [--lane web]
   keel lane start|status|merge <name> [--background]
 
+  keel arch detect|show|set <style>   architecture style and its import boundaries
+
 Checks and commits
-  keel verify fast|ac|module|contract|full|e2e|release|coverage
+  keel verify fast|ac|arch|module|contract|full|e2e|release|coverage
   keel commit <type> <ID> "<msg>"     stage and commit with phase rules enforced
   keel trace [--strict]               AC to tests to commits
   keel audit [--base main]            commit composition and test integrity
@@ -53,6 +55,7 @@ switch (cmd) {
   case 'hook': hooks.dispatch(rest[0]); break;
   case 'init': cli.init(rest); break;
   case 'preflight': cli.preflight(rest); break;
+  case 'arch': cli.archCmd(rest); break;
   case 'state': cli.stateCmd(rest); break;
   case 'commit': cli.commit(rest); break;
   case 'gate': cli.gate(rest); break;
