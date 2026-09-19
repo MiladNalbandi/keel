@@ -79,9 +79,8 @@ switch (cmd) {
     break;
   }
   case 'doctor': {
-    const sim = require('../lib/sim');
-    if (rest.includes('--hooks')) sim.runAll('always:');
-    else cli.init([]);
+    if (rest.includes('--hooks')) require('../lib/sim').runAll('always:');
+    else cli.doctorCmd(rest);
     break;
   }
   case '--help': case '-h': case undefined: usage(); break;

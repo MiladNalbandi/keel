@@ -19,20 +19,41 @@ contract:
   file: {{CONTRACT}}
 e2e:
   dir: {{E2E_DIR}}
+  web_url: http://localhost:5173
+  api_url: http://localhost:8080
 smoke:
   dir: smoke
+  max_seconds: 60
 specs:
   dir: specs
 
+base_branch: main
+
+# Every command keel runs lives here. `keel doctor` lists which are set and which
+# tiers need them; a required command that is blank makes its tier fail loudly
+# rather than passing with the check silently skipped.
 commands:
   api_compile: {{BUILD}} -q compileKotlin compileTestKotlin
   api_test_ac: {{BUILD}} -q test --tests '*{AC}*'
   api_test_module: {{BUILD}} -q test
+  api_test_pkg: {{BUILD}} -q test --tests '{PKG}.*'
   web_typecheck: npx tsc --noEmit
   web_test_ac: npx vitest run -t {AC}
   web_test_module: npx vitest run
-  contract_lint: ''
-  coverage: ''
+  web_test_paths: npx vitest run {PATHS}
+  coverage_api: {{BUILD}} -q koverXmlReport
+  coverage_web: npx vitest run --coverage
+  e2e: npx playwright test
+  smoke_e2e: npx playwright test --grep @smoke
+  # Fill these in for this project; the run ladder records what worked.
+  contract_lint: ''           # e.g. npx @redocly/cli lint {{CONTRACT}}
+  codegen: ''                 # e.g. {{BUILD}} -q openApiGenerate && npx orval
+  static_checks: ''           # e.g. {{BUILD}} -q detekt ktlintCheck
+  migrate: ''                 # e.g. {{BUILD}} -q flywayMigrate
+  testcontainers_test: ''     # one container-backed test, for the run ladder
+  api_health_check: ''        # e.g. curl -fsS http://localhost:8080/actuator/health
+  web_health_check: ''        # e.g. curl -fsS http://localhost:5173
+  smoke: ''                   # a single smoke command for the run ladder
 
 gates:
   mode: every-ac              # every-ac | end-of-lane | end
@@ -51,7 +72,16 @@ tests:
 coverage:
   changed_lines: 95
   changed_branches: 90
-  per_ac: warn
+  per_ac: warn                # off | warn | enforce
+  global: ratchet             # a number, or ratchet to never drop below the stored baseline
+  # Derived from the app directories when omitted; set these only for a custom layout.
+  reports:
+    api: {{BACKEND_DIR}}/build/reports/kover/report.xml
+    web: {{FRONTEND_DIR}}/coverage/lcov.info
+  exclude:
+    api: ['**/generated/**', '**/*ApplicationKt*']
+    web: ['src/api/generated/**', 'src/main.tsx']
+  gate_commands: ['git push', 'gh pr create', 'keel pr']
 
 stack:
   compose: {{COMPOSE}}
