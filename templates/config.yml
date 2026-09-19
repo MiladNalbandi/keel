@@ -45,10 +45,12 @@ commands:
   coverage_web: npx vitest run --coverage
   e2e: npx playwright test
   smoke_e2e: npx playwright test --grep @smoke
-  # Fill these in for this project; the run ladder records what worked.
+  # Left blank on purpose: stack packs in the plugin's stacks/ fill these in per stack
+  # (static_checks becomes detekt + ktlint + eslint), and the run ladder records what
+  # actually worked. Set one here only to override.
   contract_lint: ''           # e.g. npx @redocly/cli lint {{CONTRACT}}
   codegen: ''                 # e.g. {{BUILD}} -q openApiGenerate && npx orval
-  static_checks: ''           # e.g. {{BUILD}} -q detekt ktlintCheck
+  static_checks: ''           # filled from the stack packs; set to override
   migrate: ''                 # e.g. {{BUILD}} -q flywayMigrate
   testcontainers_test: ''     # one container-backed test, for the run ladder
   api_health_check: ''        # e.g. curl -fsS http://localhost:8080/actuator/health

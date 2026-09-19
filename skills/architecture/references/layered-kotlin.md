@@ -27,9 +27,9 @@ apps/api/src/main/kotlin/app/
 | Something cross-cutting (auth, CORS) | `config/` | Not in a controller |
 | A new endpoint | `controller/` + `service/` | One controller method, one service method |
 
-## MVC is this file, with the service layer collapsed
+## If there is no `service/`, you are reading the wrong file
 
-If `architecture.style` is `mvc`, the controller talks to the repository directly and there is no `service/`. Everything above still holds, with one substitution: **the rule goes in the controller** and the transaction boundary is the controller method. The moment a rule needs to be reused by a second entry point, that is the signal to introduce `service/` — and that is its own change with its own acceptance criterion, not something to do in passing.
+That is MVC, and it has its own failure modes: read `references/mvc-kotlin.md` instead. This file assumes the middle layer exists.
 
 ## Imports, allowed and not
 
