@@ -14,6 +14,12 @@ The spec gate is the one gate that can never be skipped, so this is the document
 | `references/ui-mockup.md` | The wireframe, and the four states it must show |
 | `references/request-path.md` | The backend drawing, and the skeleton per architecture style |
 
+## Interview with options, not open questions
+
+`AskUserQuestion` takes 2–4 options, and the options are the work. "What should happen on a duplicate?" in a selection box is still a prose question — name the candidate behaviours and what each costs, put the recommendation first, and the answer is one keypress. `references/acceptance-criteria.md` has the worked form.
+
+Never ask what the code already answers, and never ask what the mockup will force you to decide anyway: draw it, then ask about the drawing.
+
 ## The order that matters
 
 Draw **before** you finish the criteria list, not after. A mockup is not decoration on an agreed spec — it is how you find the criteria you would otherwise miss. Draw the empty state and you discover there is no criterion for an empty list; draw the error state and you discover nobody said what a failed save tells the user.

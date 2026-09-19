@@ -40,6 +40,26 @@ Do not split when: one outcome has several fields to check, or the same rule app
 
 Three to eight for a feature. Fewer than three usually means the criteria are too coarse to test. More than eight usually means two features, or a spec that should be split — and `keel check-size` will say so during a change flow.
 
+## Asking so the answers become criteria
+
+An interview question with real options produces a criterion almost verbatim; an open question produces a paragraph you then have to interpret. `AskUserQuestion` takes 2–4 options, so use them:
+
+```
+Q  A URL already saved — what should saving it again do?
+   · Reject with 409 (recommended)   the list stays unique; the client shows the existing entry
+   · Update the existing entry       last-write-wins; the original timestamp is lost
+   · Allow a duplicate row           simplest; the list can show the same link twice
+```
+
+The chosen option is the criterion:
+
+```
+- AC-005 [API] Given a URL already saved, when POST /bookmarks is called again,
+  then it returns 409 and the body names the existing id.
+```
+
+Each option must say what it *means*, not just what it is called — "reject with 409" is a label, "the list stays unique; the client shows the existing entry" is the consequence the user is actually choosing between. Put your recommendation first and mark it.
+
 ## Where they come from
 
 From the interview and from the drawings, in that order. The interview gives you the rules; the mockup's four states and the request path's marked boxes give you the ones the interview missed. A criterion that appeared only because you drew the empty state is the most valuable kind.
