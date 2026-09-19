@@ -23,7 +23,7 @@ That prints `architecture.style` plus the per-module styles. Then read exactly o
 | `hexagonal` | `references/hexagonal-kotlin.md` |
 | `ddd` | `references/ddd-kotlin.md` |
 | `layered` | `references/layered-kotlin.md` |
-| `mvc` | `references/layered-kotlin.md` — MVC is layered with the service layer collapsed; the file says where |
+| `mvc` | `references/mvc-kotlin.md` |
 | `feature-sliced` | `references/feature-sliced-web.md` |
 | `unknown` | Nothing. Copy the nearest neighbour file and say so. |
 

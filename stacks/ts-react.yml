@@ -26,6 +26,7 @@ coverage_report: coverage/lcov.info
 
 skills:
   testing: keel:web-testing
+  implementation: keel:web-implementation
   architecture: keel:architecture
 architecture_styles: [feature-sliced, layered]
 
