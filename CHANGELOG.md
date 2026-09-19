@@ -1,0 +1,82 @@
+# Changelog
+
+Design §22 lists this file and it never existed — which is why the version sat at `0.4.0`
+across nine commits and four whole stages, until the only way to tell one build from another
+was to grep the source for a function name.
+
+## 0.6.0
+
+The release that connects what 0.1–0.3 built. An audit found the mechanisms were largely
+there and largely unwired.
+
+### Unbroken
+
+- **Coverage could never run.** `coverage.reports` existed in no config, so `verify coverage`
+  always returned "no coverage reports configured" while the push gate waited for a verdict
+  that could not be produced. A fresh project could never push.
+- **`verify full` reported success having run no static checks.** A family of `commands.*`
+  keys were read by code and defined nowhere, and unconfigured commands were dropped
+  silently. Steps now declare whether they are required: a missing required command fails its
+  tier, a missing optional one is reported as skipped.
+- **The state machine accepted any phase from any phase**, so `spec` could jump straight to
+  `green` and skip RED entirely. It has a transition graph now, and `--force` is recorded.
+- **Unknown phases failed open** in the guard matrix — allow-all — so adding a phase and
+  forgetting its row disabled every edit guard for it. They fail closed.
+- **The workflow gates fired in every repo**, including ones with no `.keel/config.yml` that
+  had never adopted the workflow. They now require `cfg.configured`; the harm-prevention
+  guards stay unconditional.
+- Zero of ~20 `references/` files existed while the skills instructed the model to read them.
+- `keel lane start|merge` and `lane-runner` worked and no skill called either.
+- `.env.local` was blocked by keel's own guard, so setup could not write the file it is
+  specified to write.
+- Per-lane ports were string-concatenated, so offset 100 asked Docker for port `1005432`.
+- The secret-printing guard matched the filename anywhere after a `cat`, refusing any heredoc
+  whose body mentioned one.
+- `claude plugin validate --strict` rejected all 13 `userConfig` settings, so the plugin could
+  never have installed from its own marketplace.
+
+### Added
+
+- **Architecture awareness.** `keel arch detect` scores weighted evidence — declared
+  dependencies, package shape, domain purity, annotation placement — and records a hybrid
+  rather than collapsing it. `keel verify arch` checks import boundaries inside `verify fast`.
+- **Per-phase, per-layer skills.** RED on `[API]` loads Kotlin/Spring patterns, on `[WEB]`
+  frontend ones. Stacks are data files in `stacks/`, so another stack is one file plus one
+  testing skill.
+- **A security phase** with two pipelines: code and logic against the spec's own
+  authorization rules, and supply chain via `keel verify deps`. Plus a secret scan at the
+  edit and a dependency gate at the push.
+- **A fix pipeline** with `keel:reproducer` and seven reproduction techniques, and
+  `/keel:diagnose` for a bug you cannot yet reproduce.
+- **`/keel:cover`**, the coverage loop: group the uncovered lines, decide test, delete or
+  accept for each, and review every test for assertions that mean something.
+- **A project knowledge base** under `docs/knowledge/`, read back selectively by
+  `/keel:memory`.
+- **ASCII drawings in the spec** — a four-state UI mockup and a marked request path, drawn
+  before the criteria list is final, because the states you draw are the criteria you would
+  otherwise miss.
+- **`keel board`**, showing the phase rail, the criteria, the keel agents in flight and what
+  is blocking a push.
+- **A step checklist driven by a hook**, so the flow's steps reach Claude Code's own todo view
+  after every transition.
+- **A concurrent run ladder.** Independent rungs share a level, so the Docker pull overlaps
+  Gradle and npm instead of queueing behind them. A failing level finishes and reports every
+  failure in it.
+- **A dev container composed from the stack packs**, with a `devcontainer.json` pointer so
+  editors recognise it. The old template hardcoded a Java image for every project.
+- `keel preflight`, `keel state close`, phase 10, a frontend implementation skill, an MVC
+  architecture reference, and the reviewer's architecture and assertions lenses.
+
+### Known gaps
+
+Nothing here has run against real Gradle, Vitest, Docker or `gh`. The 128 simulator scenarios
+drive the real hooks and CLI against fake build tools, which proves the wiring and not the
+commands — `koverXmlReport` and `vitest run --coverage` remain sensible defaults rather than
+executed ones. The run ladder's optional rungs still need per-project commands, and the
+security auditor is a strong reviewer rather than a proof: the deterministic parts (the secret
+scan, the dependency gate, the 100% bar on auth paths) are the parts that hold every time.
+
+## 0.3.1
+
+Enforcement: hooks, the phase matrix, guarded commits, the coverage engine, the stall ladder,
+the run ladder, nine subagents, and 86 simulator scenarios.

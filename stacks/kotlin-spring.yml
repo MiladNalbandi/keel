@@ -38,6 +38,33 @@ commands:
 
 coverage_report: build/reports/kover/report.xml
 
+# What this stack needs inside a dev container. Merged with every other matched pack's
+# block, so the keys are identical across packs and a generator can combine them without
+# knowing which stack it is looking at.
+#
+# `primary: true` means this pack supplies the Dockerfile's FROM. When two packs match, the
+# primary's image is the base and the others contribute `toolchain_install` lines — the
+# devcontainer *features* mechanism cannot help here, because our container is defined by
+# compose rather than built by the devcontainer spec.
+devcontainer:
+  primary: true
+  image: mcr.microsoft.com/devcontainers/java:21
+  # Adds this toolchain to someone else's base image; one `run:` becomes one Dockerfile RUN,
+  # as root. `run:` maps rather than bare strings, so a value containing a colon survives.
+  toolchain_install:
+    - run: apt-get update && apt-get install -y --no-install-recommends openjdk-21-jdk-headless && rm -rf /var/lib/apt/lists/*
+  # Named volumes and where they mount. Split into parts rather than a "name:path" string
+  # because keel's YAML reader treats a quoted list item containing a colon as a map — and
+  # the generator needs the halves separately anyway, to declare the volume and mount it.
+  volumes:
+    - name: gradle-cache
+      at: /root/.gradle
+  ports:
+    - host: 8080
+      container: 8080
+  env:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/app
+
 # Which skill teaches tests for this stack, and which architecture references apply.
 skills:
   testing: keel:kotlin-spring-testing

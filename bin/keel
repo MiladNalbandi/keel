@@ -3,12 +3,19 @@
 const cli = require('../lib/cli');
 const hooks = require('../lib/hooks');
 
+// An async command must not fail silently: a rejected promise would otherwise exit 0.
+function run(p) {
+  if (p && typeof p.then === 'function') {
+    p.catch((e) => { process.stdout.write('keel: ' + (e && e.message ? e.message : String(e)) + '\n'); process.exit(1); });
+  }
+}
+
 const argv = process.argv.slice(2);
 const cmd = argv[0];
 const rest = argv.slice(1);
 
 function usage() {
-  process.stdout.write(`keel 0.4.0 — enforced spec/AC workflow for Kotlin + TypeScript
+  process.stdout.write(`keel 0.6.0 — enforced spec/AC workflow for Kotlin + TypeScript
 
 Flows and state
   keel init [--write] [--new] [--refresh] [--dev-container]
@@ -59,7 +66,7 @@ Simulation and hooks
 
 switch (cmd) {
   case 'hook': hooks.dispatch(rest[0]); break;
-  case 'init': cli.init(rest); break;
+  case 'init': run(cli.init(rest)); break;
   case 'preflight': cli.preflight(rest); break;
   case 'arch': cli.archCmd(rest); break;
   case 'skills': cli.skillsCmd(rest); break;
@@ -78,7 +85,7 @@ switch (cmd) {
   case 'verify': cli.verifyCmd(rest); break;
   case 'unlock': cli.unlock(rest); break;
   case 'env': cli.env(); break;
-  case 'ladder': cli.ladderCmd(rest); break;
+  case 'ladder': run(cli.ladderCmd(rest)); break;
   case 'discover': cli.discoverCmd(); break;
   case 'scaffold': cli.scaffoldCmd(rest); break;
   case 'stack': cli.stackCmd(rest); break;
