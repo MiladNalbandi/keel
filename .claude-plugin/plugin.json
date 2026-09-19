@@ -19,158 +19,80 @@
     "model_reviewer": {
       "type": "string",
       "title": "Reviewer model",
-      "description": "Model for keel:reviewer",
-      "default": "opus",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:reviewer \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "opus"
     },
     "model_explorer": {
       "type": "string",
       "title": "Explorer model",
-      "description": "Model for keel:explorer",
-      "default": "sonnet",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:explorer \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "sonnet"
     },
     "model_investigator": {
       "type": "string",
       "title": "Investigator model",
-      "description": "Model for keel:investigator",
-      "default": "opus",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:investigator \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "opus"
     },
     "model_e2e_author": {
       "type": "string",
       "title": "E2E author model",
-      "description": "Model for keel:e2e-author",
-      "default": "sonnet",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:e2e-author \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "sonnet"
     },
     "model_implementer": {
       "type": "string",
       "title": "Implementer model",
-      "description": "Model for keel:implementer",
-      "default": "sonnet",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:implementer \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "sonnet"
     },
     "model_bulk_reader": {
       "type": "string",
       "title": "Bulk reader model",
-      "description": "Model for keel:bulk-reader",
-      "default": "haiku",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:bulk-reader \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "haiku"
     },
     "model_test_author": {
       "type": "string",
       "title": "Test author model",
-      "description": "Model for keel:test-author",
-      "default": "sonnet",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:test-author \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "sonnet"
     },
     "model_setup_doctor": {
       "type": "string",
       "title": "Setup doctor model",
-      "description": "Model for keel:setup-doctor",
-      "default": "sonnet",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:setup-doctor \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "sonnet"
     },
     "model_lane_runner": {
       "type": "string",
       "title": "Lane runner model",
-      "description": "Model for keel:lane-runner",
-      "default": "sonnet",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:lane-runner \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "sonnet"
     },
     "model_arch_surveyor": {
       "type": "string",
       "title": "Architecture surveyor model",
-      "description": "Model for keel:arch-surveyor",
-      "default": "sonnet",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:arch-surveyor \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "sonnet"
     },
     "model_security_auditor": {
       "type": "string",
       "title": "Security auditor model",
-      "description": "Model for keel:security-auditor",
-      "default": "opus",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:security-auditor \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "opus"
     },
     "model_dependency_triager": {
       "type": "string",
       "title": "Dependency triager model",
-      "description": "Model for keel:dependency-triager",
-      "default": "sonnet",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:dependency-triager \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "sonnet"
     },
     "model_reproducer": {
       "type": "string",
       "title": "Reproducer model",
-      "description": "Model for keel:reproducer",
-      "default": "sonnet",
-      "options": [
-        "inherit",
-        "opus",
-        "sonnet",
-        "haiku"
-      ]
+      "description": "Model for keel:reproducer \u2014 one of: inherit, opus, sonnet, haiku",
+      "default": "sonnet"
     }
   }
 }
