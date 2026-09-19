@@ -8,6 +8,7 @@ disable-model-invocation: true
 
 Run these in order. Stop and report at the first failure; never skip a step.
 
+0. If a lane is still open (`keel lane status`), merge it first: `keel lane merge web`.
 1. `keel verify fast` and `keel verify module api` / `keel verify module web`. At most 2 fix rounds.
 2. `keel verify coverage`. At most 2 coverage-fix rounds: add tests for uncovered changed lines, never weaken a test.
 3. `keel audit` — commit composition, disabled tests, unlocks, branch type.
@@ -15,4 +16,5 @@ Run these in order. Stop and report at the first failure; never skip a step.
 5. Reviewers, three in parallel with `keel:reviewer`, one lens each: correctness, security, performance. Each must end with `BLOCKING: yes|no`.
 6. Fix blocking findings, one commit each (`keel commit fix <AC> "review — ..."`), then go back to step 1. At most 2 review rounds.
 7. **Final human review, never skipped.** Show: spec summary or inline ACs, the trace table, coverage numbers, non-blocking findings, unlocks, skipped gates, diffstat. Ask the user to approve, request changes, or stop.
-8. On approval: `keel gate final approve`, push, then `gh pr create --fill` with the trace table in the body.
+8. On approval: `keel gate final approve`, then `keel pr` — it pushes and opens the PR with the trace table, the coverage numbers, every unlock and every skipped gate in the body. The coverage gate refuses the push until `keel verify coverage` has written a verdict for this commit, so run it if it has not.
+9. After the merge, finish the flow: `/keel:feature` phase 10 — the ADR, then `keel state close`.
