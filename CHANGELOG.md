@@ -4,6 +4,102 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.8.0
+
+0.7.0 was the answer to a field report: `/keel:init` plus a **manual** bug hunt on a
+Kotlin/Spring + React repo. That hunt found twenty-five bugs and drove thirteen fixes, and it
+was run entirely by hand — review agents dispatched ad hoc, findings proven one at a time with
+`curl` and live SQL, the inventory living in a chat message that did not survive the session.
+Nothing in keel knew how to do it again.
+
+`/keel:hunt` is that hunt as a flow. It is read-only from end to end: its output is a backlog
+and a report, and every fix happens in a flow started from it.
+
+### Added — the hunt
+
+- **Five phases and a closed flow.** `hunt-scope`, `hunt-sweep`, `hunt-prove`, `hunt-report`,
+  `hunt-triage`, all with the read-only guard row `bug-investigate` already used. No hunt phase
+  is reachable from a non-hunt phase and none leads anywhere but `none` or another hunt phase:
+  the handoff into `/keel:fix` is `keel state start fix`, which resets state wholesale, and
+  that reset is exactly why the backlog is a file of its own rather than a field in state.
+- **Two stages, because reading code produces plausible prose.** A `keel:hunter` per lens
+  proposes candidates; a `keel:prover` then has to reproduce each one against the running
+  stack. A lens-supplied severity is dropped on ingest, loudly — a severity is a measurement,
+  and at that point nothing has measured anything.
+- **A proven verdict needs a recipe file, not an evidence paragraph.** `--repro` must exist, be
+  non-empty and live under `.keel/hunt/repro/`. That file, not a summary a model re-renders, is
+  what travels into `keel:reproducer`. `unproven` is kept as *suspected* with no severity: a
+  verifier looked and failed, which is neither a confirmed bug nor a dismissed one.
+- **The report refuses to render while any finding is still a candidate.** Determinism makes a
+  report reproducible, not true. Every line is derived from the backlog and the only timestamp
+  printed is the run's own, so a second render of an unchanged backlog is byte-identical — a
+  scenario compares bytes, because otherwise "deterministic" is a claim a `Date.now()` in the
+  header would satisfy.
+- **One cause, many symptoms.** Grouping happens at the report, never at ingest: a lens agent
+  cannot see the other lenses' findings, so it cannot know it is looking at a symptom. `keel
+  hunt next` hands over the group as one unit, the lead's recipe as the reproduction and the
+  symptoms as regression criteria. On the manual hunt, one defect surfaced as four separate
+  findings; dispatched separately they would have been four conflicting fixes to one line.
+- **The lens set is confirmed by the user before anything fans out**, enforced three ways
+  rather than asked for in prose: `confirmed` is null until it is set, `hunt add` refuses while
+  it is, and the only command that writes it is the one that opens the sweep. A model that fans
+  out early gets six result sets it cannot ingest.
+- `keel hunt start|lenses|add|prove|group|report|next|close|list|status`, `agents/hunter.md`
+  and `agents/prover.md`, `/keel:hunt` and `/keel:hunt-next`, six lens briefs, and a `hunt:`
+  config block in both the defaults and the template — a seventh lens is a config line and a
+  brief, not a code change.
+
+### Unbroken — what a fifth flow would have inherited
+
+Each of these was found while building on top of it, and each was silent.
+
+- **Three agents declared a result line that no hook ever asked for.** The contract lived in
+  two objects that had to agree — a label table for the brief, an inline regex map inside
+  `subagentStop` — with nothing asserting they did. `keel:security-auditor`,
+  `keel:dependency-triager` and `keel:reproducer` were in the first and missing from the
+  second, so `SECURITY:`, `DEPS:` and `REPRO:` were unenforced. There is one `CONTRACTS` table
+  now, and a scenario checks it against the agent files. `keel:reproducer` is the agent a hunt
+  hands off to, so this one was load-bearing before it was tidy.
+- **`state start` sent every flow it did not name to the spec phase.** The ternary chain ended
+  `: 'spec'`, so a typo — or a flow registered in `PHASES` and nowhere else — started in a
+  phase whose guard row allows writing specs and whose rail renders as a feature. It is a
+  `FLOW_START` table now, an unknown flow is refused by name, and `--phase` is validated, which
+  it was not.
+- **The step checklist answered an unregistered flow with the setup ladder**, confidently and
+  about the wrong thing, because `RAILS[flow] || []` fell through to the init ladder. It now
+  falls through only when there is no flow at all. A wrong checklist is worse than none.
+- **Verdict files keel writes itself could block the branch forever.** The ignore list was a
+  literal seven-element array, so `.keel/security.json` and `.keel/architecture.json` — both
+  written by keel, neither tracked nor ignored — sat in `git status --porcelain`, and
+  `keel preflight` refuses a tree that is not clean. Reproduced in the field: a repo that had
+  run `keel verify deps` once could not start another flow. The list is now
+  `util.PER_MACHINE_IGNORES` with an idempotent repair that `keel hunt start` calls, because
+  `init --write` cannot be re-run to pick up new entries.
+- **`gates.bug_gates` was read by nothing and `--no-gates` was parsed nowhere**, though both
+  were documented in two skills as recording an automatic approval. What a bare `keel gate R`
+  actually did was worse than failing: it recorded the empty string as a decision and moved the
+  phase backwards. Both work now, the waiver is reported in the PR body through the path that
+  already existed for a skipped AC gate, and a gate with no decision is a usage error.
+
+### Still not enforced
+
+Said plainly, in the shape of the README's own known-gaps paragraph.
+
+- **Nothing stops a prover writing to a real database.** `checkBash` has no view of what
+  `DATABASE_URL` points at, so a prover proving a data bug can write to whatever is configured.
+  The mitigations are a line in the agent brief and the stack recorded in the run file, and
+  neither is enforcement. Point a hunt at a disposable stack.
+- **The simulator proves the wiring and the refusals, not the judgement.** It cannot show that
+  six lenses find real bugs, or that a `proven` verdict is trustworthy. The refusals are the
+  deterministic part — no severity without a verdict, no proof without a recipe, no report with
+  an unexamined finding in it — and those are the parts that hold every time.
+- **`keel init --write` still overwrites a hand-edited `.keel/config.yml`.** That is why the
+  ignore-block repair lives in `keel hunt start` rather than in advice to re-run init. Fixing
+  it needs a decision about what merging a commented YAML file means, and that is its own
+  change.
+
+137 -> 158 simulation scenarios.
+
 ## 0.7.0
 
 Thirteen issues from a field report: `/keel:init` plus a full bug-hunt on a Kotlin/Spring +
