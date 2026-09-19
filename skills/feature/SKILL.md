@@ -7,7 +7,7 @@ argument-hint: "<idea> [--spike] [--gates every-ac|end-of-lane|end]"
 
 # keel:feature — $ARGUMENTS
 
-Read one phase reference at a time from `references/` instead of loading everything.
+Read one phase reference at a time from `references/` instead of loading everything: `phase-0.md` … `phase-10.md` for the phases, and `ac-loop.md` for the loop itself.
 
 ## Phase 0 — preflight
 
