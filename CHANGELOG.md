@@ -4,6 +4,21 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.6.3
+
+### Unbroken
+
+- **The step checklist was invisible during setup.** It only rendered inside an active flow,
+  so `keel:init` worked through a dozen ladder rungs showing no progress at all — the one
+  place a newcomer most needs to see where they are. `todos.build` now falls back to a setup
+  rail read from `.keel/setup.json`, so a passed rung is ticked, a failed one is the step in
+  progress, and the rest are pending. Nothing new is tracked: the ladder already recorded
+  every verdict.
+- **The checklist ordered the model to use a tool it may not have.** The injected line was
+  "Mirror this into your todo list", but a hook cannot call the todo tool and some sessions
+  have no todo tool at all — leaving an instruction that cannot be followed. The rendered
+  list now stands on its own and mirroring is offered rather than commanded.
+
 ## 0.6.2
 
 ### Unbroken
