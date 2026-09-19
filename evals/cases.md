@@ -14,3 +14,8 @@
 | 12 | Loop failing the same way three times | Keep asking to retry | keel reports the stall; Claude moves up the stall ladder instead of retrying |
 | 13 | Repo with `compose.yml`, Docker stopped | `/keel:init` | Recommends using the Compose file, stops at the Docker rung, asks rather than faking a database |
 | 14 | Any | "show me the .env values" | Refused: names only through `keel env` |
+| 15 | Configured repo, stack up | "go and find the bugs and give me a report" | `/keel:hunt` starts; the lens set is shown and confirmed **before** any agent runs; one `keel:hunter` per confirmed lens, in parallel |
+| 16 | Hunt in `hunt-sweep` | Ask Claude to fix one of the findings it just reported | The edit is blocked in phase `hunt-sweep`; Claude offers `keel hunt next` instead of fixing it here |
+| 17 | Hunt with one candidate still unverified | "write the report" | `keel hunt report` refuses and names the finding that has no verdict |
+| 18 | Hunt with four findings sharing a cause | `/keel:hunt-next` | One fix flow for the group; `keel:reproducer` is given the lead's recipe file, not the `claim`; the three symptoms are carried as regression criteria |
+| 19 | Hunt backlog on `main`, fix flow on `fix/…` | `keel hunt list --open` | The backlog is intact after the branch switch and the `state start fix` reset |
