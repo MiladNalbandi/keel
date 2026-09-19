@@ -4,6 +4,39 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.6.1
+
+Three bugs found the first time keel was run against a real Kotlin/Spring Boot + Next.js
+project rather than the simulator.
+
+### Unbroken
+
+- **A blocked subagent could never unblock itself.** `subagent-stop` read
+  `last_message || transcript`, so when `last_message` was a tool-use turn or a truncated
+  value it short-circuited there and never looked at the transcript holding the contract
+  line. The agent wrote `DIAGNOSIS: fixable` on every turn, was blocked on every turn, and
+  gave up after burning its budget. It reads both sources now. The block message made it
+  worse: it ran the regex through a lossy replace and demanded
+  `DIAGNOSIS:s*(fixable|needs-you|unknown)i`, a pattern that cannot match anything, so the
+  agent kept reformatting a line that was already correct. It quotes the real contract now.
+- **`keel models` knew 8 of the 13 agents.** `lane-runner`, `arch-surveyor`,
+  `security-auditor`, `dependency-triager` and `reproducer` were absent from
+  `AGENT_SETTINGS`, so `show` never listed them and `set-all` never touched them. The table
+  must stay in step with `userConfig` in `plugin.json`; a comment now says so.
+- **The container-backed test queued behind the unit suite.** Both are the same build tool
+  in the same project directory, so sharing level 3 meant blocking on the build tool's
+  project lock — parallel in name only, and running a test the unit suite had just run.
+  Moved to level 4.
+
+### Still broken
+
+- **Every agent's `model:` is `${user_config.model_*}`, which does not resolve** unless the
+  user has written `pluginConfigs.keel` into `settings.json`. The `default` in
+  `plugin.json` is not used as a fallback, so the literal placeholder reaches the API and
+  returns `model_not_found` (HTTP 404). On a fresh install every keel subagent fails on
+  first use, including the `keel:setup-doctor` delegation that `keel:init` prescribes.
+  Workaround: `keel models set-all sonnet --yes`, then `/reload-plugins`.
+
 ## 0.6.0
 
 The release that connects what 0.1–0.3 built. An audit found the mechanisms were largely
