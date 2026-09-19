@@ -111,6 +111,30 @@
         "sonnet",
         "haiku"
       ]
+    },
+    "model_lane_runner": {
+      "type": "string",
+      "title": "Lane runner model",
+      "description": "Model for keel:lane-runner",
+      "default": "sonnet",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_arch_surveyor": {
+      "type": "string",
+      "title": "Architecture surveyor model",
+      "description": "Model for keel:arch-surveyor",
+      "default": "sonnet",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
     }
   }
 }

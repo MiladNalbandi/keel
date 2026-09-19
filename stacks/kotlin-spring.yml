@@ -1,0 +1,60 @@
+# Stack pack: Kotlin + Spring Boot backend.
+# A new stack is one file like this plus one testing skill; the flow skills never change.
+name: kotlin-spring
+lane: api
+
+# How to recognise this stack in a repo, cheapest signal first.
+detect:
+  files: [gradlew, build.gradle.kts, build.gradle, pom.xml]
+  extensions: ['.kt', '.java']
+
+# Test layers, lowest first. The AC loop picks the lowest layer that can express the AC.
+layers:
+  - id: unit
+    what: pure rules, no framework
+    where: src/test/kotlin/**/domain
+  - id: web-slice
+    what: validation, status codes, auth rules
+    where: src/test/kotlin/**/web
+  - id: body
+    what: request and response bodies validated against the contract
+    where: src/test/kotlin/**/contract
+  - id: data-slice
+    what: queries, constraints, migrations
+    where: src/test/kotlin/**/persistence
+  - id: integration
+    what: cross-layer flows and transactions
+    where: src/integrationTest/kotlin
+
+# Command defaults for this stack. `{AC}`, `{PKG}` and `{PATHS}` are substituted.
+commands:
+  api_compile: '{BUILD} -q compileKotlin compileTestKotlin'
+  api_test_ac: "{BUILD} -q test --tests '*{AC}*'"
+  api_test_module: '{BUILD} -q test'
+  api_test_pkg: "{BUILD} -q test --tests '{PKG}.*'"
+  coverage_api: '{BUILD} -q koverXmlReport'
+  static_checks: '{BUILD} -q detekt ktlintCheck'
+  migrate: '{BUILD} -q flywayMigrate'
+
+coverage_report: build/reports/kover/report.xml
+
+# Which skill teaches tests for this stack, and which architecture references apply.
+skills:
+  testing: keel:kotlin-spring-testing
+  architecture: keel:architecture
+architecture_styles: [hexagonal, ddd, layered, mvc]
+
+# Import boundaries worth enforcing per style, merged into boundaries.rules.
+boundary_defaults:
+  hexagonal:
+    - name: domain-framework-free
+      from: '{DIR}/**/domain/**'
+      deny_imports: ['org.springframework.**', 'jakarta.persistence.**', 'javax.persistence.**']
+  ddd:
+    - name: domain-framework-free
+      from: '{DIR}/**/domain/**'
+      deny_imports: ['org.springframework.**', 'jakarta.persistence.**']
+  layered:
+    - name: no-controller-in-repository
+      from: '{DIR}/**/repository/**'
+      deny_imports: ['**.controller.**']

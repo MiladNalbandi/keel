@@ -2,7 +2,7 @@
 name: lane-runner
 description: Runs the frontend acceptance-criteria loop in its own worktree while the main session works the backend lane. Use only when that lane's human gates are skipped.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: ${user_config.model_implementer}
+model: ${user_config.model_lane_runner}
 effort: high
 maxTurns: 150
 isolation: worktree
