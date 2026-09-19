@@ -56,6 +56,7 @@ switch (cmd) {
   case 'init': cli.init(rest); break;
   case 'preflight': cli.preflight(rest); break;
   case 'arch': cli.archCmd(rest); break;
+  case 'skills': cli.skillsCmd(rest); break;
   case 'state': cli.stateCmd(rest); break;
   case 'commit': cli.commit(rest); break;
   case 'gate': cli.gate(rest); break;

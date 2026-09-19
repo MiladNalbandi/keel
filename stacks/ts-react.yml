@@ -1,0 +1,41 @@
+# Stack pack: TypeScript + React frontend.
+name: ts-react
+lane: web
+
+detect:
+  files: [package.json, tsconfig.json]
+  extensions: ['.ts', '.tsx']
+
+layers:
+  - id: component
+    what: rendering, form validation, error and empty states
+    where: src/**/*.test.tsx
+  - id: hook
+    what: state transitions and data fetching, with MSW
+    where: src/**/*.test.ts
+
+commands:
+  web_typecheck: 'npx tsc --noEmit'
+  web_test_ac: 'npx vitest run -t {AC}'
+  web_test_module: 'npx vitest run'
+  web_test_paths: 'npx vitest run {PATHS}'
+  coverage_web: 'npx vitest run --coverage'
+  static_checks: 'npx eslint .'
+
+coverage_report: coverage/lcov.info
+
+skills:
+  testing: keel:web-testing
+  architecture: keel:architecture
+architecture_styles: [feature-sliced, layered]
+
+boundary_defaults:
+  feature-sliced:
+    - name: feature-isolation
+      from: '{DIR}/src/features/*/**'
+      deny_imports: ['@/features/**']
+      allow_imports: ['@/shared/**', '@/entities/**']
+  layered:
+    - name: no-component-imports-page
+      from: '{DIR}/src/components/**'
+      deny_imports: ['@/pages/**', '@/routes/**']
