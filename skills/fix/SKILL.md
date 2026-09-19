@@ -63,8 +63,10 @@ Show the failing test and its output, then ask the user one question with three 
 | No, reproduce differently | `keel gate R reject --note "…"`, back to `bug-repro`; amend the red commit |
 | **Stop** | End the flow. The reproducing test stays on the branch for later — it is worth keeping even unfixed |
 
-`--no-gates`, or `gates.bug_gates: false`, records an automatic approval and logs it in the
-PR body.
+`keel state start fix --no-gates`, or `gates.bug_gates: false`, waives both bug gates for the
+flow: `keel gate R` and `keel gate F` with no decision then record an automatic approval, and
+the waiver appears in the final review and the PR body. With the gates on, a bare `keel gate R`
+is a usage error — a gate is not passed by leaving the decision out.
 
 ## 2 — investigate
 
