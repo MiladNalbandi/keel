@@ -1,4 +1,4 @@
-# keel 0.3.1
+# keel 0.4.0
 
 An enforced spec-and-acceptance-criteria workflow for a Kotlin + Spring Boot backend with a TypeScript frontend, as a Claude Code plugin. Hooks and a small CLI enforce the loop instead of asking the model to remember it.
 
@@ -12,6 +12,20 @@ An enforced spec-and-acceptance-criteria workflow for a Kotlin + Spring Boot bac
 - **No push without a coverage verdict** for the current commit.
 - **Stall detection.** The same failure three times in a row stops the loop instead of burning turns.
 - **Gates you control.** The acceptance-criteria gate can be skipped per lane or per flow; spec approval and the final review before the PR cannot.
+- **Phase order.** `keel state phase` refuses an illegal transition and names the legal ones, so `spec` cannot jump straight to `green` and skip RED. `--force` is allowed and recorded.
+- **Lane scope.** In RED and GREEN an `[API]` criterion cannot edit frontend code, and vice versa.
+- **No unconfigured checks passing quietly.** A required command that is not set fails its tier and says so; an optional one is reported as skipped. `keel doctor` lists every command key and which tiers need it.
+- **Secrets never reach a commit.** A hardcoded credential is blocked at the *edit*, because removing one from history is a much worse conversation.
+- **Architecture, once you have chosen one.** Import boundaries are checked on changed files inside `verify fast`, and an architecture reviewer lens runs at ship.
+- **No push with a known vulnerable dependency**, when a manifest or lockfile changed on the branch.
+
+## Beyond enforcement
+
+- **`keel arch detect`** works out whether a repo is hexagonal, DDD, layered, MVC or feature-sliced from weighted evidence — declared dependencies, package shape, and measurements like domain purity — and records a hybrid rather than collapsing it. For a greenfield project it recommends one, defaulting to layered and arguing against DDD unless the case is real.
+- **Per-phase, per-layer skills.** RED on an `[API]` criterion loads Kotlin/Spring test patterns; on a `[WEB]` one, frontend patterns. Stacks are data files in `stacks/`, so another stack is one file plus one testing skill.
+- **A project knowledge base** under `docs/knowledge/`, built at init and read back with `/keel:memory` one section at a time.
+- **`/keel:cover`** turns "coverage is low" into a loop with a decision per uncovered group — test it, delete it as unreachable, or accept it with a recorded reason — and reviews each test for assertions that mean something.
+- **`/keel:diagnose`** is the read-only entry point for a bug you cannot yet reproduce, which the bug flow alone has no room for.
 
 ## Install
 
@@ -59,18 +73,24 @@ node bin/keel doctor --hooks      # the always-on guard rules only
 
 ```
 keel init [--write]                  detect the layout, write .keel/config.yml
+keel preflight <slug>                prove the machine is ready, then create the branch
 keel discover                        what the repo says about how it runs
 keel ladder [--plan|--resume]        prove every run step, write docs/RUNNING.md
 keel scaffold <what>                 compose, dev-container, playwright, smoke, spec, claude-md
 keel stack up|down|status|logs|migrate|reset [--lane web]
 keel lane start|status|merge <name> [--background]
+keel arch detect|show|set <style>    architecture style and its import boundaries
+keel skills for <phase> [--layer]    which skills and references this phase wants
+keel memory show|reload|update       the project knowledge base
+keel cover [decide <key> <verdict>]  the coverage-fix loop
 keel smoke | keel pr [--dry-run] | keel triage "<desc>" | keel check-size
 keel stall [reset] | keel models show|set-all <model> [--yes]
-keel state start|phase|ac|show       flow state
-keel state red-done|green-done       guarded transitions
+keel state start|phase|advance|ac|lane|board|show
+keel state red-done|green-done|repro-done    guarded transitions
+keel state close                     archive a finished flow
 keel gate <ac|R|F|final> <decision>  record a human gate
 keel escalate [--override "why"]     small change -> spec flow
-keel verify fast|ac|module|contract|full|e2e|release|coverage
+keel verify fast|ac|arch|deps|module|contract|full|e2e|release|coverage
 keel commit <type> <ID> "<msg>"      commit with phase rules enforced
 keel trace [--strict] | keel audit   AC traceability and commit audit
 keel status | keel env | keel doctor
@@ -79,23 +99,20 @@ keel simulate [name] [--sandbox]
 
 ## Skills
 
-`/keel:init`, `/keel:change`, `/keel:feature`, `/keel:fix`, `/keel:ship`, `/keel:status`, plus three reference skills that Claude loads on demand: Kotlin/Spring testing, frontend testing, Playwright.
+Flows: `/keel:init`, `/keel:change`, `/keel:feature`, `/keel:fix`, `/keel:diagnose`, `/keel:cover`, `/keel:ship`, `/keel:status`, `/keel:memory`.
+
+Loaded on demand, one reference at a time: Kotlin/Spring testing, frontend testing, Playwright, architecture, security, debugging.
 
 ## Subagents
 
-`keel:reviewer`, `keel:explorer`, `keel:investigator`, `keel:e2e-author`, `keel:implementer`, `keel:lane-runner`, `keel:setup-doctor`, `keel:bulk-reader`. Each model is a plugin setting, so you can put them all on Opus from `/config`.
+`keel:reviewer`, `keel:explorer`, `keel:investigator`, `keel:e2e-author`, `keel:implementer`, `keel:test-author`, `keel:reproducer`, `keel:lane-runner`, `keel:setup-doctor`, `keel:bulk-reader`, `keel:arch-surveyor`, `keel:security-auditor`, `keel:dependency-triager`. Each model is a plugin setting, so you can put them all on Opus from `/config`.
 
 ## Status
 
-v0.2 implements the design end to end:
+v0.1–0.3 built the enforcement layer: the hooks, the phase matrix, guarded commits, the coverage engine, the stall ladder, the run ladder, the subagents and 86 simulation scenarios.
 
-- enforcement: hooks, phase matrix, guarded commits, stall detection, flake reruns
-- setup: `keel discover`, the run ladder, `docs/RUNNING.md`, scaffolding (compose, dev container, Playwright, smoke, spec, CLAUDE block)
-- checks: `fast`, `ac`, `module`, `contract`, `full`, `e2e`, `release`, and real coverage from Kover/JaCoCo XML and LCOV with changed-line, branch and ratchet rules
-- ops: `keel stack` (per-lane Compose project and port offset, migrate, reset), `keel lane` (worktrees), `keel smoke`, `keel pr` with a generated body
-- change flow: `keel triage`, `keel check-size`, `keel escalate`
-- 69 simulation scenarios, run by `node bin/keel simulate`
+v0.4 connects it. An audit found the mechanisms were built but not wired: `coverage.reports` existed in no config, so coverage could never run and the push gate blocked forever; a family of `commands.*` keys was read by code and defined nowhere, so `verify full` reported success having never run detekt, ktlint or ESLint; none of the ~20 `references/` files the skills pointed at existed; the lane commands and `lane-runner` were orphaned; and the state machine was a flat list, so any phase followed any other.
 
-v0.3 closes the remaining gaps: FileChanged and Notification hooks, the large-file read guard with the bulk-reader redirect, Serena edit tools routed through the phase matrix, per-AC coverage, changed-package test scope, the four-step stall ladder with `keel stall`, `keel models` for subagent models, and `keel init --new|--refresh|--dev-container` with a starter template.
+What v0.4 adds on top: architecture detection with import boundaries, per-phase and per-layer skill resolution behind stack data files, a project knowledge base, a security phase with a code-and-logic pipeline and a supply-chain one, a reproducer agent and a read-only diagnose flow, and the coverage-fix loop. 111 simulation scenarios.
 
-Known gaps: the run ladder's optional rungs need per-project commands (`api_health_check`, `testcontainers_test`, `smoke`); the three reviewer lenses and the background lane are driven by the skills rather than the CLI; nothing here has run against a real Gradle, Vitest, Docker or gh yet.
+**Known gaps, honestly.** Nothing here has yet run against a real Gradle, Vitest, Docker or `gh` — the simulator drives the real hooks and CLI against fake build tools, which proves the wiring and not the commands. `koverXmlReport` and `vitest run --coverage` are sensible defaults, not verified ones. The run ladder's optional rungs still need per-project commands, and the security auditor is a strong reviewer rather than a proof: the deterministic parts (the secret scan, the dependency gate, the 100% bar on auth paths) are the parts that hold every time.

@@ -32,8 +32,11 @@ Project setup
 
   keel arch detect|show|set <style>   architecture style and its import boundaries
 
+  keel memory show|reload --section <n>|update   the project knowledge base
+
 Checks and commits
-  keel verify fast|ac|arch|module|contract|full|e2e|release|coverage
+  keel verify fast|ac|arch|deps|module|contract|full|e2e|release|coverage
+  keel cover [decide <key> test|delete|accept]  the coverage-fix loop
   keel commit <type> <ID> "<msg>"     stage and commit with phase rules enforced
   keel trace [--strict]               AC to tests to commits
   keel audit [--base main]            commit composition and test integrity
@@ -57,6 +60,8 @@ switch (cmd) {
   case 'preflight': cli.preflight(rest); break;
   case 'arch': cli.archCmd(rest); break;
   case 'skills': cli.skillsCmd(rest); break;
+  case 'cover': cli.coverCmd(rest); break;
+  case 'memory': cli.memoryCmd(rest); break;
   case 'state': cli.stateCmd(rest); break;
   case 'commit': cli.commit(rest); break;
   case 'gate': cli.gate(rest); break;
