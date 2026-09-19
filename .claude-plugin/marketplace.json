@@ -1,6 +1,7 @@
 {
   "name": "keel-marketplace",
   "owner": { "name": "Milad Nalbandi" },
+  "description": "keel: an enforced spec and acceptance-criteria workflow for Kotlin/Spring Boot and TypeScript, where hooks and a CLI decide the rules rather than the model remembering them.",
   "plugins": [
     {
       "name": "keel",
