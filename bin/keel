@@ -18,7 +18,8 @@ Flows and state
   keel state repro-done               confirm a bug reproduction
   keel gate <ac|R|F|final> <decision> record a human gate decision
   keel escalate [--override "why"]    turn a small change into a spec flow
-  keel status                         board, ACs, stalls, flaky tests
+  keel board [--watch] [--for <s>]    tasks, agents in flight, what blocks a push
+  keel status                         alias for keel board
   keel stall [reset]                  repeated-failure counter and the stall ladder
   keel models show|set-all <model>    subagent models (writes user settings with --yes)
 
@@ -71,6 +72,7 @@ switch (cmd) {
   case 'trace': cli.traceCmd(rest); break;
   case 'audit': cli.auditCmd(rest); break;
   case 'status': cli.status(); break;
+  case 'board': cli.boardCmd(rest); break;
   case 'verify': cli.verifyCmd(rest); break;
   case 'unlock': cli.unlock(rest); break;
   case 'env': cli.env(); break;
