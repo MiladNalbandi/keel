@@ -4,6 +4,24 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.6.2
+
+### Unbroken
+
+- **None of the 13 subagents could run.** Every agent declared
+  `model: ${user_config.model_<name>}`, which is only interpolated once the user has written
+  `pluginConfigs.keel` into `settings.json`. The `default` in `plugin.json` is not used as a
+  fallback, so on any fresh install the literal placeholder was sent to the API and every
+  agent failed with `model_not_found` (HTTP 404) on first use — including the
+  `keel:setup-doctor` delegation that `keel:init` itself prescribes. Each agent now names its
+  model literally, `keel models show|set|set-all|reset` reads and rewrites those frontmatter
+  lines instead of a settings file that never resolved, and a scenario fails the build if a
+  placeholder ever returns. `KEEL_AGENT_DIR` overrides the directory so the scenarios rewrite
+  a throwaway copy.
+- **`plugin.json` no longer declares `userConfig`.** With the model in frontmatter those
+  thirteen entries controlled nothing, and leaving them would have shown settings in
+  `/config` that silently did nothing.
+
 ## 0.6.1
 
 Three bugs found the first time keel was run against a real Kotlin/Spring Boot + Next.js

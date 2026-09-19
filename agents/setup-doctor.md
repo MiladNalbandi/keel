@@ -2,7 +2,7 @@
 name: setup-doctor
 description: Diagnoses a failing project-setup step (toolchain, Docker, Compose, ports, boot) and proposes a fix. Use when a keel:init ladder rung fails.
 tools: Read, Grep, Glob, Bash
-model: ${user_config.model_setup_doctor}
+model: sonnet
 effort: medium
 maxTurns: 25
 disallowedTools: Write, Edit

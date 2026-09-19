@@ -2,7 +2,7 @@
 name: reviewer
 description: Reviews a diff against a spec or acceptance criteria in a fresh context, one lens at a time (correctness, security, performance, architecture, assertions). Use at an AC gate, in the coverage loop and in the ship blueprint.
 tools: Read, Grep, Glob, Bash
-model: ${user_config.model_reviewer}
+model: opus
 effort: high
 maxTurns: 25
 disallowedTools: Write, Edit

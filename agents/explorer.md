@@ -2,7 +2,7 @@
 name: explorer
 description: Maps the code an acceptance criterion touches and the patterns to follow, read-only. Use during planning and bug triage, several in parallel for different areas.
 tools: Read, Grep, Glob, Bash
-model: ${user_config.model_explorer}
+model: sonnet
 effort: low
 maxTurns: 20
 disallowedTools: Write, Edit

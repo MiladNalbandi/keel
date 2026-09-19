@@ -2,7 +2,7 @@
 name: bulk-reader
 description: Answers one specific question about large files and returns short bullets with line numbers. Use when a whole-file read would be wasteful.
 tools: Read, Grep, Glob
-model: ${user_config.model_bulk_reader}
+model: haiku
 effort: low
 maxTurns: 10
 disallowedTools: Write, Edit, Bash

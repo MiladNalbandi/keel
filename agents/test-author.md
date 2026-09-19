@@ -2,7 +2,7 @@
 name: test-author
 description: Writes the failing tests for one acceptance criterion in a fresh context, without seeing the implementation plan. Use for the RED step when loops.red_author is subagent.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: ${user_config.model_test_author}
+model: sonnet
 effort: medium
 maxTurns: 25
 ---

@@ -2,7 +2,7 @@
 name: reproducer
 description: Writes the smallest failing test that demonstrates a reported bug, from the symptom alone, without seeing any theory about the cause. Use for phase 1 of the bug flow.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: ${user_config.model_reproducer}
+model: sonnet
 effort: medium
 maxTurns: 25
 ---

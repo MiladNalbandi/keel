@@ -2,7 +2,7 @@
 name: security-auditor
 description: Reviews a branch diff against the spec for security bugs and logic flaws, read-only. Use in the security phase, pipeline A.
 tools: Read, Grep, Glob, Bash
-model: ${user_config.model_security_auditor}
+model: opus
 effort: high
 maxTurns: 30
 disallowedTools: Write, Edit
