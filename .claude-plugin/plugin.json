@@ -135,6 +135,42 @@
         "sonnet",
         "haiku"
       ]
+    },
+    "model_security_auditor": {
+      "type": "string",
+      "title": "Security auditor model",
+      "description": "Model for keel:security-auditor",
+      "default": "opus",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_dependency_triager": {
+      "type": "string",
+      "title": "Dependency triager model",
+      "description": "Model for keel:dependency-triager",
+      "default": "sonnet",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    "model_reproducer": {
+      "type": "string",
+      "title": "Reproducer model",
+      "description": "Model for keel:reproducer",
+      "default": "sonnet",
+      "options": [
+        "inherit",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
     }
   }
 }
