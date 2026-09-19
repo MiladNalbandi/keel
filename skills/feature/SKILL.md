@@ -25,13 +25,22 @@ keel state start feature --gates <mode>
 
 ## Phase 1 — interview and spec
 
-Interview the user with `AskUserQuestion`: edge cases, validation, authorization, data rules, error states, what is out of scope. Then write `specs/NNN-slug.md` with:
+Load `keel:spec-authoring`. Interview the user with `AskUserQuestion`: edge cases, validation, authorization, data rules, error states, what is out of scope.
+
+Then **draw before you finish the criteria list** — the drawings are how you find the criteria the interview missed:
+
+- a `## UI mockup` in ASCII showing four states — default, empty, loading, error — when the spec has any `[WEB]` criterion. Drawing the empty and error states is what surfaces the criteria nobody mentioned.
+- a `## Request path` in ASCII when it has any `[API]` criterion: endpoint → controller → use case → repository → table, each box marked `+` new or `~` changed, with both the success and the failure response drawn.
+
+Show both in the terminal as you write them, and keep them inside 80 columns.
+
+Then write `specs/NNN-slug.md` with those two sections plus:
 
 - numbered ACs, each tagged `[API]`, `[WEB]`, `[E2E]` or `[SMOKE]`, each testable
 - data and migration notes, validation and security rules
 - out of scope, contract changes, smoke checks
 
-Register them: `keel state ac AC-001 --layer API` for each. Ask for approval, then `keel commit docs SPEC-NNN "spec"`. Start a fresh session before the next phase.
+Register them: `keel state ac AC-001 --layer API` for each. Run `keel spec check` — it names states you have not drawn, `[API]` criteria missing from the path, and empty sections; it warns rather than blocks, so decide with the gaps in front of you. Ask for approval, then `keel commit docs SPEC-NNN "spec"`, which prints the same check again at the moment of the decision. Start a fresh session before the next phase.
 
 ## Phase 2 — plan
 
