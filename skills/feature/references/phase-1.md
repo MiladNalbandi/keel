@@ -4,7 +4,9 @@ Interview first, write second. Use `AskUserQuestion` and cover: edge cases, vali
 
 ## The spec file
 
-`specs/NNN-slug.md`, from `templates/spec.md`. Sections: Context, Acceptance criteria, Data and migrations, Validation and security rules, Contract changes, Out of scope, Smoke checks, Decisions.
+`specs/NNN-slug.md`, from `templates/spec.md`. Sections: Context, Acceptance criteria, **UI mockup**, **Request path**, Data and migrations, Validation and security rules, Contract changes, Out of scope, Smoke checks, Decisions.
+
+The two drawing sections come from `keel:spec-authoring`, and they are written **before** the criteria list is final: an ASCII mockup of four states (default, empty, loading, error) for any `[WEB]` criterion, and an ASCII request path marked `+` new / `~` changed for any `[API]` one. They are not documentation of an agreed spec — they are how the missing criteria get found. Run `keel spec check` before asking for approval.
 
 Every AC is numbered, layer-tagged and testable:
 
