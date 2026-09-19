@@ -1,0 +1,46 @@
+# Conventions
+
+What an agent reads to write code that looks like its neighbours. **Observed from the
+codebase, not aspirational** — if a rule here is not what the code actually does, the code
+wins and this file is wrong.
+
+## Naming
+
+| Thing | Pattern | Example |
+|---|---|---|
+| <controller / endpoint> | {{PATTERN}} | `{{EXAMPLE}}` |
+| <use case / service> | {{PATTERN}} | `{{EXAMPLE}}` |
+| <repository / port> | {{PATTERN}} | `{{EXAMPLE}}` |
+| <test class> | {{PATTERN}} | `{{EXAMPLE}}` |
+
+## Errors
+
+- Domain rule violated: <the exception type, and where it is translated to a status>
+- Not found: <type> → <status>
+- Validation: <where it happens — bean validation, a value class constructor, both>
+- Never: <what this codebase does not do — bare `RuntimeException`, swallowed catches, status codes decided in the domain>
+
+## Tests
+
+| Layer | Tool | Where | Naming |
+|---|---|---|---|
+| Unit | <JUnit 5, MockK> | `{{BACKEND}}/src/test/kotlin/**/domain` | `<pattern>` |
+| Web slice | <@WebMvcTest> | `{{BACKEND}}/src/test/kotlin/**/web` | `<pattern>` |
+| Body | <MockMvc + contract validator> | `{{BACKEND}}/src/test/kotlin/**/contract` | `<pattern>` |
+| Component | <Vitest, Testing Library, MSW> | `{{FRONTEND}}/src/**/*.test.tsx` | `<pattern>` |
+
+Every test carries its acceptance-criterion ID — `keel verify ac` filters on it and
+`keel trace` finds the test by it. The `keel:{{TESTING_SKILL}}` skill holds the patterns;
+this table only says where things live and what they are called.
+
+## Placement
+
+<Three or four lines, from the architecture style: which package a new endpoint, rule,
+query or component belongs in. Full reasoning is in the `keel:architecture` skill — do not
+restate it here.>
+
+## Local practices worth knowing
+
+<The non-obvious ones an agent would otherwise get wrong: a shared test configuration, a
+custom assertion helper, a generated-code directory that must never be hand-edited, a
+formatting rule the linter enforces.>

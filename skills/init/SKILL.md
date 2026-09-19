@@ -48,8 +48,23 @@ After each rung, record the exact command that worked.
 
 Delegate to `keel:setup-doctor`. Retries that change nothing may run. Anything that changes the machine or repo files needs the user's approval. Never edit application code. After 3 attempts, record the rung as "needs you" and continue.
 
-## 6. Write it down
+## 6. Build the knowledge base
+
+Everything an agent needs to work here, under `docs/knowledge/`: architecture and its
+boundaries, the domain's vocabulary, conventions, data and fixtures, integrations and their
+test stand-ins. Detect the architecture first (`keel arch detect`, then `keel arch set`), so
+the architecture and conventions sections describe the style the code actually uses.
+
+If the `ai-coding-toolkit:project-onboarding` skill is available, delegate the initial build
+to it — it already does parallel-agent onboarding, a knowledge graph and Mermaid diagrams —
+then fit the result to keel's six sections. Otherwise fill `templates/knowledge/` yourself
+from discovery. Either way keel owns every later refresh, through `keel memory update`.
+
+This is a deliberate, bounded, init-time-only exception to keel depending on no other
+plugin; nothing at flow time relies on it, and the templates are the fallback.
+
+## 7. Write it down
 
 Run `keel init --write`, then write `docs/RUNNING.md` with the verified commands, the date, the commit, and the "needs you" list. Add the keel block to CLAUDE.md. Ask before applying test-speed changes (Testcontainers reuse, one shared Spring test context).
 
-Finish with the three ways to start work: `/keel:change` for small work, `/keel:feature` for spec work, `/keel:fix` for bugs.
+Finish with the three ways to start work: `/keel:change` for small work, `/keel:feature` for spec work, `/keel:fix` for bugs — and `/keel:memory` to read the knowledge base back in a later session.

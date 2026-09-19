@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Reviews a diff against a spec or acceptance criteria in a fresh context, one lens at a time (correctness, security, performance). Use at an AC gate and in the ship blueprint.
+description: Reviews a diff against a spec or acceptance criteria in a fresh context, one lens at a time (correctness, security, performance, architecture, assertions). Use at an AC gate, in the coverage loop and in the ship blueprint.
 tools: Read, Grep, Glob, Bash
 model: ${user_config.model_reviewer}
 effort: high
@@ -18,6 +18,8 @@ Report **blocking** findings only:
 - a change outside the stated scope: unrequested refactors, renamed files, disabled, skipped or weakened tests
 - for the security lens: missing authorization, missing validation, data exposure, injection
 - for the performance lens: N+1 queries, missing index on a new query path, unbounded lists, blocking calls on request threads
+- for the architecture lens: an import that crosses a boundary the style in `architecture.style` forbids — read `keel arch show` for the style and `keel:architecture` for its placement rules. Report only crossings this diff **introduces**; a pre-existing one is not this branch's finding, and reporting it drowns the new one
+- for the assertions lens: a test whose assertions restate the implementation instead of the requirement, a test with no meaningful assertion (a call with no check, a `verify` that only proves a mock was hit), a scenario contrived purely to reach a line that no user could produce, or a duplicate of an existing test under a new name. This lens exists because a coverage test is written against code that already exists, so it passes the moment it is written — "it must fail first" cannot catch a tautology here, and nothing else will
 
 Non-blocking observations go in a short second list. Ignore style and formatting.
 
