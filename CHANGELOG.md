@@ -4,6 +4,16 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.6.4
+
+### Unbroken
+
+- **`keel ladder --plan` destroyed the ladder's memory.** A plan run marks every rung
+  `planned` and then persisted that over the recorded verdicts, so a dry run that changed
+  nothing made `--resume` lose its cache and re-run everything, and left the new setup
+  checklist reading 0/n on a project whose ladder was fully green. A plan proves nothing, so
+  it no longer writes `setup.json` or the proven-commands file.
+
 ## 0.6.3
 
 ### Unbroken
