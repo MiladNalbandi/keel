@@ -1,4 +1,5 @@
 .serena/
+.DS_Store
 node_modules/
 .keel/state.json
 .keel/coverage.json
