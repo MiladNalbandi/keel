@@ -1,4 +1,4 @@
-# keel 0.6.4
+# keel 0.7.0
 
 An enforced spec-and-acceptance-criteria workflow for a Kotlin + Spring Boot backend with a TypeScript frontend, as a Claude Code plugin. Hooks and a small CLI enforce the loop instead of asking the model to remember it.
 

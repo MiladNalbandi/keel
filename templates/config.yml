@@ -19,7 +19,7 @@ contract:
   file: {{CONTRACT}}
 e2e:
   dir: {{E2E_DIR}}
-  web_url: http://localhost:5173
+  web_url: {{WEB_URL}}
   api_url: http://localhost:8080
 smoke:
   dir: smoke
@@ -32,19 +32,28 @@ base_branch: main
 # Every command keel runs lives here. `keel doctor` lists which are set and which
 # tiers need them; a required command that is blank makes its tier fail loudly
 # rather than passing with the check silently skipped.
+#
+# Working directory, because it is not the same for every key and nothing else says so:
+#   api_*, coverage_api, migrate, unit_tests, testcontainers_test, deps_api  ->  backend.dir
+#   web_*, coverage_web, deps_web                                           ->  frontend.dir
+#   e2e, smoke_e2e                                                          ->  e2e.dir
+#   contract_lint, codegen, static_checks, api_health_check,
+#   web_health_check, smoke                                                 ->  the repo root
+# A relative command is resolved from there, so `cd frontend && ...` in a web_* key is one
+# directory too deep. If the directory does not exist keel runs at the repo root and says so.
 commands:
   api_compile: {{BUILD}} -q compileKotlin compileTestKotlin
   api_test_ac: {{BUILD}} -q test --tests '*{AC}*'
   api_test_module: {{BUILD}} -q test
   api_test_pkg: {{BUILD}} -q test --tests '{PKG}.*'
   web_typecheck: npx tsc --noEmit
-  web_test_ac: npx vitest run -t {AC}
-  web_test_module: npx vitest run
-  web_test_paths: npx vitest run {PATHS}
-  coverage_api: {{BUILD}} -q koverXmlReport
-  coverage_web: npx vitest run --coverage
-  e2e: npx playwright test
-  smoke_e2e: npx playwright test --grep @smoke
+  web_test_ac: {{WEB_TEST_AC}}
+  web_test_module: {{WEB_TEST_MODULE}}
+  web_test_paths: {{WEB_TEST_PATHS}}
+  coverage_api: {{COVERAGE_API}}
+  coverage_web: {{COVERAGE_WEB}}
+  e2e: {{E2E_CMD}}
+  smoke_e2e: {{SMOKE_E2E_CMD}}
   # Left blank on purpose: stack packs in the plugin's stacks/ fill these in per stack
   # (static_checks becomes detekt + ktlint + eslint), and the run ladder records what
   # actually worked. Set one here only to override.

@@ -4,6 +4,77 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.7.0
+
+Thirteen issues from a field report: `/keel:init` plus a full bug-hunt on a Kotlin/Spring +
+React repo that is single-module at the root and has no git history. The ladder passed 12/12
+there, so none of these were setup failures — they were defects in what keel reports,
+generates and enforces. Every one reproduced before it was fixed.
+
+### Unbroken — these cost work
+
+- **A compliant subagent could be blocked forever, and lose its report doing it.**
+  `lastAssistant()` returned on the first assistant entry it met even when that entry yielded
+  no text — a tool-use turn maps to `''` — so it never scanned back to the turn holding the
+  result line. (0.6.1 fixed the layer above this, joining `last_message` with the transcript;
+  the defect was one level down.) It now keeps scanning until a turn actually has text.
+- **Enforcing the result line destroyed the findings it protected.** The contract was a hard
+  `decision: block` saying "Add it and finish", which an agent satisfies most cheaply by
+  replying with the marker alone — and that reply *replaces* its result. A reviewer's entire
+  findings list became the single line `BLOCKING: yes`. The contract is now advice, and asks
+  for the findings back alongside the marker.
+- **`keel doctor` could not see the failure that killed every agent.** An agent whose `model:`
+  still holds `${user_config.…}` fails with `model_not_found` (HTTP 404) naming the
+  placeholder, which points nowhere near the cause — and a cached install of an older version
+  shadows the one keel is running from, so the symptom outlives the fix. `doctor` now reports
+  both, with the remedy.
+
+### Unbroken — output that looked right and was not
+
+- **`verify arch` printed `architecture boundaries hold.` having inspected nothing.**
+  `changedFiles()` never checked exit codes, and `git()` folds stderr into its output, so
+  outside a repository `fatal: not a git repository…` was treated as a filename and then
+  dropped for having no source extension. Zero files were checked and it read exactly like a
+  real pass. It now reports the denominator, and says when the answer is zero.
+- **Boundary rules were templated from the style name and never checked against the tree.**
+  A rule could deny an import the codebase already depends on, or scope itself to a package
+  that merely shares a layer's name. `arch set` now dry-runs the rules it is about to write,
+  reports the existing violations per rule, and leaves `enforce` off rather than shipping a
+  rule the code violates on day one.
+- **Generated config asserted what discovery never proved** — a Kover task for a JaCoCo
+  project, vitest and Playwright commands with neither installed, `:5173` for a Next app.
+  `doctor` then counted them as set, so the failure surfaced at run time instead of at init.
+  Discovery now reads the build file and `package.json`, and anything it cannot prove is left
+  blank with its suggestion in a comment. Stack packs are gated on their own `detect:` block,
+  which they never were — every pack applied to every repo.
+- **A shell error was written verbatim into generated artifacts**, e.g. `docs/RUNNING.md`
+  reading `at commit fatal: not a git repository…`. A new `gitOut()` returns a fallback unless
+  the command succeeded; nine sites now use it.
+
+### Unbroken — friction
+
+- **A backend at the repository root was never found.** Detection probed only `apps/api` and
+  friends, so init printed the self-contradictory `backend: not found   build: ./gradlew` and
+  then wrote `apps/api` into the config. Root-level single-module projects are detected, and
+  `.` is normalised through one `moduleDir()` helper — previously it would have silently
+  skipped its own compile and typecheck while reporting a clean `verify fast`.
+- **`keel ladder --help` ran the ladder**, starting Docker services and booting both apps.
+  `--help` was matched only in first position. Every subcommand answers it now.
+- **The knowledge base could not be created.** `memory show` sent you to `memory update`,
+  which sent you back to `/keel:init`; nothing ever copied `templates/knowledge/`. `update`
+  now scaffolds it.
+- **An explicitly blank coverage path was silently overridden.** `deriveReports()` tested
+  truthiness, so `''` — the way a project says "there is no coverage here" — was treated as
+  unset, undoing what `deepMerge` had deliberately preserved.
+- **The Playwright and smoke templates were copied raw**, carrying another project's pnpm
+  workspace, `apps/api`, `:5173` and actuator path into every repo. They are now filled from
+  the config init just wrote.
+- **Nothing said which directory a command runs in.** `api_*` run from `backend.dir`, `web_*`
+  from `frontend.dir`, `e2e` from `e2e.dir`, and the cross-cutting ones from the repo root.
+  Documented per key; `e2e` now runs where `scaffold playwright` writes its config, rather
+  than at the root where it could not find it; and a missing module directory is reported
+  instead of silently becoming the repo root.
+
 ## 0.6.4
 
 ### Unbroken
