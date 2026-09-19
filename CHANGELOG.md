@@ -23,6 +23,11 @@ project rather than the simulator.
   `security-auditor`, `dependency-triager` and `reproducer` were absent from
   `AGENT_SETTINGS`, so `show` never listed them and `set-all` never touched them. The table
   must stay in step with `userConfig` in `plugin.json`; a comment now says so.
+- **The coverage push gate could not be satisfied on the base branch.** Coverage is measured
+  on lines changed against `base_branch`, so on `main` itself the diff is empty, every app is
+  skipped, and the empty result set was reported as `no coverage reports configured` — blaming
+  a configuration that was correct. Nothing changed means nothing can regress: the verdict now
+  passes and says so, and the "not configured" problem is reported only when it is true.
 - **The container-backed test queued behind the unit suite.** Both are the same build tool
   in the same project directory, so sharing level 3 meant blocking on the build tool's
   project lock — parallel in name only, and running a test the unit suite had just run.
