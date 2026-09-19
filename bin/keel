@@ -23,6 +23,7 @@ Flows and state
   keel models show|set-all <model>    subagent models (writes user settings with --yes)
 
 Project setup
+  keel preflight <slug>               prove the machine is ready, then create the branch
   keel discover                       what the repo says about how it runs
   keel ladder [--plan|--resume]       prove every run step, write docs/RUNNING.md
   keel scaffold [compose|dev-container|playwright|smoke|spec|claude-md|all]
@@ -51,6 +52,7 @@ Simulation and hooks
 switch (cmd) {
   case 'hook': hooks.dispatch(rest[0]); break;
   case 'init': cli.init(rest); break;
+  case 'preflight': cli.preflight(rest); break;
   case 'state': cli.stateCmd(rest); break;
   case 'commit': cli.commit(rest); break;
   case 'gate': cli.gate(rest); break;
