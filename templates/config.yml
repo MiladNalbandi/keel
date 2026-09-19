@@ -1,0 +1,68 @@
+# keel configuration. Written by `keel init --write`; edit freely.
+version: 1
+flow_default: full
+
+runtime:
+  services: {{SERVICES}}      # docker | external | none
+  app: host                   # host | container
+  agent: host                 # host | devcontainer
+
+backend:
+  dir: {{BACKEND_DIR}}
+  build: {{BUILD}}
+  migrations: src/main/resources/db/migration
+frontend:
+  dir: {{FRONTEND_DIR}}
+  package_manager: {{PM}}
+  generated: src/api/generated
+contract:
+  file: {{CONTRACT}}
+e2e:
+  dir: {{E2E_DIR}}
+smoke:
+  dir: smoke
+specs:
+  dir: specs
+
+commands:
+  api_compile: {{BUILD}} -q compileKotlin compileTestKotlin
+  api_test_ac: {{BUILD}} -q test --tests '*{AC}*'
+  api_test_module: {{BUILD}} -q test
+  web_typecheck: npx tsc --noEmit
+  web_test_ac: npx vitest run -t {AC}
+  web_test_module: npx vitest run
+  contract_lint: ''
+  coverage: ''
+
+gates:
+  mode: every-ac              # every-ac | end-of-lane | end
+  ai_review_on_skip: false
+  bug_gates: true
+
+loops:
+  stall_repeats: 3
+  flaky_reruns: 1
+  green_author: main          # main | subagent
+
+tests:
+  per_ac_scope: changed-packages
+  module_suite_at: gate       # every-ac | gate | lane-end
+
+coverage:
+  changed_lines: 95
+  changed_branches: 90
+  per_ac: warn
+
+stack:
+  compose: {{COMPOSE}}
+  per_lane_isolation: true
+
+stop_gate:
+  enabled: true
+  max_blocks_per_turn: 1
+
+caps:
+  red_turns: 8
+  green_turns: 15
+  e2e_turns: 40
+  ship_rounds: 2

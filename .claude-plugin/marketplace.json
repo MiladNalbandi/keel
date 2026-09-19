@@ -1,0 +1,11 @@
+{
+  "name": "keel-marketplace",
+  "owner": { "name": "Milad Nalbandi" },
+  "plugins": [
+    {
+      "name": "keel",
+      "source": "./",
+      "description": "Enforced spec and acceptance-criteria workflow for Kotlin/Spring Boot with a TypeScript frontend: RED/GREEN loops, guarded commits, coverage gate, review and ship blueprint."
+    }
+  ]
+}

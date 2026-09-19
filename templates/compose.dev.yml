@@ -1,0 +1,26 @@
+# Dev-container mode: your services plus a container that holds the toolchain.
+# Your own compose.yml is included unchanged.
+include:
+  - compose.yml
+
+services:
+  dev:
+    image: mcr.microsoft.com/devcontainers/java:21
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:cached
+      - /var/run/docker.sock:/var/run/docker.sock   # Testcontainers starts sibling containers
+      - gradle-cache:/root/.gradle
+    environment:
+      TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+      - "5173:5173"
+    command: sleep infinity
+
+volumes:
+  gradle-cache:
