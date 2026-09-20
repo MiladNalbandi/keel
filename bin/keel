@@ -44,7 +44,7 @@ Flows and state
   keel stall [reset]                  repeated-failure counter and the stall ladder
   keel ask <id> --question "..." [--blocking] | --answer "..." [--by user]
   keel ask list|pending|clear <id>    questions keel will not proceed past
-  keel models show|set-all <model>    subagent models (writes user settings with --yes)
+  keel models show|set-all <model> [--effort low|medium|high]   subagent model and effort
 
 Project setup
   keel preflight <slug>               prove the machine is ready, then create the branch
