@@ -73,12 +73,13 @@ Checks and commits
   keel check-size                     escalation triggers on the current branch
 
 Bug hunt
-  keel hunt start [--scope all|diff|<paths>] [--lenses a,b,c] [--fast] [--new]
+  keel hunt start --auto|--semi [--scope all|diff|<paths>] [--lenses a,b,c] [--fast]
   keel hunt lenses [--confirm a,b,c]  the lens set; confirming it opens the sweep
   keel hunt add --lens L --lane api|web|both --json <f>   ingest one hunter's candidates
   keel hunt candidates [--batch]      the next batch of candidates to prove
   keel hunt prove <id> --verdict proven|unproven|false --evidence "..." --repro <f>
   keel hunt group <id...> --cause "..."  one cause, many symptoms
+  keel hunt gate sweep|prove|report approve|reject [--by user]   --semi phase gates
   keel hunt report [--candidates]     the report, or the unverified candidate list
   keel hunt next [--take]             the top group, and the command to start it
   keel hunt close <id> --as fixed|accepted|wontfix --note "..."
