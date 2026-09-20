@@ -48,14 +48,33 @@ job in the fix flow, from the symptom alone, and a test written by you — who h
 theory — is the contamination that separation exists to prevent.
 
 Make the recipe self-contained: the command, the expected result, and the actual one. Someone
-running it a month from now has only this file.
+running it a month from now has only this file — and `keel hunt report` copies it next to the
+report, so whoever you hand that to has only this file too.
+
+**A concurrency or idempotency finding needs a concurrent recipe.** Neither class can be shown by one
+sequential request, and a probe that passes proves nothing about them. Load `keel:debugging`
+`references/reproduce-race.md`, then write something that actually races —
+`seq 8 | xargs -P8 -I{} curl …` — and run it twice. For idempotency, send the *same* request twice
+and count the effects: a correct 409 on the second call is not a bug; a second row is.
 
 ## Severity, for a proven finding only
 
-`low`, `moderate`, `high` or `critical`, judged by **impact and reachability** — what an actor
-can do, and how easily they can reach it. Never by how bad the code looks. An alarming-looking
-function behind an endpoint nobody can call is low; a plain-looking one that hands a caller
-another tenant's data is critical.
+Judge against the rubric, not by feel. `keel hunt prove` prints it on a bad value, and
+`hunt.severity_rubric` is the source of truth:
+
+| | |
+|---|---|
+| **critical** | data loss or corruption · cross-tenant exposure · auth bypass · a silent wrong write |
+| **high** | a 5xx on a documented path · a lost update under ordinary concurrency · a retry that creates duplicates |
+| **moderate** | a wrong status code with otherwise correct behaviour · missing validation with no exploit path |
+| **low** | cosmetic · unreachable in the current code |
+
+**A 5xx in your evidence or your recipe is refused below `high`** — the CLI checks that one clause,
+because it is the one a program can check. If you believe the 5xx is not on a documented path, say so
+in `--evidence`; do not quietly downgrade it.
+
+Reachability still sorts within a row: an alarming-looking function behind an endpoint nobody can
+call is low, and a plain-looking one that hands a caller another tenant's data is critical.
 
 ## Where to run it
 
