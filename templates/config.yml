@@ -83,7 +83,21 @@ setup:
 # A seventh lens is a line here plus a brief in the hunt skill's references/lenses.md — the
 # flow, the guards and the agents do not change.
 hunt:
-  lenses: [security, behavioral, technical, contract-drift, test-integrity, data-migration]
+  lenses: [security, behavioral, technical, concurrency, idempotency, contract-drift, test-integrity, data-migration]
+  # Which half of the tree each lens reads. Two lanes means two hunters, each given half — which is
+  # what keeps a wide sweep affordable. `both` means one agent that must see both sides:
+  # contract-drift's subject is the disagreement between them, so splitting it blinds it.
+  lens_lanes:
+    security: [api, web]
+    behavioral: [web, api]
+    technical: [api, web]
+    concurrency: [api]
+    idempotency: [api, web]
+    contract-drift: [both]
+    test-integrity: [api, web]
+    data-migration: [api]
+  dedup_line_window: 10       # same file within N lines = the same finding, seen twice
+  severity_floor_5xx: high    # a proven 5xx cannot be filed below this
   default_scope: diff         # all | diff | <comma-separated paths>
   max_candidates_per_lens: 12
   prove_concurrency: 4

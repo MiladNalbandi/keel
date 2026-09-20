@@ -38,6 +38,9 @@ Two things to get right, both of them the reason the group exists:
 - **Hand `keel:reproducer` the recipe file, not the `claim`.** The recipe shows the symptom; the
   claim is the lens agent's theory, and an agent that knows the suspected cause writes a test
   confirming the theory instead of one demonstrating the bug.
+- **A finding flagged `needs_e2e` makes phase 4 mandatory.** No end-to-end spec mentions it, so
+  `keel:e2e-author` writes one and runs it before the fix is done — `keel hunt next` says so when it
+  applies. A bug with no regression test is a bug that can come back unnoticed.
 - **The symptoms are regression criteria, not separate work.** Put them in the Gate F plan so
   the one fix is asserted from every angle the hunt saw it from. Fixing them separately is how
   four conflicting edits to one line happen.
