@@ -42,6 +42,8 @@ Flows and state
   keel status                         alias for keel board
   keel todos [--json]                 the flow's steps as a checklist
   keel stall [reset]                  repeated-failure counter and the stall ladder
+  keel ask <id> --question "..." [--blocking] | --answer "..." [--by user]
+  keel ask list|pending|clear <id>    questions keel will not proceed past
   keel models show|set-all <model>    subagent models (writes user settings with --yes)
 
 Project setup
@@ -122,6 +124,7 @@ switch (cmd) {
   case 'pr': cli.prCmd(rest); break;
   case 'triage': cli.triageCmd(rest); break;
   case 'hunt': cli.huntCmd(rest); break;
+  case 'ask': cli.askCmd(rest); break;
   case 'check-size': cli.checkSizeCmd(rest); break;
   case 'models': cli.models(rest); break;
   case 'stall': cli.stall(rest); break;
