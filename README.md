@@ -1,4 +1,4 @@
-# keel 0.11.0
+# keel 0.12.0
 
 An enforced spec-and-acceptance-criteria workflow for a Kotlin + Spring Boot backend with a TypeScript frontend, as a Claude Code plugin. Hooks and a small CLI enforce the loop instead of asking the model to remember it.
 
@@ -60,10 +60,10 @@ Check it loaded: `/plugin` lists keel, and `/keel:status` answers. Then, in your
 
 ## Try it without a project
 
-The plugin ships a simulator that builds a throwaway repo with fake build tools and drives the real hooks and CLI through 192 scenarios:
+The plugin ships a simulator that builds a throwaway repo with fake build tools and drives the real hooks and CLI through 196 scenarios:
 
 ```bash
-node bin/keel simulate            # run every scenario (192)
+node bin/keel simulate            # run every scenario (196)
 node bin/keel simulate RED:       # only the RED-phase scenarios
 node bin/keel simulate --sandbox  # keep a sandbox repo and print how to poke at it
 node bin/keel doctor --hooks      # the always-on guard rules only
@@ -129,7 +129,9 @@ On top of that it adds architecture detection with enforced import boundaries, p
 
 **v0.10 widens the hunt and grades it.** Two new lenses — concurrency and idempotency — and a sweep split by lane, so thirteen hunters each read half the tree. A finding outside a hunter's lane is refused at the ingest; the same bug from two lenses becomes one finding with two witnesses; a proven 5xx cannot be filed below `high`; and every run owns a dated, numbered folder whose report carries the recipes it cites. **189 simulation scenarios.**
 
-**v0.11 adds a lower gear.** `keel ladder --fast` keeps every rung and stops repeating work — it re-uses what already passed and drops a build-tool probe that `compile` subsumes. `keel hunt start --fast` sweeps three lenses instead of eight, and cannot skip the proof: the report still refuses to render while any candidate is unverified, and says which lenses never ran. The knowledge build also shares one explorer map across its five librarians instead of each walking the tree. **192 simulation scenarios.** See `CHANGELOG.md`.
+**v0.11 adds a lower gear.** `keel ladder --fast` keeps every rung and stops repeating work — it re-uses what already passed and drops a build-tool probe that `compile` subsumes. `keel hunt start --fast` sweeps three lenses instead of eight, and cannot skip the proof: the report still refuses to render while any candidate is unverified, and says which lenses never ran. The knowledge build also shares one explorer map across its five librarians instead of each walking the tree. **192 simulation scenarios.**
+
+**v0.12 asks how closely to watch, first.** `keel hunt start` requires `--auto` or `--semi` and refuses without one. `--semi` gates the sweep, the provers and the report, each releasing exactly one thing; `--auto` is the old behaviour, named, and pre-approves those gates as the model — so both reports say which gates no human saw and whether the lens set was reviewed. What is still missing is written down in `docs/BACKLOG.md`. **196 simulation scenarios.** See `CHANGELOG.md`.
 
 **What is known to be missing** is written down in [`docs/BACKLOG.md`](docs/BACKLOG.md): defects found
 and not fixed, work designed and not built, limits kept on purpose, and one inference that has not been

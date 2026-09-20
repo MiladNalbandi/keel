@@ -4,6 +4,39 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.12.0
+
+### Added
+
+- **`keel hunt start` requires `--auto` or `--semi`.** A hunt had one real gate — the lens
+  confirmation — and everything after it ran without asking. That is right for letting it run and
+  wrong for watching it work, and there was no way to ask for the second. The refusal to start *is*
+  the gate: nothing proceeds because no run exists. Deliberately not a `keel ask` blocking question,
+  since those also block `ladder`, `init --write`, `memory update` and `preflight`, and how closely
+  you supervise a hunt should not stop unrelated work.
+- **`--semi` gates each phase**, each releasing exactly one thing: `hunt candidates` and `hunt prove`
+  wait on `gate sweep`, `hunt report` on `gate prove`, `hunt next` on `gate report`.
+  `hunt report --candidates` is never gated — it is what you read *in order to* decide the sweep
+  gate, so gating it would deadlock.
+- **`--auto` is the old behaviour, named**, and pre-approves all three gates as `by: model`, so the
+  record has the same shape either way and the difference is who is named in it.
+- **Both reports say what nobody checked.** In `--auto` the lens set is confirmed by the model, which
+  is a self-answer; `lenses --confirm` takes `--by`, the run records `confirmed_by`, and the banner
+  reads "everything reported was still proved; what no one checked is whether the right things were
+  looked for". An unattributed self-answer is how "this is not a git repository" became a footnote.
+- **`docs/BACKLOG.md`** — what is known to be missing, in four sections whose distinction is the
+  point: a defect behaves wrongly today, a design is worked out and unwritten, a kept limit is a
+  trade somebody chose, and an untested inference has not been run. Every entry names the file it
+  came from.
+
+### Unchanged on purpose
+
+Neither mode touches the proof bar, and neither fixes anything. The output is a report and a
+backlog; findings drain one at a time into `/keel:fix`, where the normal approval flow applies. That
+is why `--auto` is safe to let run: the worst case is time spent and a thin report.
+
+192 -> 196 simulation scenarios.
+
 ## 0.11.0
 
 A lower gear for the two slowest flows, and the map that should have landed in 0.10.
