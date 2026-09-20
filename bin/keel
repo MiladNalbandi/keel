@@ -49,7 +49,7 @@ Flows and state
 Project setup
   keel preflight <slug>               prove the machine is ready, then create the branch
   keel discover                       what the repo says about how it runs
-  keel ladder [--plan|--resume]       prove every run step, write docs/RUNNING.md
+  keel ladder [--plan|--resume|--fast]  prove every run step, write docs/RUNNING.md
   keel scaffold [compose|dev-container|playwright|smoke|spec|claude-md|all]
   keel stack up|down|status|logs|migrate|reset [--lane web]
   keel lane start|status|merge <name> [--background]
@@ -73,7 +73,7 @@ Checks and commits
   keel check-size                     escalation triggers on the current branch
 
 Bug hunt
-  keel hunt start [--scope all|diff|<paths>] [--lenses a,b,c] [--new]
+  keel hunt start [--scope all|diff|<paths>] [--lenses a,b,c] [--fast] [--new]
   keel hunt lenses [--confirm a,b,c]  the lens set; confirming it opens the sweep
   keel hunt add --lens L --lane api|web|both --json <f>   ingest one hunter's candidates
   keel hunt candidates [--batch]      the next batch of candidates to prove

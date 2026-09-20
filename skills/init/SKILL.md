@@ -2,7 +2,7 @@
 name: init
 description: Set up keel in this repository: detect the layout, ask the two runtime questions, prove the project runs, write the runbook and config. Use before the first keel flow.
 disable-model-invocation: true
-argument-hint: "[--write] [--new]"
+argument-hint: "[--write] [--new] [--fast]"
 ---
 
 # keel:init
@@ -57,6 +57,31 @@ After `setup.fix_attempts_per_rung` failures keel raises a blocking question for
 exclude it in `setup.ladder`, or accept it as not-checked. You cannot run the ladder again until it
 is answered, which is the point: a rung that has failed three times is a decision, not a retry.
 
+## 5b. `--fast`, when you want the machine proven and nothing else
+
+A fast init checks **every rung** — `keel ladder --fast` drops no step. It re-uses whatever already
+passed on this machine, and skips the build-tool probe because `compile` resolves the same graph and
+proves more. The runbook says it was a fast run and still lists every rung with its verdict.
+
+What a fast init *does* skip is **step 6 entirely**: no knowledge base. That is all-or-nothing on
+purpose — a half-written `docs/knowledge/` fails `keel memory check`, and a failing knowledge verdict
+blocks every push until the rest arrives. An absent one blocks nothing.
+
+Record the choice rather than leaving it implied:
+
+```
+keel ask knowledge-deferred --question "Build the knowledge base now?" \
+  --because "a fast init skips it, so agents have no project context here until it exists"
+keel ask knowledge-deferred --answer "deferred with --fast" --by user
+```
+
+Then say in the closing message that `keel memory update` builds it when they want it — and that
+until then every flow starts without project context, which is the thing they traded away.
+
+**One trap to name out loud:** a fast init does not bring the stack up. A hunt started straight after
+one has nothing to prove against — `keel hunt start` will record `api: down`, every prover will come
+back `unproven`, and a page of `unproven` reads like "no bugs found". Run `keel stack up` first.
+
 ## 6. Build the knowledge base
 
 Everything an agent needs to work here, under `docs/knowledge/`: architecture and its
@@ -64,10 +89,18 @@ boundaries, the domain's vocabulary, conventions, data and fixtures, integration
 test stand-ins. Detect the architecture first (`keel arch detect`, then `keel arch set`), so
 the architecture and conventions sections describe the style the code actually uses.
 
-Send one **`keel:librarian`** per section, **in parallel** — architecture, domain, conventions,
-data, integrations. Each writes its own file and ends
-`SECTION: <name> claims:<n> cited:<n> unverified:<n>`. Five readers each covering a slice beats one
-trying to hold the whole codebase.
+**Send one `keel:explorer` first, and keep its map.** It returns the file layout, where each kind
+of thing lives, and the patterns worth copying, capped at 60 lines and ending `MAP-END`. Hand that
+same map to every librarian.
+
+This is the difference between a knowledge build that takes four minutes and one that takes nine.
+Without it each of the five librarians walks the whole tree to find its own slice, and they run in
+parallel — so you pay the slowest of five full reads rather than one read plus five focused ones.
+The hunt has always done this for its hunters, for exactly this reason.
+
+Then send one **`keel:librarian`** per section, **in parallel** — architecture, domain, conventions,
+data, integrations — each with the map and its own section. Each writes its own file and ends
+`SECTION: <name> claims:<n> cited:<n> unverified:<n>`.
 
 Two rules make the result worth keeping, and `keel memory check` enforces both:
 
