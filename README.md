@@ -131,4 +131,8 @@ On top of that it adds architecture detection with enforced import boundaries, p
 
 **v0.11 adds a lower gear.** `keel ladder --fast` keeps every rung and stops repeating work — it re-uses what already passed and drops a build-tool probe that `compile` subsumes. `keel hunt start --fast` sweeps three lenses instead of eight, and cannot skip the proof: the report still refuses to render while any candidate is unverified, and says which lenses never ran. The knowledge build also shares one explorer map across its five librarians instead of each walking the tree. **192 simulation scenarios.** See `CHANGELOG.md`.
 
+**What is known to be missing** is written down in [`docs/BACKLOG.md`](docs/BACKLOG.md): defects found
+and not fixed, work designed and not built, limits kept on purpose, and one inference that has not been
+tested. It is kept current because a finding nobody recorded is a finding nobody acts on.
+
 **Known gaps, honestly.** Nothing here has yet run against a real Gradle, Vitest, Docker or `gh` — the simulator drives the real hooks and CLI against fake build tools, which proves the wiring and not the commands. `koverXmlReport` and `vitest run --coverage` are sensible defaults, not verified ones. The run ladder's optional rungs still need per-project commands, and the security auditor is a strong reviewer rather than a proof: the deterministic parts (the secret scan, the dependency gate, the 100% bar on auth paths) are the parts that hold every time.
