@@ -46,7 +46,16 @@ After each rung, record the exact command that worked.
 
 ## 5. When a rung fails
 
-Delegate to `keel:setup-doctor`. Retries that change nothing may run. Anything that changes the machine or repo files needs the user's approval. Never edit application code. After 3 attempts, record the rung as "needs you" and continue.
+Send one `keel:setup-doctor` **per failing rung, in parallel** — a level can fail several at once,
+and the ladder reports all of them precisely so you do not fix one and rediscover the next. Each
+ends `DIAGNOSIS: fixable|needs-you|unknown`.
+
+Retries that change nothing may run. Anything that changes the machine or repo files needs the
+user's approval. Never edit application code.
+
+After `setup.fix_attempts_per_rung` failures keel raises a blocking question for that rung — fix it,
+exclude it in `setup.ladder`, or accept it as not-checked. You cannot run the ladder again until it
+is answered, which is the point: a rung that has failed three times is a decision, not a retry.
 
 ## 6. Build the knowledge base
 
@@ -55,16 +64,50 @@ boundaries, the domain's vocabulary, conventions, data and fixtures, integration
 test stand-ins. Detect the architecture first (`keel arch detect`, then `keel arch set`), so
 the architecture and conventions sections describe the style the code actually uses.
 
-If the `ai-coding-toolkit:project-onboarding` skill is available, delegate the initial build
-to it — it already does parallel-agent onboarding, a knowledge graph and Mermaid diagrams —
-then fit the result to keel's six sections. Otherwise fill `templates/knowledge/` yourself
-from discovery. Either way keel owns every later refresh, through `keel memory update`.
+Send one **`keel:librarian`** per section, **in parallel** — architecture, domain, conventions,
+data, integrations. Each writes its own file and ends
+`SECTION: <name> claims:<n> cited:<n> unverified:<n>`. Five readers each covering a slice beats one
+trying to hold the whole codebase.
 
-This is a deliberate, bounded, init-time-only exception to keel depending on no other
-plugin; nothing at flow time relies on it, and the templates are the fallback.
+Two rules make the result worth keeping, and `keel memory check` enforces both:
+
+- **Every claim carries a backticked `path:line`.** If it cannot be cited, it is not written.
+- **A rule about validation, transactions, error mapping or authorization needs a proof** — a
+  citation into a test or a `.keel/hunt/repro/` recipe — or the literal prefix `unverified:`.
+  A citation proves the code *says* something; only a test proves it *does*.
+
+Then `keel memory check`, and `keel memory update` to record the verdict. Do not skip the check: a
+knowledge base is read back as project authority, and a wrong entry is followed rather than
+looked up.
 
 ## 7. Write it down
 
-Run `keel init --write`, then write `docs/RUNNING.md` with the verified commands, the date, the commit, and the "needs you" list. Add the keel block to CLAUDE.md. Ask before applying test-speed changes (Testcontainers reuse, one shared Spring test context).
+Run `keel init --write`. `keel ladder` writes `docs/RUNNING.md` itself — do not hand-write it, and
+do not edit it; rerun the ladder. Add the keel block to CLAUDE.md. Ask before applying test-speed
+changes (Testcontainers reuse, one shared Spring test context).
 
-Finish with the three ways to start work: `/keel:change` for small work, `/keel:feature` for spec work, `/keel:fix` for bugs — and `/keel:memory` to read the knowledge base back in a later session.
+## 8. Say what you did not check, then hand over
+
+**Do not tell the user the project is healthy.** Every rung is a liveness check: it builds, it
+boots, its own suite passes. Not one of them asks whether an endpoint *behaves correctly*, and a
+repository can pass the whole ladder while returning the wrong status code, exposing another
+tenant's data, or ignoring a validation annotation that was never wired up. `docs/RUNNING.md` says
+this in its own words; say it out loud too, with the count: how many rungs ran, and how many were
+not checked.
+
+Then ask, and record the answer rather than deciding for them:
+
+```
+keel ask audit-now --blocking --by init \
+  --question "The ladder checked liveness only. Run /keel:hunt now to check behaviour?" \
+  --because "nothing so far has exercised any endpoint for correctness"
+```
+
+It is blocking on purpose. A question the model may quietly answer for itself is how "no git
+repository" became a footnote instead of a decision — and answering it counts as answering:
+`keel ask audit-now --answer "skip for now" --by user` is a legitimate outcome, recorded and
+attributed, and `--by model` is visible as a self-answer.
+
+On yes, run `/keel:hunt`. On no, finish with the three ways to start work: `/keel:change` for small
+work, `/keel:feature` for spec work, `/keel:fix` for bugs — and `/keel:memory` to read the knowledge
+base back in a later session.
