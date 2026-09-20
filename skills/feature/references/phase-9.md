@@ -33,7 +33,7 @@ In the `coverage-fix` phase, test files are writable and production code is **de
 
 ## The reviewers
 
-Three at once on the same diff and spec, one lens each — correctness, security, performance (`review.lenses`). Each must end `BLOCKING: yes|no`; the `SubagentStop` hook blocks a reviewer that forgets the line. Apply blocking findings one commit each:
+Three at once on the same diff and spec, one lens each — correctness, security, performance (`review.lenses`). Each must end `BLOCKING: yes|no`; the `SubagentStop` hook asks a reviewer that forgets the line to repeat its findings and add it. Apply blocking findings one commit each:
 
 ```
 keel commit fix AC-00n "review — <what changed>"
