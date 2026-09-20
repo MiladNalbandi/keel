@@ -6,7 +6,8 @@ The section that matters in each is **what a provable candidate looks like**. A 
 is judged by whether a verifier can reproduce it, so a lens that produces well-written unease
 is worse than one that produces three concrete, checkable claims.
 
-Adding a seventh lens is a line in `hunt.lenses` in `.keel/config.yml` and a section here. The
+Adding a lens is a line in `hunt.lenses`, an entry in `hunt.lens_lanes` saying which side of the
+tree it reads, and a section here. The
 flow, the guards, the agents and the CLI do not change.
 
 ---
@@ -83,6 +84,55 @@ is raised at commit, after the port's catch has already returned."* Provable wit
 
 Not a candidate: "this could be refactored". If you cannot say what a caller observes, it is
 not this lens's finding.
+
+---
+
+## concurrency
+
+**Looks for:** what breaks when two callers arrive at once. Read-modify-write with no lock and no
+version column. Check-then-act that is not atomic — `existsById` then `deleteById`, `findByEmail`
+then `save`. A `max + 1` computed in memory and written under a unique constraint. An upsert that is
+really a blind `save()` on an assigned id. Shared mutable state on a request path. A transaction whose
+isolation level cannot hold the invariant the code assumes.
+
+**Look first at:** every `@Transactional` method that reads then writes the same row; every unique
+constraint in the migrations, then who computes the value that fills it; any counter, sequence or
+version number the application maintains itself.
+
+**Load:** `keel:debugging` `references/reproduce-race.md` — the technique for making a race fail on
+demand, and the reason a single sequential request can never show one.
+
+**A provable candidate:** names the two callers and what one of them loses. *"Two concurrent
+`POST /api/websites/{id}/versions` both read `max(version_number)` as 3 and both write 4; the unique
+constraint rejects the loser, which surfaces as a 500 and a lost write."* Provable with eight parallel
+requests — and only with parallel requests, which is why this lens exists separately from `technical`.
+
+Not a candidate: "this isn't thread-safe" with no path where two callers meet.
+
+**Note for whoever proves it:** a recipe here must itself be concurrent. `seq 8 | xargs -P8 -I{} curl
+…` run twice. A sequential probe that passes proves nothing about this class.
+
+---
+
+## idempotency
+
+**Looks for:** what breaks when the *same* caller arrives twice. A `POST` that creates a second row
+on retry. A missing idempotency key where the client may legitimately re-send. A handler on an
+at-least-once queue that is not replay-safe. A double-submitted form that produces two of something.
+A migration that fails or duplicates when run a second time. A `DELETE` whose second call reports an
+error rather than the same success.
+
+**Look first at:** every create endpoint, and ask what a client with a dropped response does next;
+every message handler; the frontend controls that fire a mutation with no in-flight guard.
+
+**Load:** `keel:debugging` `references/reproduce-race.md` for the repeat-until-it-breaks technique.
+
+**A provable candidate:** names the repeat and the divergence. *"`POST /api/users` with an identical
+body twice creates two users; nothing keys on the request, so a client that retries a timed-out call
+silently doubles the row."* Provable by sending the same request twice and counting.
+
+Not a candidate: a naturally idempotent `PUT` you merely dislike. And note that a *correct* 409 on the
+second call is not a bug — the finding is a second **effect**, not a second error.
 
 ---
 
