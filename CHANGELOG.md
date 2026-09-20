@@ -4,6 +4,56 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.11.0
+
+A lower gear for the two slowest flows, and the map that should have landed in 0.10.
+
+### Added
+
+- **`keel ladder --fast` keeps every rung.** "All the rungs, but do not break anything, and make it
+  fast" is the right shape for this, so a fast run removes duplicated work rather than coverage. The
+  rung list is byte-identical either way and a scenario asserts it.
+  - The `dependencies` rung's default is `./gradlew -q help`, which proves the build tool starts —
+    and `compile` then resolves the same graph and proves strictly more. The probe was paying a whole
+    cold-daemon start for a subset of the next rung. Dropped under `--fast` **only** while it is that
+    default; a project that pointed `commands.deps_api` at a real resolution task keeps it, because
+    that one checks something `compile` does not.
+  - `--fast` implies `--resume`, so nothing already proven on this machine is proven again.
+  - The skipped probe reports as `not-checked` with its reason, and the runbook says it was a fast
+    run — a fast ladder cannot read as a full one.
+- **`keel hunt start --fast`** sweeps `hunt.fast_lenses` — security, technical, contract-drift — as
+  five hunters rather than thirteen, against the diff, with half the candidate cap. Concurrency and
+  idempotency are excluded precisely because they are the most expensive to *prove*.
+- **`/keel:init --fast`** runs the fast ladder and defers the knowledge base **entirely**. That is
+  mechanical, not stylistic: a half-written `docs/knowledge/` fails `keel memory check`, and a failing
+  verdict blocks every push, while an absent one blocks nothing. The deferral is recorded through
+  `keel ask` with `--by user` so it lands in the runbook rather than being silent.
+
+### Unbroken
+
+- **The five librarians each walked the whole tree.** The shared explorer map was planned in 0.10 and
+  never implemented, and because the librarians run in parallel the cost was the slowest of five full
+  reads instead of one read plus five focused ones — most of the knowledge build's eight minutes. One
+  `keel:explorer` builds the map and every librarian receives it, which is what the hunt has always
+  done for its hunters. Unconditional, not a fast-mode option: it removes reading, not checking.
+
+### The rule fast mode does not bend
+
+`--fast` narrows **what is looked at**, never **whether a finding is verified**. A fast hunt's report
+still refuses to render while any candidate lacks a verdict, and both the report and the candidate
+page carry a banner naming the lenses that never ran, ending "a short report is not a clean bill of
+health". A hunt that reported unproven findings quickly would be the exact thing 0.8 was built to
+prevent, and worse than no hunt at all, because it would read like one.
+
+### Still not enforced
+
+- **A fast init does not bring the stack up**, so a hunt started straight afterwards has nothing to
+  prove against: `keel hunt start` records `api: down`, every prover returns `unproven`, and a page of
+  `unproven` reads like "no bugs found". The skill says to run `keel stack up` first; nothing makes
+  you.
+
+189 -> 192 simulation scenarios.
+
 ## 0.10.0
 
 0.9.0 went into the field and was watched working. What came back was a list of things a person
