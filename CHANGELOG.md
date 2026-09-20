@@ -105,7 +105,23 @@ question, and nothing that could check a claim.
 - **The ladder still checks liveness only, by design.** Behaviour is `/keel:hunt`'s job, and 0.9's
   contribution is that init says so instead of implying otherwise.
 
-158 -> 177 simulation scenarios.
+### Found by the dry run, not by a scenario
+
+Both of these came out of running 0.9 against a real repository before tagging it, which is the
+same way 0.7's thirteen issues were found.
+
+- **`preflight` read `not-checked` as a failure.** Renaming the `skipped` verdict to `not-checked`
+  left preflight's allowlist naming the old one, so every unconfigured rung reported as "run ladder
+  rungs still failing" and no flow could start.
+- **The ladder did not repair the ignore block**, so `.keel/setup.json` — which the ladder itself
+  writes — still dirtied the tree. `ensureGitignore` was called by `init --write` and `keel hunt
+  start` and not by the command that creates the file.
+
+A file that is already *tracked* stays tracked: gitignore does not apply retroactively, so a repo
+that committed `.keel/setup.json` under an earlier version still needs one `git rm --cached`. keel
+does not do that silently.
+
+158 -> 178 simulation scenarios.
 
 ## 0.8.0
 
