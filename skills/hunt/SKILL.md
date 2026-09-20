@@ -26,8 +26,26 @@ Two rules carry the whole design. Read them before anything else:
 ## 0 — scope
 
 ```
-keel hunt start --scope <all|diff|path,path>        # or --fast
+keel hunt start --semi --scope <all|diff|path,path>     # or --auto; and --fast narrows the lenses
 ```
+
+**Ask this first, before anything else.** `keel hunt start` refuses without a mode, because how
+closely the user wants to watch is the one thing to settle up front:
+
+| | `--auto` | `--semi` |
+|---|---|---|
+| lens set | confirmed by you-the-model, and **marked as a self-answer** | waits for the user |
+| after the sweep | runs on | **gate** — show the candidate page, then wait |
+| before the provers | runs on | **gate** |
+| the report | renders | **gate** |
+
+In `--semi`, `keel hunt candidates`, `hunt prove`, `hunt report` and `hunt next` each refuse until
+`keel hunt gate <sweep|prove|report> approve --by user`. `hunt report --candidates` is never gated —
+it is what the user reads *in order to* decide the sweep gate.
+
+Say plainly that `--auto` is safe to let run: nothing is fixed inside a hunt either way, so the worst
+case is time spent and a thin report. And in `--auto`, tell them what the report will say — that the
+lens set was not reviewed, and which gates no human saw.
 
 `--fast` sweeps `hunt.fast_lenses` only — security, technical and contract-drift, five hunters rather
 than thirteen — against the diff rather than the whole tree, with half the candidate cap. It **does

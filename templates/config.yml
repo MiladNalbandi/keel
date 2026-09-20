@@ -98,6 +98,9 @@ hunt:
     data-migration: [api]
   dedup_line_window: 10       # same file within N lines = the same finding, seen twice
   severity_floor_5xx: high    # a proven 5xx cannot be filed below this
+  # `keel hunt start` requires --auto or --semi. --semi waits at each of these; --auto pre-approves
+  # them as the model and the report says so. There is no default: it is the first thing you decide.
+  gates: [sweep, prove, report]
   default_scope: diff         # all | diff | <comma-separated paths>
   max_candidates_per_lens: 12
   prove_concurrency: 4
