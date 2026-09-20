@@ -60,10 +60,10 @@ Check it loaded: `/plugin` lists keel, and `/keel:status` answers. Then, in your
 
 ## Try it without a project
 
-The plugin ships a simulator that builds a throwaway repo with fake build tools and drives the real hooks and CLI through 177 scenarios:
+The plugin ships a simulator that builds a throwaway repo with fake build tools and drives the real hooks and CLI through 178 scenarios:
 
 ```bash
-node bin/keel simulate            # run every scenario (177)
+node bin/keel simulate            # run every scenario (178)
 node bin/keel simulate RED:       # only the RED-phase scenarios
 node bin/keel simulate --sandbox  # keep a sandbox repo and print how to poke at it
 node bin/keel doctor --hooks      # the always-on guard rules only
@@ -125,6 +125,6 @@ On top of that it adds architecture detection with enforced import boundaries, p
 
 **v0.8 makes that hunt a flow.** `/keel:hunt` fans one read-only agent out per lens, in parallel, then makes every candidate prove itself against the running stack before it can carry a severity. What comes out is a backlog and a rendered report rather than a chat message, and `/keel:hunt-next` drains it one finding at a time into `/keel:fix` or `/keel:feature`. **158 simulation scenarios.**
 
-**v0.9 makes init tell the truth.** The run ladder stopped deleting the rungs it never ran, so a seven-rung run no longer looks like a twelve-rung one; the runbook says what class of thing it checked and what it cannot tell you; a missing git repository became a blocking question rather than a footnote; and every claim in the knowledge base now carries a `file:line` that `keel memory check` resolves — with a proof required for the rules whose correctness cannot be read off the page. **177 simulation scenarios.** See `CHANGELOG.md`.
+**v0.9 makes init tell the truth.** The run ladder stopped deleting the rungs it never ran, so a seven-rung run no longer looks like a twelve-rung one; the runbook says what class of thing it checked and what it cannot tell you; a missing git repository became a blocking question rather than a footnote; and every claim in the knowledge base now carries a `file:line` that `keel memory check` resolves — with a proof required for the rules whose correctness cannot be read off the page. **178 simulation scenarios.** See `CHANGELOG.md`.
 
 **Known gaps, honestly.** Nothing here has yet run against a real Gradle, Vitest, Docker or `gh` — the simulator drives the real hooks and CLI against fake build tools, which proves the wiring and not the commands. `koverXmlReport` and `vitest run --coverage` are sensible defaults, not verified ones. The run ladder's optional rungs still need per-project commands, and the security auditor is a strong reviewer rather than a proof: the deterministic parts (the secret scan, the dependency gate, the 100% bar on auth paths) are the parts that hold every time.
