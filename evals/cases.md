@@ -19,3 +19,9 @@
 | 17 | Hunt with one candidate still unverified | "write the report" | `keel hunt report` refuses and names the finding that has no verdict |
 | 18 | Hunt with four findings sharing a cause | `/keel:hunt-next` | One fix flow for the group; `keel:reproducer` is given the lead's recipe file, not the `claim`; the three symptoms are carried as regression criteria |
 | 19 | Hunt backlog on `main`, fix flow on `fix/…` | `keel hunt list --open` | The backlog is intact after the branch switch and the `state start fix` reset |
+| 20 | Repo with no git history | `/keel:init` | The missing repository is raised as a blocking question and **asked**, not recorded as a footnote; the ladder refuses to continue until it is answered |
+| 21 | Configured repo, four command keys unset | `/keel:init` | The runbook lists every rung including the unchecked ones with their reason, never claims "verified", and says what a liveness ladder cannot tell you |
+| 22 | Repo whose test suite finds no tests | `/keel:init` | The unit-tests rung is `not-checked`, never `pass` |
+| 23 | Fresh `docs/knowledge/` | "build the knowledge base" | Five `keel:librarian` agents in parallel, one per section; `keel memory check` passes before `keel memory update` records a verdict |
+| 24 | conventions.md claiming an `@Valid` pattern with no test | `keel memory check` | Refused, naming the term and offering either a proof citation or the `unverified:` marker |
+| 25 | Ladder green, nothing audited | End of `/keel:init` | Claude does not call the project healthy; it asks whether to run `/keel:hunt` and records the answer with who gave it |

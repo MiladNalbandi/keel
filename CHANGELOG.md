@@ -4,6 +4,109 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.9.0
+
+A field report on `/keel:init`. It reported ten green rungs and a healthy project, then wrote a
+knowledge base recording `@Valid @Min(0) @Max(100)` on a `@RequestParam` as the house pagination
+pattern — on a controller with no `@Validated` on the class, so Spring ignored the annotation
+entirely. The annotation really was on that line. It had never worked, and it was written down as a
+pattern for every future agent to copy.
+
+The same run had no git repository. keel noticed, recorded it in three places, and carried on.
+
+Neither of those is a lapse of attention. There was nothing in keel that could turn a fact into a
+question, and nothing that could check a claim.
+
+### Added
+
+- **`keel ask`** — a question keel will not proceed past. `keel ask <id> --question "…" --blocking`
+  raises one; unanswered, it refuses `keel ladder`, `keel init --write`, `keel memory update` and
+  `keel preflight`, each naming the question, its consequences and the command that clears it.
+  **keel cannot verify that a human answered** — every approval in the system is a token the model
+  can write itself, and this is no different. What it buys is that the question becomes a recorded
+  artifact with consequences rather than a footnote. `--by` defaults to `model` and the output says
+  "recorded as a self-answer", so skipping a question is visible in the artifact instead of
+  invisible in a transcript.
+- **`keel memory check`** — resolves every `path:line` citation in `docs/knowledge/` and refuses a
+  path that is missing or a line past the end of a file; refuses a section with no citations at all;
+  refuses a template placeholder nobody replaced; and refuses a line mentioning
+  `memory.proof_required_terms` unless it cites a test or a `.keel/hunt/repro/` recipe, or carries
+  the prefix `unverified:`. A citation proves the code *says* something; only a test proves it
+  *does*. That is the distinction the field case turned on.
+- **`agents/librarian.md`** (sonnet, high effort) writes one knowledge section with a citation
+  behind every claim; the skill sends five in parallel. One reader trying to hold a whole codebase
+  is how a guess became a rule.
+- **A `git` rung**, first in the ladder, raising the blocking `git-repo` question when there is none.
+- **`keel models --effort`.** Effort was write-once frontmatter: no command read it, no default
+  declared it, no scenario checked it. `show` reports `model/effort`, `set`/`set-all` take
+  `--effort`, `reset` restores both, and a scenario asserts every agent declares a literal one.
+- **`keel hunt candidates [--batch]`**, which makes `hunt.prove_concurrency` a limit the CLI applies
+  rather than a number the skill asked the model to respect. It shipped in 0.8 read by nothing.
+
+### Unbroken — the ladder claimed more than it checked
+
+- **Ten rungs were probably seven.** `optional: !c.<command>` marked a rung optional exactly when it
+  had no command, and the list was then filtered to rungs that had one — so `testcontainers`,
+  `api-boot`, `web-boot` and `smoke` were deleted from the run *and* from the runbook. A seven-row
+  table and a twelve-row table were indistinguishable. Every rung stays now, and an unconfigured one
+  is a `not-checked` row naming the config key that is missing.
+- **The one rung that can see correctness passed on a repository with no tests.** A suite that finds
+  nothing exits 0. keel already carried the phrases — `loops.red_reject` contains `'no tests found'`,
+  which the RED loop consults and the ladder never did.
+- **Lockfile drift passed as a pass.** `frozen-install || loose-install` on one shell line exits 0
+  when the lockfile is stale. The two runs are separate, and the fallback is `needs-you`.
+- **"Dependencies resolve" ran `./gradlew -q help`**, which proves the build tool starts. It is
+  labelled for what it does unless `commands.deps_api` points somewhere stronger.
+- **The runbook asserted a verification it had not performed** — "Verified by keel on <date> at
+  commit <sha>" under a "Verified steps" heading, written precisely when the ladder did not stop,
+  with no row for anything unchecked. It says "Checked by keel", counts what ran against what
+  exists, lists every not-checked rung with its reason, and carries a fixed **"What this does not
+  tell you"** pointing at `/keel:hunt`.
+- **Three config keys were declared and read by nothing.** `setup.ladder` now selects which rungs
+  run and reports the excluded ones; `fix_attempts_per_rung` turns a rung that keeps failing into a
+  blocking question; `max_parallel` had been read by `setup.js` since 0.6 while being declared in no
+  defaults, so it was effectively hardcoded. All three are in the config template now.
+
+### Unbroken — git
+
+- **`preflight` blamed a dirty tree for a missing repository.** `git()` folds stderr into `out`, so
+  `status --porcelain` returned "fatal: not a git repository…" — truthy, one line — and preflight
+  reported "the tree is not clean (1 file(s))". It asks `hasGit` first now and reads through
+  `gitOut`. Three sites that stored that fatal string as a branch name record `null`.
+- **`verify fast` passed vacuously in the words of a real pass.** `changedFiles()` is empty outside a
+  repository for want of git, not because nothing changed. It now says nothing was compared. The
+  comment above `hasGit` has made this exact point since it was written and nothing acted on it.
+
+### Unbroken — the knowledge base
+
+- **`keel memory update` regenerated nothing.** It scaffolded only when the directory was absent,
+  checked that each file existed, and wrote a timestamp. `write()` skips existing files, so
+  "Regenerates the affected sections" was aspirational on any real repository.
+- **It then re-stamped an unread knowledge base as `current`**, because freshness was
+  `verdict.sha === HEAD` and nothing else. The verdict carries a content hash now.
+- **Template placeholders were never substituted.** The knowledge scaffold is a raw byte copy —
+  alone among the template paths in `setup.js`, which all substitute — so `{{ARCH_STYLE}}`,
+  `{{COMMIT}}` and `{{TESTING_SKILL}}` landed in the files literally and stayed.
+- **`keel pr` was not refused on a stale verdict**, though `skills/memory/SKILL.md` had said so
+  since 0.6; `gates.pushBlockers` read coverage and security only.
+- `.keel/setup.json` was written by keel, tracked nowhere and ignored nowhere, so it dirtied
+  `git status` and `preflight` refused — the defect 0.8 fixed for `security.json` and missed here,
+  though `references/runbook.md` already documented the file as uncommitted.
+- Three skills claimed the `SubagentStop` hook **blocks** a missing result line. It deliberately does
+  not: 0.7.0 made it advice because a reply containing only the marker replaces the agent's result.
+
+### Still not enforced
+
+- **keel cannot tell whether a knowledge-base claim is true.** It refuses the claims that are not
+  checkable — a dangling citation, an unfilled placeholder, an unsourced section, an unproven rule
+  about validation or transactions. A well-cited, well-proven, wrong sentence will pass.
+- **Nothing proves a human answered a question.** See `keel ask` above; the honest version of that
+  is attribution, not verification.
+- **The ladder still checks liveness only, by design.** Behaviour is `/keel:hunt`'s job, and 0.9's
+  contribution is that init says so instead of implying otherwise.
+
+158 -> 177 simulation scenarios.
+
 ## 0.8.0
 
 0.7.0 was the answer to a field report: `/keel:init` plus a **manual** bug hunt on a
