@@ -3,7 +3,7 @@ name: memory
 description: Read back what keel knows about this project — architecture, domain vocabulary, conventions, data and integrations — and refresh it. Load when you need project context you do not have, or after /clear, rather than re-deriving it from the code.
 disable-model-invocation: false
 user-invocable: true
-argument-hint: "[show|reload --section <name>|update]"
+argument-hint: "[show|reload --section <name>|check|update]"
 ---
 
 # keel:memory
@@ -60,16 +60,44 @@ keel memory reload --all
 Opt-in, and it warns when the total is large. Reasonable when onboarding to an unfamiliar
 repo; wasteful in the middle of an acceptance criterion.
 
+## Write or rebuild it
+
+Send one **`keel:librarian`** per section, **in parallel** — architecture, domain, conventions,
+data, integrations. Each gets one section and nothing about the others: five readers each covering
+a slice beats one reader trying to hold the whole codebase, and the sections are independent by
+construction. Each writes its own file and ends
+`SECTION: <name> claims:<n> cited:<n> unverified:<n>`.
+
+Give every librarian the same two rules, because they are what make the result worth keeping:
+
+- **Every claim carries a backticked `path:line`.** A claim that cannot be cited is not written.
+- **A rule about validation, transactions, error mapping or authorization needs a proof** — a
+  citation into a test or a `.keel/hunt/repro/` recipe — or the literal prefix `unverified:`.
+  A citation proves the code *says* something; only a test proves it *does*. A repo was once
+  onboarded with `@Valid @Min @Max` recorded as its pagination convention, on a controller with no
+  `@Validated` on the class, so Spring ignored it. The annotation was really on that line.
+
+## Check it
+
+```
+keel memory check
+```
+
+Resolves every citation, refuses a path that is missing or a line past the end of a file, refuses a
+section with no citations at all, refuses a template placeholder nobody replaced, and refuses a
+correctness-affecting rule with neither a proof nor an `unverified:` marker. It cannot tell whether
+a claim is *true* — nothing can — but it refuses the claims that are not even checkable.
+
 ## Refresh it
 
 ```
 keel memory update
 ```
 
-Regenerates the affected sections and writes a verdict keyed to the current commit. This is
-the gated step in `/keel:ship`: `keel pr` is refused while the verdict is missing or stale, so
-the knowledge base cannot quietly rot behind the code. It lands as its own `docs(memory)`
-commit, separate from the reviewed diff.
+Fills the template values keel knows, runs the check, and writes a verdict carrying both the commit
+and a hash of the sections — so a knowledge base nobody touched is reported as stale at a new
+commit rather than re-stamped as current. `keel pr` is refused while that verdict is missing, stale
+or failing. It lands as its own `docs(memory)` commit, separate from the reviewed diff.
 
 ## What is not here
 

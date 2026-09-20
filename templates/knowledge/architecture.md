@@ -2,6 +2,7 @@
 
 Style: **{{ARCH_STYLE}}** ({{ARCH_CONFIDENCE}}, {{ARCH_SOURCE}}) — detected at `{{COMMIT}}`.
 
+> Claims here carry a backticked `path:line`; `keel memory check` resolves every one.
 <when `hybrid_with` is set, say which style prevails in which directory, and that neither is being migrated>
 
 ## Modules

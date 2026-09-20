@@ -4,6 +4,7 @@
 and the business disagree on a word, say so here — that mismatch causes more bugs than any
 missing test.>
 
+> Claims here carry a backticked `path:line`; `keel memory check` resolves every one.
 ## Glossary
 
 <Only terms whose meaning is not obvious from the name, or where code and business differ.

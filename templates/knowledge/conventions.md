@@ -4,14 +4,22 @@ What an agent reads to write code that looks like its neighbours. **Observed fro
 codebase, not aspirational** — if a rule here is not what the code actually does, the code
 wins and this file is wrong.
 
+> **Every claim here carries a citation** — a backticked `path:line`. `keel memory check` resolves
+> each one and refuses this file if a path is missing or the line is past the end. A claim you
+> cannot cite should not be written; "no convention found for X" is a useful sentence.
+>
+> A rule about **validation, transactions, error mapping or authorization** needs more than a
+> citation, because a citation proves the code *says* something and only a test proves it *does*.
+> Cite a test or a `.keel/hunt/repro/` recipe, or prefix the line with `unverified:`.
+
 ## Naming
 
-| Thing | Pattern | Example |
+| Thing | Pattern | Seen at |
 |---|---|---|
-| <controller / endpoint> | {{PATTERN}} | `{{EXAMPLE}}` |
-| <use case / service> | {{PATTERN}} | `{{EXAMPLE}}` |
-| <repository / port> | {{PATTERN}} | `{{EXAMPLE}}` |
-| <test class> | {{PATTERN}} | `{{EXAMPLE}}` |
+| <controller / endpoint> | {{PATTERN}} | `<path:line>` |
+| <use case / service> | {{PATTERN}} | `<path:line>` |
+| <repository / port> | {{PATTERN}} | `<path:line>` |
+| <test class> | {{PATTERN}} | `<path:line>` |
 
 ## Errors
 

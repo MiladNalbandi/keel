@@ -3,6 +3,7 @@
 Migrations live in `{{MIGRATIONS}}`, applied by <Flyway / Liquibase>. An existing migration
 is **immutable** — keel refuses to edit one; add a new file instead.
 
+> Claims here carry a backticked `path:line`; `keel memory check` resolves every one.
 ## Schema
 
 <Tables that carry rules, not every table. For each: what it holds, and the constraint that
