@@ -71,6 +71,14 @@ gates:
   ai_review_on_skip: false
   bug_gates: true             # false, or `keel state start fix --no-gates`, auto-approves R and F
 
+# The run ladder. `ladder: []` runs every rung; listing a subset marks the rest as not-checked
+# rather than hiding them, which is how a seven-rung run used to look like a twelve-rung one.
+setup:
+  ladder: []                  # e.g. [toolchain, dependencies, compile, unit-tests]
+  max_parallel: 4             # rungs of one level at a time
+  fix_attempts_per_rung: 3    # after this many failures the rung becomes a blocking question
+  runbook: docs/RUNNING.md
+
 # /keel:hunt proposes these lenses and asks you to confirm the set before anything fans out.
 # A seventh lens is a line here plus a brief in the hunt skill's references/lenses.md — the
 # flow, the guards and the agents do not change.
