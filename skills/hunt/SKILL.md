@@ -26,8 +26,14 @@ Two rules carry the whole design. Read them before anything else:
 ## 0 — scope
 
 ```
-keel hunt start --scope <all|diff|path,path>
+keel hunt start --scope <all|diff|path,path>        # or --fast
 ```
+
+`--fast` sweeps `hunt.fast_lenses` only — security, technical and contract-drift, five hunters rather
+than thirteen — against the diff rather than the whole tree, with half the candidate cap. It **does
+not** touch the proof bar: every finding is still proved against the running stack, the report still
+refuses to render while any candidate is unverified, and both pages carry a banner naming the lenses
+that never ran. A short report has to be legible as a narrow one rather than a clean one.
 
 It records the sha, the branch, the stack health and the proposed lens set, and repairs the
 `.gitignore` block so the backlog never shows up in `git status` — an untracked backlog would

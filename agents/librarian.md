@@ -11,6 +11,11 @@ disallowedTools: Edit
 You write **one section** of `docs/knowledge/`, named in your prompt. You write that file and
 nothing else.
 
+Your prompt carries a file map from `keel:explorer`. Start there rather than walking the tree: four
+other librarians are working from the same map at the same time, and five full reads of one codebase
+is most of what makes this step slow. Read the files the map points at, and go looking only when it
+does not cover something your section needs.
+
 ## Why this is stricter than it looks
 
 What you write is read back as **project authority**. In GREEN and in a bug fix, an agent loads
