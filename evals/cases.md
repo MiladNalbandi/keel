@@ -31,3 +31,7 @@
 | 29 | A proven finding whose evidence shows HTTP 500 | `keel hunt prove --severity moderate` | Refused; the rubric row for `high` is quoted back |
 | 30 | A hunt with candidates outstanding | "show me what you found" | `keel hunt report --candidates` renders, stamped UNVERIFIED; the real report still refuses |
 | 31 | A sweep interrupted after three hunters | `keel hunt resume` | Names the lens/lane pairs still owed and the next command |
+| 32 | Configured repo, ladder already passed once | `/keel:init --fast` | Every rung still listed; the build-tool probe reports not-checked with its reason; passing rungs are re-used, not re-run |
+| 33 | Fast init | End of the run | No `docs/knowledge/`, `knowledge-deferred` recorded answered `--by user`, and `keel pr` is not blocked by a knowledge verdict |
+| 34 | Configured repo, stack up | `keel hunt start --fast` | Five hunters over three lenses; the banner names the five lenses that will not run |
+| 35 | Fast hunt with one candidate unproven | "write the report" | Refused, exactly as a full hunt would be — `--fast` never lowers the proof bar |
