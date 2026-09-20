@@ -4,6 +4,69 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.10.0
+
+0.9.0 went into the field and was watched working. What came back was a list of things a person
+wanted from it, and underneath the first request was a defect that had been live since the flow
+shipped.
+
+### Unbroken
+
+- **A second hunt overwrote the first hunt's proofs.** `repro/` and `incoming/` were shared across
+  runs while finding ids restart at `F-001` every run, so run 2's `F-001.sh` landed exactly where
+  run 1's proof had been. Every run now owns a directory named for the day and its number —
+  `.keel/hunt/2026-09-20-01/` — and the sha moves out of the id into a field, because an id is for
+  people and a sha is for freshness.
+- **The committed report cited files the reader did not have.** It pointed at
+  `.keel/hunt/repro/F-001.sh`, which is gitignored. `keel hunt report` copies each proven recipe in
+  beside `report.md` and cites it relatively, so "proved by execution" is something the recipient can
+  actually execute.
+- **A severity was whatever the prover felt.** `hunt.severity_rubric` says what each level means, and
+  the one clause a program can check is enforced: a proven finding whose own evidence or recipe shows
+  a 5xx is refused below `high`, quoting the rubric row back.
+
+### Added
+
+- **Two lenses that were missing.** `concurrency` — read-modify-write with no lock or version,
+  check-then-act, `max + 1` under a unique constraint, shared state on a request path.
+  `idempotency` — a POST unsafe to retry, a missing idempotency key, a handler that is not
+  replay-safe, a migration that breaks the second time. Neither is visible to one sequential request,
+  so the prover is told to write a recipe that races and to run it twice; `keel:debugging` already
+  carried `references/reproduce-race.md`.
+- **The sweep splits by lane.** Each lens declares which side of the tree it reads; eight lenses
+  become thirteen hunters, each given half. `contract-drift` is `both` and never split — its subject
+  is the disagreement *between* client and server, so each half of a split would see one side of the
+  thing it exists to find.
+- **Scope forced at the ingest.** `keel hunt add --lane api` classifies every cited path through the
+  same `guards.classify` the write guard uses and refuses a batch containing a file from the other
+  lane. This is where it had to go: `PreToolUse` sees only `tool_name` and `tool_input`, and the
+  subagent payload carries no instance id — so no hook can bind *this* hunter to *these* paths. The
+  `SubagentStart` brief states the rule; the ingest holds anyone to it.
+- **Duplicates merge instead of re-filing.** A candidate landing on the same file within ten lines of
+  an existing finding appends to `also_found_by`. Thirteen hunters find the same defect repeatedly,
+  and two lenses agreeing is worth more than two entries.
+- **A candidate report** — `docs/hunts/<run>/candidates.md`, stamped UNVERIFIED throughout, which
+  renders *while* candidates exist: the one thing the real report refuses to do. It is the page to
+  read when deciding what is worth proving, and it says how much of the sweep it covers.
+- **One fixed block per finding** — Where, What, Impact, Proof, Evidence, Severity, Also by — in both
+  reports, so eight findings are scanned as columns rather than read as eight paragraphs.
+- **Findings no end-to-end spec covers are flagged** and raise the blocking `e2e-cover` question;
+  `keel hunt next` then makes phase 4 of the fix flow mandatory for them. The hunt still writes no
+  test — `keel:e2e-author` does, in the flow where writing one is legal and where the recipe, not the
+  theory, is what it works from.
+- **`keel hunt resume`** — which lens/lane pairs are still owed, how many candidates have no verdict,
+  whether the report is rendered and committed, and the one next command.
+
+### Still not enforced
+
+- **A hook cannot bind a subagent to a path subset.** Stated plainly because the alternative is a
+  scope rule that only sometimes fires. Scope is enforced where keel enforces everything: the write.
+- **Coverage detection answers "no spec references this"**, not "this is untested". It matches an id
+  or a source basename, and a spec that exercises the path without naming it reads as uncovered.
+- **The severity rubric is judged by a model** apart from the 5xx clause. keel cannot weigh impact.
+
+186 -> 189 simulation scenarios.
+
 ## 0.9.0
 
 A field report on `/keel:init`. It reported ten green rungs and a healthy project, then wrote a
