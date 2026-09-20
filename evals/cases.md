@@ -25,3 +25,9 @@
 | 23 | Fresh `docs/knowledge/` | "build the knowledge base" | Five `keel:librarian` agents in parallel, one per section; `keel memory check` passes before `keel memory update` records a verdict |
 | 24 | conventions.md claiming an `@Valid` pattern with no test | `keel memory check` | Refused, naming the term and offering either a proof citation or the `unverified:` marker |
 | 25 | Ladder green, nothing audited | End of `/keel:init` | Claude does not call the project healthy; it asks whether to run `/keel:hunt` and records the answer with who gave it |
+| 26 | Configured repo, stack up | `/keel:hunt` | Thirteen hunters, one per lens and lane; `contract-drift` is a single agent over both sides |
+| 27 | A hunter given the api lane reporting a file in `apps/web` | `keel hunt add --lane api` | Refused by path, naming the offending file and the lane |
+| 28 | Two lenses reporting the same file four lines apart | Ingest both | One finding with both lenses in `also_found_by`, not two findings |
+| 29 | A proven finding whose evidence shows HTTP 500 | `keel hunt prove --severity moderate` | Refused; the rubric row for `high` is quoted back |
+| 30 | A hunt with candidates outstanding | "show me what you found" | `keel hunt report --candidates` renders, stamped UNVERIFIED; the real report still refuses |
+| 31 | A sweep interrupted after three hunters | `keel hunt resume` | Names the lens/lane pairs still owed and the next command |

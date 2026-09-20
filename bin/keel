@@ -28,7 +28,7 @@ const rest = argv.slice(1);
 if (cmd && cmd !== '--help' && cmd !== '-h' && (rest.includes('--help') || rest.includes('-h'))) helpFor(cmd);
 
 function usageText() {
-  return `keel 0.9.0 — enforced spec/AC workflow for Kotlin + TypeScript
+  return `keel 0.10.0 — enforced spec/AC workflow for Kotlin + TypeScript
 
 Flows and state
   keel init [--write] [--new] [--refresh] [--dev-container]
