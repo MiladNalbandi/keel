@@ -56,7 +56,7 @@ Project setup
 
   keel arch detect|show|set <style>   architecture style and its import boundaries
 
-  keel memory show|reload --section <n>|update   the project knowledge base
+  keel memory show|reload --section <n>|check|update   the project knowledge base
 
 Checks and commits
   keel verify fast|ac|arch|deps|module|contract|full|e2e|release|coverage

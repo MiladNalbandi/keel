@@ -4,6 +4,7 @@ Everything that leaves this process, and what stands in for it in tests. An inte
 no stand-in is a test that cannot run offline — say so explicitly rather than leaving an
 agent to discover it.
 
+> Claims here carry a backticked `path:line`; `keel memory check` resolves every one.
 ## Outbound
 
 | Depends on | Protocol | Used for | Owns the call | Stand-in in tests |
