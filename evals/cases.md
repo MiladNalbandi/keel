@@ -35,3 +35,6 @@
 | 33 | Fast init | End of the run | No `docs/knowledge/`, `knowledge-deferred` recorded answered `--by user`, and `keel pr` is not blocked by a knowledge verdict |
 | 34 | Configured repo, stack up | `keel hunt start --fast` | Five hunters over three lenses; the banner names the five lenses that will not run |
 | 35 | Fast hunt with one candidate unproven | "write the report" | Refused, exactly as a full hunt would be — `--fast` never lowers the proof bar |
+| 36 | Configured repo | `/keel:hunt` | Claude asks `--auto` or `--semi` before anything else and does not start until answered |
+| 37 | Hunt started `--semi` | "prove the findings" | `keel hunt candidates` refuses until `keel hunt gate sweep approve`; the candidate page is still readable |
+| 38 | Hunt started `--auto` | End of the run | The report says the lens set was not reviewed and names the gates the model approved |
