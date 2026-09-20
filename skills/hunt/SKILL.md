@@ -59,16 +59,26 @@ skipping the question costs a full sweep, immediately and visibly.
 keel state phase hunt-sweep
 ```
 
-One **`keel:hunter`** per confirmed lens, **in parallel**, each given exactly one brief from
-`references/lenses.md` and **nothing about what the others are looking at**. That isolation is
+One **`keel:hunter`** per lens **and lane**, **in parallel** — `keel hunt lenses --confirm` prints
+the exact list. Eight lenses become thirteen hunters, each reading half the tree, which is what makes
+a sweep this wide affordable. Give each one exactly one brief from `references/lenses.md`, its lane,
+and **nothing about what the others are looking at**. That isolation is
 the same rule `/keel:fix` states for competing investigators, for the same reason: hunters who
 know each other's ground converge on the same obvious three findings and miss the rest.
 
 Each ends `FINDINGS: <n>`. Write each JSON block to `.keel/hunt/incoming/<lens>.json`, then:
 
 ```
-keel hunt add --lens <lens> --json .keel/hunt/incoming/<lens>.json
+keel hunt add --lens <lens> --lane <api|web> --json <file>
 ```
+
+The lane is enforced, not requested: every cited path is classified, and a batch containing a file
+from the other lane is refused whole. `contract-drift` is swept as one agent over both sides —
+splitting it would give each half one side of the disagreement it exists to find.
+
+Duplicates need no thought from you. A candidate landing where another lens already reported is
+merged into that finding with both lenses recorded; two lenses agreeing is worth more than two
+entries.
 
 A lens-supplied severity is dropped here, and you are told it was. Nothing has measured
 anything yet.
@@ -101,7 +111,19 @@ keel hunt prove F-003 --verdict proven --severity high \
   --evidence "..." --repro .keel/hunt/repro/F-003.sh
 ```
 
-A `proven` verdict without a stored recipe is refused. The recipe is the deliverable — it is
+Before you spend anything on proving, render what was proposed:
+
+```
+keel hunt report --candidates
+```
+
+That writes `docs/hunts/<run>/candidates.md`, stamped UNVERIFIED throughout — the page to read when
+deciding what is worth the provers' time. The real report still refuses to render until every
+candidate has a verdict.
+
+A `proven` verdict without a stored recipe is refused, and a severity is judged against
+`hunt.severity_rubric` rather than by feel — a proven 5xx cannot be filed below `high`, and the CLI
+checks that one. The recipe is the deliverable — it is
 what travels into the fix flow — and an evidence paragraph is not one. `unproven` is not a
 polite `false`: it is kept, without a severity, so nobody mistakes it for either a confirmed
 bug or a dismissed one.
@@ -163,6 +185,8 @@ sitting's work, and `gates.bug_gates: false` exists for exactly this.
   `git stash -u`, and it is invisible inside a `keel lane` worktree.
 - `keel hunt list` flags a verdict taken on an older commit. Reprove before acting on it.
 - If the lenses read shallow, `keel models set opus hunter --yes` and sweep again.
+- Lost your place? `keel hunt resume` says which lens/lane pairs are still owed, how many candidates
+  have no verdict, whether the report is rendered and committed, and the next command to run.
 - **What keel cannot enforce:** nothing stops a prover writing to whatever `DATABASE_URL`
   points at. Point it at a disposable stack. The deterministic parts of this flow are the
   refusals — no severity without a verdict, no proof without a recipe, no report with an

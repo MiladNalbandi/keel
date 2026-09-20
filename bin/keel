@@ -84,6 +84,7 @@ Bug hunt
   keel hunt close <id> --as fixed|accepted|wontfix --note "..."
   keel hunt list [--open] [--lens L]  the backlog
   keel hunt status                    counts, groups, and what blocks the report
+  keel hunt resume                    where you were, and the next command
 
 Simulation and hooks
   keel simulate [name] | --sandbox    run the built-in scenarios, or keep a sandbox repo

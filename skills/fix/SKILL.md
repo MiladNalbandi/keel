@@ -119,7 +119,7 @@ keel commit fix BUG-<n> "<what changed>"
 If the fix fails twice, do not try a third time from the same context: `keel state phase
 reset`, save what you learned to the note, `/clear`, and reproduce again.
 
-## 4 — regression E2E, if the bug was user-visible
+## 4 — regression E2E, if the bug was user-visible — or always, if the hunt flagged it
 
 Only when the bug crossed both apps or would be invisible to a unit test. Delegate to
 **`keel:e2e-author`** with the symptom and the fix, then:
