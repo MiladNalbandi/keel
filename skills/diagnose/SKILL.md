@@ -41,7 +41,8 @@ Give each agent the symptom, the evidence so far, and **one** hypothesis to conf
 Do not tell an agent what the others are testing.
 
 Each returns evidence and ends `ROOT-CAUSE: confirmed` or `ROOT-CAUSE: unconfirmed`, and the
-`SubagentStop` hook blocks it if that line is missing.
+`SubagentStop` hook asks for it back if that line is missing — it is advice, not a block, because
+a reply containing only the marker would replace the findings it was protecting.
 
 Load the `keel:debugging` skill for technique: `references/bisect.md` for "when did this
 start", `references/logs-and-traces.md` for reading the failure, and

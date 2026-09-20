@@ -109,7 +109,7 @@ Loaded on demand, one reference at a time: spec authoring, Kotlin/Spring testing
 
 ## Subagents
 
-`keel:reviewer`, `keel:explorer`, `keel:investigator`, `keel:e2e-author`, `keel:implementer`, `keel:test-author`, `keel:reproducer`, `keel:hunter`, `keel:prover`, `keel:lane-runner`, `keel:setup-doctor`, `keel:bulk-reader`, `keel:arch-surveyor`, `keel:security-auditor`, `keel:dependency-triager`. Each model is a plugin setting, so you can put them all on Opus from `/config`.
+`keel:reviewer`, `keel:explorer`, `keel:investigator`, `keel:e2e-author`, `keel:implementer`, `keel:test-author`, `keel:reproducer`, `keel:hunter`, `keel:prover`, `keel:lane-runner`, `keel:setup-doctor`, `keel:bulk-reader`, `keel:arch-surveyor`, `keel:security-auditor`, `keel:dependency-triager`. Each agent declares its own model and effort in its frontmatter; `keel models show|set|set-all` reads and rewrites them.
 
 ## Status
 

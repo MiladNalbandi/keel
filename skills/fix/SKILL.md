@@ -83,7 +83,7 @@ nothing else, and they do not contaminate each other. Do not tell one agent what
 testing.
 
 Each ends `ROOT-CAUSE: confirmed` or `ROOT-CAUSE: unconfirmed`. If three hypotheses come back
-unconfirmed, escalate the model once (`model_investigator` to Opus or Fable) and try the
+unconfirmed, escalate the model once (`keel models set opus investigator --yes`) and try the
 surviving leads again. Still nothing → `/keel:diagnose`, which is built for this.
 
 ## Gate F — the fix plan

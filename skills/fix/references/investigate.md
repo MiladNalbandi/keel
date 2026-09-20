@@ -9,7 +9,7 @@ keel state phase bug-investigate
 
 ## Delegating to `keel:investigator`
 
-Read-only, Opus by default, capped at 40 turns. Give it the symptom, the failing test, and the evidence so far. It returns ranked hypotheses with evidence and ends `ROOT-CAUSE: confirmed` or `ROOT-CAUSE: unconfirmed` — the `SubagentStop` hook blocks it if the line is missing.
+Read-only, Opus by default, capped at 40 turns. Give it the symptom, the failing test, and the evidence so far. It returns ranked hypotheses with evidence and ends `ROOT-CAUSE: confirmed` or `ROOT-CAUSE: unconfirmed` — the `SubagentStop` hook asks for it back if the line is missing.
 
 What it may use:
 

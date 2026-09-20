@@ -79,8 +79,15 @@ anything yet.
 keel state phase hunt-prove
 ```
 
-Bring the stack up first (`keel stack up`). Then one **`keel:prover`** per candidate, up to
-`hunt.prove_concurrency` at a time. Give it the **symptom**, never the `claim` — a prover told
+Bring the stack up first (`keel stack up`). Then ask for a batch and send one **`keel:prover`** per
+candidate in it, in parallel:
+
+```
+keel hunt candidates --batch
+```
+
+It hands out at most `hunt.prove_concurrency` ids at a time, so the batch size is the CLI's decision
+rather than something you have to remember. Give it the **symptom**, never the `claim` — a prover told
 the theory confirms the theory.
 
 | Verdict | Means | Recorded with |
