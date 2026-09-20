@@ -91,23 +91,47 @@ changes (Testcontainers reuse, one shared Spring test context).
 **Do not tell the user the project is healthy.** Every rung is a liveness check: it builds, it
 boots, its own suite passes. Not one of them asks whether an endpoint *behaves correctly*, and a
 repository can pass the whole ladder while returning the wrong status code, exposing another
-tenant's data, or ignoring a validation annotation that was never wired up. `docs/RUNNING.md` says
-this in its own words; say it out loud too, with the count: how many rungs ran, and how many were
-not checked.
+tenant's data, or ignoring a validation annotation that was never wired up.
 
-Then ask, and record the answer rather than deciding for them:
+Raise the question before you write the closing message, so the counts are in front of you:
 
 ```
 keel ask audit-now --blocking --by init \
   --question "The ladder checked liveness only. Run /keel:hunt now to check behaviour?" \
-  --because "nothing so far has exercised any endpoint for correctness"
+  --because "<n> of <n> steps passed; none of them exercised an endpoint for correctness"
 ```
 
 It is blocking on purpose. A question the model may quietly answer for itself is how "no git
-repository" became a footnote instead of a decision — and answering it counts as answering:
-`keel ask audit-now --answer "skip for now" --by user` is a legitimate outcome, recorded and
-attributed, and `--by model` is visible as a self-answer.
+repository" became a footnote instead of a decision.
 
-On yes, run `/keel:hunt`. On no, finish with the three ways to start work: `/keel:change` for small
-work, `/keel:feature` for spec work, `/keel:fix` for bugs — and `/keel:memory` to read the knowledge
-base back in a later session.
+### What to show
+
+Give them what a decision needs: what was checked, what a hunt would cost, and **both** answers as
+real options. Showing the command only for *skip* is a thumb on the scale.
+
+> One thing left, and it is yours to decide.
+>
+> > The ladder checked liveness only. Run `/keel:hunt` now to check behaviour?
+> > because 13 of 13 steps passed, and none of them exercised an endpoint for correctness
+>
+> It builds, it boots, its own suite is green. Nothing so far has asked whether an endpoint
+> returns the right thing.
+>
+> **Run it** — six read-only lenses in parallel, then one verifier per candidate. Nothing is
+> reported until it reproduces against the running stack, and it changes no code. Ten to twenty
+> minutes, mostly waiting on the provers.
+> `keel ask audit-now --answer "yes, run it" --by user`
+>
+> **Skip it** — the backlog stays empty and the runbook records that behaviour was never checked.
+> `keel ask audit-now --answer "skip for now" --by user`
+
+Both are real answers. Say plainly that you cannot answer it for them — once, without repeating
+it — and stop. Do not list the ways to start work yet; that is the *next* message, and only if
+they skip.
+
+### After they answer
+
+- **Yes** → run `/keel:hunt`.
+- **Skip** → now give them the three ways to start: `/keel:change` for small work,
+  `/keel:feature` for spec work, `/keel:fix` for bugs — and `/keel:memory` to read the knowledge
+  base back in a later session.
