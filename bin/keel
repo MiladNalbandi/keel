@@ -27,12 +27,24 @@ const rest = argv.slice(1);
 // Any subcommand, not just argv[0]: `keel ladder --help` must print usage, never run.
 if (cmd && cmd !== '--help' && cmd !== '-h' && (rest.includes('--help') || rest.includes('-h'))) helpFor(cmd);
 
+// Read from the manifest rather than repeating it: this string sat at 0.13.0 across five releases
+// because a hardcoded version is only ever wrong later.
+function version() {
+  try {
+    return JSON.parse(require('fs').readFileSync(
+      require('path').join(__dirname, '..', '.claude-plugin', 'plugin.json'), 'utf8')).version;
+  } catch (e) { return 'unknown'; }
+}
+
 function usageText() {
-  return `keel 0.12.0 — enforced spec/AC workflow for Kotlin + TypeScript
+  return `keel ${version()} — enforced spec/AC workflow for Kotlin + TypeScript
 
 Flows and state
   keel init [--write] [--new] [--refresh] [--dev-container]
   keel state show|start|phase|ac      inspect or move the flow state
+  keel state dep <name> --by user     record a dependency the spec approved
+  keel state ac-done                  single-commit loop: confirm the AC passes
+  keel state ship-skip <step> --reason "..."   record a ship step not run
   keel state red-done                 confirm a real RED for the current AC
   keel state green-done               confirm the AC and suite are green
   keel state repro-done               confirm a bug reproduction
@@ -56,6 +68,7 @@ Project setup
 
   keel arch detect|show|set <style>   architecture style and its import boundaries
 
+  keel memory sections [--confirm a,b|--all|--none]    which sections to build
   keel memory show|reload --section <n>|check|update   the project knowledge base
 
 Checks and commits
@@ -63,6 +76,7 @@ Checks and commits
   keel cover [decide <key> test|delete|accept]  the coverage-fix loop
   keel spec check|show [--path]        spec gaps, and its ASCII drawings
   keel commit <type> <ID> "<msg>"     stage and commit with phase rules enforced
+  keel commit setup|memory|smoke|coverage "<msg>"   the ID-less types
   keel trace [--strict]               AC to tests to commits
   keel audit [--base main]            commit composition and test integrity
   keel unlock <path> --reason "..."   one-phase exception, logged

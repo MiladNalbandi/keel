@@ -26,6 +26,7 @@ The minimum-code rule still governs everything below: **no component, hook, prop
 | A form the user submits | `references/forms.md` |
 | Anything a user operates with a keyboard or screen reader | `references/accessibility.md` |
 | Naming, file layout, imports, formatting arguments | `references/style.md` |
+| SOLID in React, types that make illegal states unrepresentable, hook rules, which patterns earn their keep | `references/design.md` — in `refactor`, or in GREEN when the criterion touches a shape that already exists |
 
 Most `[WEB]` criteria need two: `data.md` plus one of `components.md` or `forms.md`.
 

@@ -45,15 +45,6 @@ committing someone's whole untracked project unasked is not a thing this tool do
 **This must land before the init commit above**: `git add -A` in a repository whose project is
 untracked would sweep the entire codebase into a `docs(…)` commit.
 
-### `keel memory check` is not scoped to a selection
-
-A partial `docs/knowledge/` reads as missing sections, and a failing knowledge verdict blocks **every
-push**. That is why `--fast` had to defer the knowledge base wholesale rather than build two of five
-sections.
-
-**The fix**: `memory.json` gains `selected`. *Missing* means chosen-but-absent; an unchosen section
-reads `not selected`, which is a fact and not a problem. `gates.memoryBlocker` honours it.
-
 ### keel's MCP heuristic lets an orchestrator through
 
 `guards.checkMcp` decides from a name heuristic. Measured against a real flow: it refuses
@@ -67,16 +58,6 @@ lever is an allowlist checked after it, so there is no way to say "never this to
 ---
 
 ## Designed, not built
-
-### A human gate on the knowledge build
-
-`keel memory sections --confirm data,conventions`, modelled on `keel hunt lenses --confirm`: the user
-picks which sections, and one `keel:librarian` is spawned per chosen section and no others. Three
-states that genuinely differ — `null` (never asked; `update` refuses, which is the gate's teeth), `[]`
-(deliberately none, which is what `--fast` becomes), and a list.
-
-**Depends on the scoped `check` above.** Without it, choosing one section costs you every push, so the
-gate would hand the user a knife.
 
 ### `keel hunt regress`
 
@@ -107,6 +88,26 @@ file writes.
 `model` and `effort` are settable. The same frontmatter-rewriting mechanism would cover the other two.
 
 ---
+
+## Shipped since this file was written
+
+### A human gate on the knowledge build — **0.13.0**
+
+`keel memory sections [--confirm a,b | --all | --none]`, modelled on `keel hunt lenses --confirm`:
+the user picks which sections, and one `keel:librarian` is spawned per chosen section and no others.
+Three states that genuinely differ — `null` (never asked; `keel memory update` refuses, which is the
+gate's teeth), `[]` (deliberately none, which is what `--fast` records), and a list.
+
+Its prerequisite shipped with it: **`memory check` is now scoped to the selection.** *Missing* means
+chosen-but-absent; an unchosen section reads `not selected`, which is a fact and not a problem, and
+`gates.memoryBlocker` honours it — so a two-of-five knowledge base no longer costs the push gate.
+
+Two properties worth not regressing, both covered by scenarios:
+
+- **Confirming again adds.** A built section cannot be un-chosen (`--none` refuses while files
+  exist), so re-running `/keel:init` finishes a base over several sittings without orphaning one.
+- **Selection decides what must exist, never what gets checked.** A section on disk is read back as
+  project authority whether or not it was chosen, so an unsourced one is still refused.
 
 ## Limits kept on purpose
 
