@@ -4,6 +4,58 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.57.0
+
+The background lane was built and never wired to the thing that decides which tests run, so it
+worked only by coincidence — and one of its parts was actively wrong.
+
+**A `[WEB]` criterion now runs the web tests.** `currentLane` read `state.lane`, which a default
+flow never moves off `'api'`, so every criterion — layer `[WEB]` included — was verified with the
+backend build. The same read sat in `guards.laneMismatch`, which meant a `[WEB]` criterion was
+*also* refused permission to edit its own test file, and told it was a lane violation. Both now
+ask the criterion's own layer through `state.acLaneOf`. `laneOf` keeps its old meaning — which
+worktree is this — and still keys the Compose project, the port offset and the gate-skip
+bookkeeping, because those are a different question.
+
+**A lane worktree reads its own state.** Every command resolved its root from
+`CLAUDE_PROJECT_DIR` before the working directory, so a keel command run inside a lane found the
+*main* checkout's state file. `findRepoRoot` now prefers the directory it is standing in when
+that directory is a configured keel project — which a lane worktree always is, and an unrelated
+directory is not.
+
+**`lane start` hands the lane a seeded state**: its criteria, its branch, its lane name, and
+`gates.skipped` already set for a background lane. It refuses without an active flow, without
+criteria of its own, and — this one bit in testing — when `.keel/state.json` is not ignored,
+because the lane would otherwise commit its state and collide with the parent's copy on the way
+back. It rolls the worktree and branch back when it refuses.
+
+**`lane merge` folds the lane's work in** rather than dropping it. `verify.trace` recomputes red
+and green by grepping commit subjects, so before the merge a lane's criteria are invisible from
+the parent and `keel pr` blocks on them; after it they are simply done. Merge refuses while
+criteria are unfinished unless forced, deletes the merged branch so the lane name can be reused,
+and prefixes the lane's gate log rather than losing it. Approving the last criterion in this
+session now holds at the gate instead of declaring the flow ready for integration with a lane
+still out.
+
+**`keel:lane-runner` no longer asks for its own worktree.** `isolation: worktree` gave it a
+throwaway checkout that was not the lane's — so its commits landed on a branch `keel lane merge`
+never looks at.
+
+**`keel upgrade [--write]`** brings an older repo forward: it adds config keys this version reads
+but the file predates, migrates state, and syncs the ignore lines. It edits the config as lines
+rather than parsing and re-emitting it, so comments, ordering and every value already set survive
+— a dry run by default, idempotent, and refusing a config newer than the plugin. `version` in the
+config has been an unread field since the beginning; it is now the migration counter, and a
+config behind this build says so at session start.
+
+**`loops.red_author`** exists. The feature skill has documented it since the RED step gained a
+subagent, but it was in neither the defaults nor the template, so `keel:test-author` — a finished
+agent with a hook contract and a model setting — could never be reached.
+
+The simulator's fixture repo now writes the real ignore lines, as `keel init --write` does.
+Without them keel's own per-machine state rode along in commits, which is exactly the failure
+`lane start` now refuses to set up. 241 scenarios, up from 229.
+
 ## 0.56.0
 
 A new hunt lens — **`reachability`** — on by default and in `fast_lenses`, default lane `[api,

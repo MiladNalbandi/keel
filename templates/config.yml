@@ -1,5 +1,5 @@
 # keel configuration. Written by `keel init --write`; edit freely.
-version: 1
+version: 2
 flow_default: full
 
 runtime:
@@ -127,6 +127,7 @@ loops:
   commit_style: paired        # paired | single
   stall_repeats: 3
   flaky_reruns: 1
+  red_author: main            # main | subagent
   green_author: main          # main | subagent
 
 tests:

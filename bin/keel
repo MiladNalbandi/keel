@@ -41,6 +41,7 @@ function usageText() {
 
 Flows and state
   keel init [--write] [--new] [--refresh] [--dev-container]
+  keel upgrade [--write]              add config keys and state fields a newer keel needs
   keel state show|start|phase|ac      inspect or move the flow state
   keel state dep <name> --by user     record a dependency the spec approved
   keel state ac-done                  single-commit loop: confirm the AC passes
@@ -113,6 +114,7 @@ function usage() { process.stdout.write(usageText()); }
 switch (cmd) {
   case 'hook': hooks.dispatch(rest[0]); break;
   case 'init': run(cli.init(rest)); break;
+  case 'upgrade': cli.upgrade(rest); break;
   case 'preflight': cli.preflight(rest); break;
   case 'arch': cli.archCmd(rest); break;
   case 'skills': cli.skillsCmd(rest); break;
