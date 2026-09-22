@@ -1,12 +1,16 @@
-# keel 0.12.0
+# keel
+
+<!-- No version number here on purpose: it sat at 0.13.0 for thirty releases. The version lives
+     in .claude-plugin/plugin.json, `keel --help` reads it from there, and CHANGELOG.md is the
+     history. Same reason the scenario count below says how to get it rather than asserting one. -->
 
 An enforced spec-and-acceptance-criteria workflow for a Kotlin + Spring Boot backend with a TypeScript frontend, as a Claude Code plugin. Hooks and a small CLI enforce the loop instead of asking the model to remember it.
 
 ## What it enforces
 
-- **RED then GREEN, one acceptance criterion at a time.** Production code is blocked while you write the failing test; test files are frozen while you make it pass.
-- **Commit composition.** A `test(AC-003)` commit may not contain production code, and `feat(AC-003)` may not contain tests.
-- **Real red tests.** A failure from a compile error, a Spring context failure or Docker is refused as a setup problem, not accepted as a red test.
+- **RED then GREEN, one acceptance criterion at a time.** Production code is blocked while you write the failing test; test files are frozen while you make it pass. This is the default `paired` loop; `loops.commit_style: single` trades it for one commit per criterion and says so in the PR.
+- **Commit composition.** A `test(AC-003)` commit may not contain production code, and `feat(AC-003)` may not contain tests — in the paired loop.
+- **Real red tests.** A failure from a compile error, a Spring context failure or Docker is refused as a setup problem, not accepted as a red test. The single-commit loop has no RED to verify, which is its stated cost.
 - **No disabled tests.** Adding `@Disabled`, `.skip(`, `.only(`, `xit(` or `assumeTrue(false)` is rejected at the edit.
 - **Secrets stay out.** Reading or printing `.env` is blocked; `keel env` shows variable names and whether they are set.
 - **No push without a coverage verdict** for the current commit.
@@ -15,7 +19,7 @@ An enforced spec-and-acceptance-criteria workflow for a Kotlin + Spring Boot bac
 - **Phase order.** `keel state phase` refuses an illegal transition and names the legal ones, so `spec` cannot jump straight to `green` and skip RED. `--force` is allowed and recorded.
 - **Lane scope.** In RED and GREEN an `[API]` criterion cannot edit frontend code, and vice versa.
 - **No unconfigured checks passing quietly.** A required command that is not set fails its tier and says so; an optional one is reported as skipped. `keel doctor` lists every command key and which tiers need it.
-- **Secrets never reach a commit.** A hardcoded credential is blocked at the *edit*, because removing one from history is a much worse conversation.
+- **Secrets never reach a commit.** A hardcoded credential is caught at the edit, and the staged diff is scanned again at `keel commit` — the edit hook cannot see a shell write, and history is a much worse conversation than a refused commit.
 - **Architecture, once you have chosen one.** Import boundaries are checked on changed files inside `verify fast`, and an architecture reviewer lens runs at ship.
 - **No push with a known vulnerable dependency**, when a manifest or lockfile changed on the branch.
 
@@ -60,10 +64,10 @@ Check it loaded: `/plugin` lists keel, and `/keel:status` answers. Then, in your
 
 ## Try it without a project
 
-The plugin ships a simulator that builds a throwaway repo with fake build tools and drives the real hooks and CLI through 196 scenarios:
+The plugin ships a simulator that builds a throwaway repo with fake build tools and drives the real hooks and CLI through every scenario in `lib/sim.js` — `node bin/keel simulate --list` counts them:
 
 ```bash
-node bin/keel simulate            # run every scenario (196)
+node bin/keel simulate            # run every scenario
 node bin/keel simulate RED:       # only the RED-phase scenarios
 node bin/keel simulate --sandbox  # keep a sandbox repo and print how to poke at it
 node bin/keel doctor --hooks      # the always-on guard rules only
@@ -111,7 +115,7 @@ Loaded on demand, one reference at a time: spec authoring, Kotlin/Spring testing
 
 ## Subagents
 
-`keel:reviewer`, `keel:explorer`, `keel:investigator`, `keel:e2e-author`, `keel:implementer`, `keel:test-author`, `keel:reproducer`, `keel:hunter`, `keel:prover`, `keel:librarian`, `keel:lane-runner`, `keel:setup-doctor`, `keel:bulk-reader`, `keel:arch-surveyor`, `keel:security-auditor`, `keel:dependency-triager`. Each agent declares its own model and effort in its frontmatter; `keel models show|set|set-all` reads and rewrites them.
+`keel:reviewer`, `keel:ac-reviewer`, `keel:explorer`, `keel:investigator`, `keel:e2e-author`, `keel:implementer`, `keel:test-author`, `keel:reproducer`, `keel:hunter`, `keel:prover`, `keel:librarian`, `keel:lane-runner`, `keel:setup-doctor`, `keel:bulk-reader`, `keel:arch-surveyor`, `keel:security-auditor`, `keel:dependency-triager`. Each agent declares its own model and effort in its frontmatter; `keel models show|set|set-all` reads and rewrites them.
 
 ## Status
 
@@ -131,7 +135,7 @@ On top of that it adds architecture detection with enforced import boundaries, p
 
 **v0.11 adds a lower gear.** `keel ladder --fast` keeps every rung and stops repeating work — it re-uses what already passed and drops a build-tool probe that `compile` subsumes. `keel hunt start --fast` sweeps three lenses instead of eight, and cannot skip the proof: the report still refuses to render while any candidate is unverified, and says which lenses never ran. The knowledge build also shares one explorer map across its five librarians instead of each walking the tree. **192 simulation scenarios.**
 
-**v0.12 asks how closely to watch, first.** `keel hunt start` requires `--auto` or `--semi` and refuses without one. `--semi` gates the sweep, the provers and the report, each releasing exactly one thing; `--auto` is the old behaviour, named, and pre-approves those gates as the model — so both reports say which gates no human saw and whether the lens set was reviewed. What is still missing is written down in `docs/BACKLOG.md`. **196 simulation scenarios.** See `CHANGELOG.md`.
+**v0.12 asks how closely to watch, first.** `keel hunt start` requires `--auto` or `--semi` and refuses without one. `--semi` gates the sweep, the provers and the report, each releasing exactly one thing; `--auto` is the old behaviour, named, and pre-approves those gates as the model — so both reports say which gates no human saw and whether the lens set was reviewed. What is still missing is written down in `docs/BACKLOG.md`. **The simulator covers every enforced rule; `keel simulate --list` counts them.** See `CHANGELOG.md`.
 
 **What is known to be missing** is written down in [`docs/BACKLOG.md`](docs/BACKLOG.md): defects found
 and not fixed, work designed and not built, limits kept on purpose, and one inference that has not been

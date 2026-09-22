@@ -10,6 +10,7 @@ The spec gate is the one gate that can never be skipped, so this is the document
 
 | Read this | For |
 |---|---|
+| `references/clarify.md` | **First** — what to ask before any criteria exist, and the identity probe |
 | `references/acceptance-criteria.md` | Numbering, layer tags, what makes one testable |
 | `references/ui-mockup.md` | The wireframe, and the four states it must show |
 | `references/request-path.md` | The backend drawing, and the skeleton per architecture style |

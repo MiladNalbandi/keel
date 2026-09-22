@@ -3,7 +3,7 @@ name: memory
 description: Read back what keel knows about this project — architecture, domain vocabulary, conventions, data and integrations — and refresh it. Load when you need project context you do not have, or after /clear, rather than re-deriving it from the code.
 disable-model-invocation: false
 user-invocable: true
-argument-hint: "[show|reload --section <name>|check|update]"
+argument-hint: "[show|sections|reload --section <name>|check|update]"
 ---
 
 # keel:memory
@@ -12,6 +12,17 @@ argument-hint: "[show|reload --section <name>|check|update]"
 boundaries, the domain's own vocabulary, the conventions that make new code match its
 neighbours, the data and fixture strategy, and the integrations with their test stand-ins.
 `keel init` builds it; `/keel:ship` refreshes it under a gate.
+
+**You choose which sections exist.** `keel memory sections` prints the five, what each is for, and
+which are built; `keel memory sections --confirm conventions,data --by user` records the answer.
+`keel memory update` refuses until it has one — five librarians is the most expensive thing init
+does, and nothing used to ask. A section nobody chose reads `not selected`, which is a fact and not
+a problem, so a partial knowledge base blocks no push. Confirming again **adds**: re-run
+`/keel:init` to finish a base over more than one sitting, and what exists is kept, not rebuilt.
+
+The selection decides what must *exist*. It never decides what gets *checked* — a section that is
+on disk is read back as project authority whether or not it was chosen, so an unsourced one is
+still refused.
 
 Unlike the flow skills this changes nothing in the repo, so it is safe to reach for whenever
 project context is missing.

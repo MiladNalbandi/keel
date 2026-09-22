@@ -8,6 +8,7 @@ import { BookmarkForm } from '../BookmarkForm'
 // Generated from contracts/openapi.yaml — never hand-edited, and a contract change
 // breaks these tests rather than passing silently.
 import { bookmarkSchema } from '../api/generated/schemas'
+import { createBookmark } from '../api/generated/client'
 
 const created = vi.fn()
 
@@ -49,13 +50,13 @@ it('AC-005 saves a valid url and parses the response against the contract', asyn
 })
 
 it('AC-005 parses the created bookmark with the generated zod schema', async () => {
-  const res = await fetch('/bookmarks', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ url: 'https://x.dev' }),
-  })
+  // Through the generated client, not a hand-written fetch: the client is what the app
+  // uses, so this exercises the deserialisation path the feature actually runs on.
+  const bookmark = await createBookmark({ url: 'https://x.dev' })
 
-  // At least one test per endpoint parses the real response shape, so a body mismatch
-  // fails on this side too rather than only in the backend's body test.
-  expect(() => bookmarkSchema.parse(res.json())).not.toThrow()
+  // `parse` returns the value on success and throws on a mismatch, so asserting on what
+  // comes back IS the assertion — there is nothing to wrap in `expect(() => …)`.
+  // (`expect(() => parse(res.json())).not.toThrow()` reads fine and can never pass:
+  //  `res.json()` is a Promise, so parse always throws.)
+  expect(bookmarkSchema.parse(bookmark)).toMatchObject({ url: 'https://x.dev' })
 })

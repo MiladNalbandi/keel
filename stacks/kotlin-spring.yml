@@ -30,7 +30,10 @@ layers:
 commands:
   api_compile: '{BUILD} -q compileKotlin compileTestKotlin'
   api_test_ac: "{BUILD} -q test --tests '*{AC}*'"
-  api_test_module: '{BUILD} -q test'
+  # `test` alone excludes the `integrationTest` source set declared above, so every
+  # @SpringBootTest could sit unrun while the module suite reported green. Gradle skips a task
+  # it does not have, so this is safe on a project without that source set.
+  api_test_module: '{BUILD} -q test integrationTest'
   api_test_pkg: "{BUILD} -q test --tests '{PKG}.*'"
   coverage_api: '{BUILD} -q koverXmlReport'
   static_checks: '{BUILD} -q detekt ktlintCheck'
@@ -68,6 +71,7 @@ devcontainer:
 # Which skill teaches tests for this stack, and which architecture references apply.
 skills:
   testing: keel:kotlin-spring-testing
+  implementation: keel:kotlin-spring-implementation
   architecture: keel:architecture
 architecture_styles: [hexagonal, ddd, layered, mvc]
 

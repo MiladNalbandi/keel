@@ -47,11 +47,32 @@ Say plainly that `--auto` is safe to let run: nothing is fixed inside a hunt eit
 case is time spent and a thin report. And in `--auto`, tell them what the report will say — that the
 lens set was not reviewed, and which gates no human saw.
 
-`--fast` sweeps `hunt.fast_lenses` only — security, technical and contract-drift, five hunters rather
-than thirteen — against the diff rather than the whole tree, with half the candidate cap. It **does
+`--fast` sweeps `hunt.fast_lenses` only — by default exploration, observability, security,
+technical and contract-drift, nine hunters rather than seventeen, though a project may name a
+different set — against the diff rather
+than the whole tree, with half the candidate cap. It **does
 not** touch the proof bar: every finding is still proved against the running stack, the report still
 refuses to render while any candidate is unverified, and both pages carry a banner naming the lenses
 that never ran. A short report has to be legible as a narrow one rather than a clean one.
+
+### One lens only
+
+`--lenses` overrides the selection outright, `--fast` included, so a single lens is a first-class
+run rather than a trimmed sweep:
+
+```
+keel hunt start --auto --lenses exploration --scope all
+```
+
+Reach for this when the question is narrow enough to name — *does the running system misbehave*,
+*has the contract drifted* — rather than sweeping wide and reading a long page for the one answer
+you wanted. Every gate, the proof bar and the banner behave exactly as they do on a full run.
+
+**Pass `--scope` explicitly here.** `--fast` defaults scope to `diff`, which is the wrong instrument
+for a lens that reads no files at all: `exploration` acts on endpoints and routes, so a diff scope
+narrows nothing and only risks a hunter being told to look at files its brief forbids it to read.
+Scope is about which source a hunter may read; for a behavioural lens the answer is none of it, and
+`--scope all` says that without ambiguity.
 
 It records the sha, the branch, the stack health and the proposed lens set, and repairs the
 `.gitignore` block so the backlog never shows up in `git status` — an untracked backlog would
@@ -84,11 +105,58 @@ keel state phase hunt-sweep
 ```
 
 One **`keel:hunter`** per lens **and lane**, **in parallel** — `keel hunt lenses --confirm` prints
-the exact list. Eight lenses become thirteen hunters, each reading half the tree, which is what makes
-a sweep this wide affordable. Give each one exactly one brief from `references/lenses.md`, its lane,
+the exact list. Ten lenses become seventeen hunters, each reading half the tree, which is what makes
+a sweep this wide affordable. Give each one exactly one brief, its lane,
 and **nothing about what the others are looking at**. That isolation is
 the same rule `/keel:fix` states for competing investigators, for the same reason: hunters who
 know each other's ground converge on the same obvious three findings and miss the rest.
+
+### What every hunter prompt carries
+
+A hunter starts with no context. Everything it needs is in the prompt, and a field left out is one
+it will either guess at or work without:
+
+| | |
+|---|---|
+| **Repo root** | the absolute path |
+| **Lens and lane** | `LENS: <name>` / `LANE: <api\|web\|both>` — exactly one of each |
+| **Scope** | `all`, `diff`, or the paths; a `--fast` run is `diff` unless told otherwise |
+| **Cap** | `max_candidates_per_lens`, halved on `--fast`. Over it, the batch is refused whole |
+| **The brief, verbatim** | from `.keel/lenses/` or `references/lenses.md` |
+| **The output contract** | the JSON fields, and that severity is never one of them |
+| **Scratchpad path** | where scripts go, because nothing may be written into the repository |
+| **Base URLs** | for a lens that acts — `exploration`, `observability`, and any lane that drives a browser |
+
+### Name what the environment is, and whose it is
+
+A lens that acts needs to reach something, and **what you hand it is a claim about blast radius**.
+Say plainly what it may touch, how, and whether anything else is using it:
+
+> Postgres at `localhost:5432`, database `<name>` — reachable via
+> `docker exec -i <container> psql -U <user> -d <name>`.
+> **CAUTION: this database is shared with another working copy. Insert your own probe rows
+> freely; do NOT truncate tables or delete rows you did not create.** If you need a genuinely
+> disposable database, create one and apply the migrations to it yourself.
+
+Several briefs say *provable against a disposable database* — `data-migration` in as many words.
+A hunter cannot tell a disposable database from a shared one by looking, so if you do not say, it
+will take the brief at its word and act as though nothing else depends on what it drops. Omitting
+the caution is how a sweep costs someone their data, and keel cannot catch it: the guards stop
+writes to the *repository*, and nothing stops a hunter from reaching whatever connection string it
+was handed.
+
+The same applies to a broker for `messaging`, which will not accept a shared one at all, and to any
+stack where a restart or a filled queue is someone else's problem.
+
+**Where a brief comes from:** `.keel/lenses/<lens>.md` in the project if it exists, otherwise
+`references/lenses.md` here. Check the project first for every lens, not only unfamiliar ones — a
+project may override a stock brief as well as add its own.
+
+This directory is the upgrade-safe place for a project's own lenses. `references/lenses.md` lives
+under a version-pinned plugin path and is replaced wholesale on upgrade, so a lens written into it
+disappears the next time keel updates — silently, because the config line and the lane entry
+survive and only the prose goes. A lens named in `hunt.lenses` with no brief in either place is a
+configuration error worth stopping for, not a hunter to dispatch briefless.
 
 Each ends `FINDINGS: <n>`. Write each JSON block to `.keel/hunt/incoming/<lens>.json`, then:
 

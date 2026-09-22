@@ -10,15 +10,32 @@ keel verify e2e AC-00n
 keel commit e2e AC-00n "<journey>"
 ```
 
-## Before starting
+## Before starting — three things, in order
 
-Check migration drift — stale dev data is the most common cause of a confusing E2E failure:
+**1. The gate right before this phase.** Phase 6.6's full-diff review (`keel:code-reviewer`) and
+its own `e2e-approved` question happen just before `keel state phase e2e` — see the feature
+`SKILL.md`. Do not re-ask it here; it has already been asked by the time this phase starts.
+
+**2. Is the tool even configured?** Check `commands.e2e` and `commands.smoke_e2e` in
+`.keel/config.yml` before delegating — a blank command fails inside `keel:e2e-author` as an
+unexplained shell error, which reads as a broken test rather than a missing tool. If either is
+blank, ask (`keel ask e2e-tool-missing --blocking`) whether to set one up now. **Either answer**
+still ends with `keel:e2e-author` writing and committing the `[E2E]` specs — "no" only means it is
+told not to run them. Say so plainly at the final review and in the PR body: an unrun `@e2e` test
+must never quietly read as a passing one.
+
+**3. Migration drift** — stale dev data is the most common cause of a confusing E2E failure:
 
 ```
 keel stack migrate     # if keel reported pending migrations
 ```
 
 `keel verify e2e` prints a drift note itself when it finds one.
+
+## The gate right after this phase
+
+Before `keel state phase smoke`, ask `smoke-approved --blocking` the same way — proceed, show the
+diff, or stop here. See the feature `SKILL.md` for the exact question.
 
 ## Delegating to `keel:e2e-author`
 

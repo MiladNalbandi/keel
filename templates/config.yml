@@ -83,19 +83,33 @@ setup:
 # A seventh lens is a line here plus a brief in the hunt skill's references/lenses.md — the
 # flow, the guards and the agents do not change.
 hunt:
-  lenses: [security, behavioral, technical, concurrency, idempotency, contract-drift, test-integrity, data-migration]
+  lenses: [exploration, observability, security, behavioral, technical, concurrency, idempotency, contract-drift, reachability, test-integrity, data-migration]
+  # `messaging` ships a brief but stays off here: most projects have no broker, and a lens with
+  # nothing to act on spends a hunter every sweep. Add it, and `messaging: [api]` below, when
+  # there is one — it needs a dedicated broker, never a shared environment.
   # Which half of the tree each lens reads. Two lanes means two hunters, each given half — which is
   # what keeps a wide sweep affordable. `both` means one agent that must see both sides:
   # contract-drift's subject is the disagreement between them, so splitting it blinds it.
   lens_lanes:
+    exploration: [api, web]
+    observability: [api, web]
     security: [api, web]
     behavioral: [web, api]
     technical: [api, web]
     concurrency: [api]
     idempotency: [api, web]
     contract-drift: [both]
+    # Two hunters, each half the target list — reachability's whole brief is a time budget, and
+    # splitting the list in half is the cheapest way to keep it.
+    reachability: [api, web]
     test-integrity: [api, web]
     data-migration: [api]
+  # What `keel hunt start --fast` sweeps. The lenses that carry the most per token: exploration and
+  # observability arrive with proof attached, contract-drift and reachability are both nearly
+  # mechanical (one a static diff, the other one live call per target). concurrency and idempotency
+  # are left out as the most expensive to *prove* — a fast hunt narrows what is looked at, never
+  # whether a finding is verified.
+  fast_lenses: [exploration, observability, security, technical, contract-drift, reachability]
   dedup_line_window: 10       # same file within N lines = the same finding, seen twice
   severity_floor_5xx: high    # a proven 5xx cannot be filed below this
   # `keel hunt start` requires --auto or --semi. --semi waits at each of these; --auto pre-approves
@@ -107,6 +121,10 @@ hunt:
   report_dir: docs/hunts
 
 loops:
+  # paired = test commit then code commit, with red-done proving the test failed first.
+  # single = test and code together, one commit, no red-done. Faster; nothing then proves
+  # the test ever failed, so ship's assertions lens is the only net left.
+  commit_style: paired        # paired | single
   stall_repeats: 3
   flaky_reruns: 1
   green_author: main          # main | subagent
@@ -116,6 +134,10 @@ tests:
   module_suite_at: gate       # every-ac | gate | lane-end
 
 coverage:
+  # `enabled: false` turns the push gate off for a project that measures coverage elsewhere.
+  # Note `gate_commands: []` does NOT do this — an empty list reads as "unset" and falls back
+  # to the defaults, so it looks like an off switch and is not one.
+  enabled: true
   changed_lines: 95
   changed_branches: 90
   per_ac: warn                # off | warn | enforce

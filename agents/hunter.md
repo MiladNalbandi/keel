@@ -35,10 +35,10 @@ One thing: **something a caller can do, and something they then observe.** If yo
 who does what and what comes back, you have a code smell rather than a finding, and a verifier
 will spend a turn discovering that.
 
-Good: "a second `POST /api/websites/{id}/domains` for a hostname that already exists returns
-200 and reassigns it to the new website."
+Good: "a second POST to a nested collection, naming a value already held by a different parent,
+returns 200 and silently reassigns it rather than rejecting it."
 
-Not a finding: "`DomainPortImpl.create` uses `save()`, which is risky."
+Not a finding: "the adapter's create method uses `save()`, which is risky."
 
 The second one might be the *cause* of the first. Say it in `claim`, where it is labelled a
 theory and where nothing downstream is allowed to act on it.
@@ -70,7 +70,7 @@ the codebase. One object per candidate:
 [
   {
     "title": "one line, under 120 characters",
-    "where": ["apps/api/src/main/kotlin/app/DomainPortImpl.kt:35"],
+    "where": ["apps/api/src/main/kotlin/app/<the file>.kt:35"],
     "symptom": "what a caller does and what they observe",
     "claim": "your theory of the cause — labelled as a theory, never carried into the fix",
     "impact": "who is affected and how badly — one line, and be concrete",
