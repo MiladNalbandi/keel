@@ -92,6 +92,128 @@ function buildFlow(state) {
   };
 }
 
+// The flow as the state machine actually is, not flattened to a line. RAILS gives the spine;
+// TRANSITIONS gives the branches the rail cannot express — the repair routes, the amendment path
+// back to spec, the gate's nine outcomes. Geometry is computed here rather than in the page so
+// the layout is deterministic and a scenario can assert it.
+// LEFT is the gutter every off-spine edge bows into. A feature flow puts ~27 curves in there,
+// so it needs room for them to nest rather than overlap into a smear.
+const G = { W: 108, H: 26, ROW: 42, LEFT: 132, GAP: 54, PAD: 16 };
+
+function buildGraph(state, cfg) {
+  const rail = board.RAILS[state.flow];
+  if (!rail || !rail.length) return null;
+  const railRank = new Map(rail.map((n, i) => [n, i]));
+  const single = (((cfg || {}).loops) || {}).commit_style === 'single';
+
+  // A detour is a phase that is on no flow's rail at all — refactor, review-fix, coverage-fix,
+  // reset: states that exist only to repair something and hand back. A phase on ANOTHER flow's
+  // rail is a handoff, not a detour, and drawing it pulls that whole flow in: `gate -> e2e` is
+  // legal from a change flow, and following it rendered the feature pipeline inside the change
+  // graph. It must lead back into this rail, or it is simply an exit.
+  const elsewhere = new Set();
+  for (const [f, names] of Object.entries(board.RAILS)) {
+    if (f === state.flow) continue;
+    for (const n of names) if (!railRank.has(n)) elsewhere.add(n);
+  }
+  const off = [];
+  for (const p of rail) {
+    for (const t of (st.TRANSITIONS[p] || [])) {
+      if (t === 'none' || railRank.has(t) || off.includes(t) || elsewhere.has(t)) continue;
+      if (!(st.TRANSITIONS[t] || []).some((x) => railRank.has(x))) continue;
+      // `ac` is the other loop style. Drawing it in a paired project shows a phase that
+      // project will never enter.
+      if (t === 'ac' && !single) continue;
+      off.push(t);
+    }
+  }
+
+  const rank = new Map(railRank);
+  for (const o of off) {
+    let min = Infinity;
+    for (const p of rail) {
+      if ((st.TRANSITIONS[p] || []).includes(o)) min = Math.min(min, railRank.get(p));
+    }
+    rank.set(o, (min === Infinity ? rail.length : min) + 0.5);
+  }
+  const rows = [...new Set(rank.values())].sort((a, b) => a - b);
+  const rowOf = (n) => rows.indexOf(rank.get(n));
+
+  const legal = new Set(st.TRANSITIONS[state.phase] || []);
+  const taken = new Map();                       // row -> how many side nodes already placed
+  const nodes = new Map();
+  for (const name of [...rail, ...off]) {
+    const row = rowOf(name);
+    const onRail = railRank.has(name);
+    let col = 0;
+    if (!onRail) { col = (taken.get(row) || 0) + 1; taken.set(row, col); }
+    nodes.set(name, {
+      phase: name,
+      label: board.SHORT[name] || name,
+      onRail,
+      row,
+      col,
+      x: G.LEFT + col * (G.W + G.GAP),
+      y: G.PAD + row * G.ROW,
+      current: name === state.phase,
+      legal: legal.has(name),
+      // Positional, like the rail: everything before you on the spine has been passed through.
+      done: onRail && railRank.has(state.phase) && railRank.get(name) < railRank.get(state.phase),
+    });
+  }
+
+  const edges = [];
+  for (const [name, n] of nodes) {
+    for (const t of (st.TRANSITIONS[name] || [])) {
+      const m = nodes.get(t);
+      if (!m) continue;                          // `none` and other flows' phases
+      edges.push(edgePath(n, m, name === state.phase));
+    }
+  }
+
+  let width = 0;
+  for (const n of nodes.values()) width = Math.max(width, n.x + G.W);
+  return {
+    nodes: [...nodes.values()],
+    edges,
+    width: width + G.PAD,
+    height: G.PAD * 2 + (rows.length - 1) * G.ROW + G.H,
+    box: { w: G.W, h: G.H },
+    offRail: off,
+  };
+}
+
+function edgePath(a, b, live) {
+  const midA = a.y + G.H / 2;
+  const midB = b.y + G.H / 2;
+  const cxA = a.x + G.W / 2;
+
+  if (a.col === 0 && b.col === 0) {
+    if (b.row === a.row + 1) {
+      return { kind: 'down', live, from: a.phase, to: b.phase,
+        d: `M ${cxA} ${a.y + G.H} L ${cxA} ${b.y}` };
+    }
+    // Everything else on the spine bows out to the left, deeper the further it reaches, so a
+    // long back-edge cannot be confused with a short one.
+    const span = Math.abs(b.row - a.row);
+    const bulge = Math.min(14 + span * 8, G.LEFT - 8);
+    return { kind: b.row < a.row ? 'back' : 'skip', live, from: a.phase, to: b.phase,
+      d: `M ${a.x} ${midA} C ${a.x - bulge} ${midA} ${b.x - bulge} ${midB} ${b.x} ${midB}` };
+  }
+
+  // Anything touching a side node attaches spine-right to side-left, whichever way it points.
+  const spine = a.col === 0 ? a : b;
+  const side = a.col === 0 ? b : a;
+  const sx = spine.x + G.W;
+  const tx = side.x;
+  const bow = G.GAP * 0.6;
+  const [x1, y1, x2, y2] = a.col === 0
+    ? [sx, midA, tx, midB]
+    : [tx, midA, sx, midB];
+  return { kind: 'side', live, from: a.phase, to: b.phase,
+    d: `M ${x1} ${y1} C ${x1 + (a.col === 0 ? bow : -bow)} ${y1} ${x2 + (a.col === 0 ? -bow : bow)} ${y2} ${x2} ${y2}` };
+}
+
 function buildAcs(state) {
   const ids = st.acList(state);
   const sum = st.acSummary(state);
@@ -269,6 +391,7 @@ function build(cwd, opts = {}) {
     gates: (state.gates || {}).mode || null,
   };
   view.flow = buildFlow(state);
+  view.graph = buildGraph(state, cfg);
   view.acs = buildAcs(state);
   view.current = buildCurrent(state);
   view.agents = buildAgents(cfg, state);
