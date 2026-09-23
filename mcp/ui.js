@@ -70,7 +70,31 @@ section.card{
 .note{color:var(--dim);font-size:11.5px;line-height:1.5;margin-top:12px;
   padding-left:11px;border-left:2px solid var(--border)}
 
-/* flow rail */
+/* flow graph */
+.graph{width:100%;overflow-x:auto}
+.graph svg{display:block;margin:0 auto;max-width:100%;height:auto}
+/* Below this the diagram would have to shrink past legibility — a 740px figure in a 368px
+   column puts the labels at 5px. Keep it at its own size and let the container scroll. */
+@media (max-width:620px){ .graph svg{max-width:none} }
+.g-edge{fill:none;stroke:var(--rail);stroke-width:1.2;opacity:.8}
+/* A forward skip is a legal shortcut you will almost never take; a back edge is a repair loop,
+   which is the structure worth seeing. Rank them so the spine reads before either. */
+.g-edge.skip{opacity:.3}
+.g-edge.back{stroke-dasharray:3 3;opacity:.55}
+.g-edge.side{opacity:.6}
+.g-edge.live{stroke:var(--accent);stroke-width:1.9;opacity:1}
+.g-node rect{fill:var(--panel);stroke:var(--border);stroke-width:1}
+.g-node text{fill:var(--faint);font-size:11px;font-family:inherit}
+.g-node.done rect{stroke:color-mix(in srgb,var(--ok) 55%,transparent)}
+.g-node.done text{fill:var(--ok)}
+.g-node.legal rect{stroke:var(--accent);stroke-width:1.4}
+.g-node.legal text{fill:var(--fg)}
+.g-node.current rect{fill:var(--accent);stroke:var(--accent)}
+.g-node.current text{fill:var(--bg);font-weight:700}
+.g-node.side rect{stroke-dasharray:4 3}
+.glegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:11.5px;color:var(--faint)}
+
+/* flow rail — fallback when a flow has no rail to graph */
 .rail{display:flex;flex-wrap:wrap;gap:3px 0;align-items:stretch}
 .rs{display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:6px;
   color:var(--faint);white-space:nowrap;font-size:12px}
@@ -133,7 +157,7 @@ section.card{
 
 /* status glyphs */
 .g{flex:none;width:12px;display:inline-block;text-align:center}
-.ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+.ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)} .acc{color:var(--accent)}
 .run{color:var(--run)} .faint{color:var(--faint)} .dim{color:var(--dim)}
 
 /* questions + blockers */
@@ -211,14 +235,52 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
   var GLYPH = { done:'\\u2714', current:'\\u25b6', pending:'\\u00b7',
     pass:'\\u2714', fail:'\\u2717', stale:'\\u00b7', none:'\\u00b7', skipped:'\\u2014' };
 
+  // The flow as a graph: the rail is the spine, and every branch TRANSITIONS allows is drawn.
+  // Geometry arrives from the server already solved; this only turns it into elements.
+  function renderGraph(g, phase){
+    var defs = '<defs>' +
+      '<marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">' +
+        '<path d="M0 0 L8 4 L0 8 z" fill="var(--rail)"/></marker>' +
+      '<marker id="ahl" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6.5" markerHeight="6.5" orient="auto">' +
+        '<path d="M0 0 L8 4 L0 8 z" fill="var(--accent)"/></marker>' +
+      '</defs>';
+
+    var edges = g.edges.map(function(e){
+      var cls = 'g-edge ' + e.kind + (e.live ? ' live' : '');
+      return '<path class="' + cls + '" d="' + e.d + '" marker-end="url(#' + (e.live ? 'ahl' : 'ah') + ')"></path>';
+    }).join('');
+
+    var nodes = g.nodes.map(function(n){
+      var cls = 'g-node' + (n.current ? ' current' : n.legal ? ' legal' : n.done ? ' done' : '') +
+        (n.onRail ? '' : ' side');
+      return '<g class="' + cls + '">' +
+        '<rect x="' + n.x + '" y="' + n.y + '" width="' + g.box.w + '" height="' + g.box.h + '" rx="5"></rect>' +
+        '<text x="' + (n.x + g.box.w/2) + '" y="' + (n.y + g.box.h/2 + 0.5) + '" text-anchor="middle" ' +
+          'dominant-baseline="central">' + esc(n.label) + '</text></g>';
+    }).join('');
+
+    return '<div class="graph"><svg viewBox="0 0 ' + g.width + ' ' + g.height + '" ' +
+      'width="' + g.width + '" height="' + g.height + '" role="img" ' +
+      'aria-label="flow graph, current phase ' + esc(phase) + '">' +
+      defs + edges + nodes + '</svg></div>' +
+      '<div class="glegend">' +
+        '<span class="acc">\\u25a0 you are here</span>' +
+        '<span class="acc">\\u25a1 where you may go next</span>' +
+        '<span class="ok">\\u25a1 passed through</span>' +
+        '<span>dashed box = a detour, not on the rail</span>' +
+        '<span>dashed line = a route back</span>' +
+      '</div>';
+  }
+
   function renderFlow(v){
     var f = v.flow; if (!f) return '';
-    var rail = f.steps.map(function(s){
-      return '<span class="rs ' + s.state + '"><i class="g">' + GLYPH[s.state] + '</i>' + esc(s.label) + '</span>';
-    }).join('');
     var tag = f.onRail ? ('phase ' + (f.index+1) + ' of ' + f.total)
                        : (esc(f.phase) + ' \\u2014 off the rail');
-    var body = '<div class="rail">' + rail + '</div>';
+    var body;
+    if (v.graph) body = renderGraph(v.graph, f.phase);
+    else body = '<div class="rail">' + f.steps.map(function(s){
+      return '<span class="rs ' + s.state + '"><i class="g">' + GLYPH[s.state] + '</i>' + esc(s.label) + '</span>';
+    }).join('') + '</div>';
     if (f.phaseBlurb) body += note(f.phaseBlurb);
     return card('flow \\u00b7 ' + f.flow, tag, body);
   }
