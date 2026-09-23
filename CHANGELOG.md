@@ -4,6 +4,21 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.58.0
+
+**The flow card now draws the state machine, not a straight line.** It used to render the flow
+as one ordered rail — the spine only, no room to show that a gate has nine outcomes, that a wrong
+spec sends you back from RED, or that ship's failures leave through review-fix or coverage-fix and
+come back. `TRANSITIONS` already held the real graph; now the card draws it: the rail stays the
+spine, every branch `TRANSITIONS` allows is an edge, the current phase is lit and its legal moves
+are outlined.
+
+**`CLAUDE.md`** now tells Claude how to explain things in this project: simple English, a diagram
+when it helps, written for a junior developer. Applies to explanations only — code and commit
+messages stay normal.
+
+242 scenarios, up from 241.
+
 ## 0.57.0
 
 The background lane was built and never wired to the thing that decides which tests run, so it

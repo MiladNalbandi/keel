@@ -1,7 +1,7 @@
 {
   "name": "keel",
   "displayName": "keel",
-  "version": "0.57.0",
+  "version": "0.58.0",
   "description": "Spec-and-AC driven workflow for Kotlin/Spring Boot backends with a TypeScript frontend: enforced RED/GREEN loops, guarded commits, review and ship blueprint.",
   "author": {
     "name": "Milad Nalbandi"
