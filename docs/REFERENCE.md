@@ -603,6 +603,23 @@ tree. `check` is what the push gate consults.
 flow, phase, ACs, agents in flight, stalls, flaky tests, and what currently blocks a push. `--watch`
 keeps it live. `keel todos` gives the same thing as a checklist.
 
+**The dashboard — every project on one page.** The `keel_dashboard` MCP tool opens a local page
+(`http://127.0.0.1:7391`, or `KEEL_DASHBOARD_PORT`) that updates as the flow moves. There is one page per
+machine, not one per session. The first session that opens it runs the hub, and every other session
+hands back the same URL. The page opens on "all projects": one card per keel project with its flow, phase,
+AC progress and a red mark when a blocking question waits on you. Click a card or a tab to see that
+project's flow graph, criteria, agents, feed and push blockers.
+
+The hub knows only the projects on the machine's list, `~/.keel/projects.json` (or `KEEL_HOME`). A project
+joins the list when a session starts in it. It drops off when its `.keel/config.yml` is gone, when it has
+not been seen for 14 days, or when you run `keel projects forget <name>`. Nothing is registered over
+HTTP, and a request with a foreign `Host` header is refused. When the hub's session ends, any other session
+that has opened the dashboard takes the port over within about ten seconds. The open page reconnects by
+itself.
+
+`keel projects` and the `keel_projects` tool list the same projects in text. Every other `keel_*` tool
+takes `project: "<name>"` to look at a project other than the session's own.
+
 **Reference skills the flows load.** Ten skills that contain no commands, only patterns:
 `architecture`, `debugging`, `kotlin-spring-testing`, `playwright`, `security`, `spec-authoring`,
 `web-implementation`, `web-testing`. They are why generated tests look like the house style rather than
@@ -854,6 +871,7 @@ Flows and state
   keel status                         alias for keel board
   keel todos [--json]                 the flow's steps as a checklist
   keel stall [reset]                  repeated-failure counter and the stall ladder
+  keel projects [forget <name>]       every keel project on this machine, as the dashboard shows them
   keel ask <id> --question "..." [--blocking] | --answer "..." [--by user]
   keel ask list|pending|clear <id>    questions keel will not proceed past
   keel models show|set-all <model> [--effort low|medium|high]

@@ -192,6 +192,29 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
 .flowlist .fl{display:flex;gap:14px}
 .flowlist .fl code{flex:none}
 .flowlist .fl span{color:var(--dim)}
+
+/* project tabs — one hub serves every keel project on the machine */
+nav.tabs{display:flex;gap:5px;overflow-x:auto;margin:-4px 0 14px;padding-bottom:2px}
+nav.tabs a{flex:none;display:inline-flex;align-items:center;gap:7px;padding:4px 12px;border-radius:99px;
+  border:1px solid var(--border);background:var(--panel);color:var(--dim);text-decoration:none;font-size:12px}
+nav.tabs a:hover{color:var(--fg)}
+nav.tabs a[aria-current="page"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+nav.tabs a .n{font-weight:700;color:var(--bad)}
+.pd{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none;display:inline-block}
+.pd.run{background:var(--run)} .pd.wait{background:var(--bad)} .pd.stall{background:var(--warn)}
+
+/* overview */
+.projects{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+a.pc{display:block;min-width:0;color:inherit;text-decoration:none;background:var(--panel);
+  border:1px solid var(--border);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow)}
+a.pc:hover{border-color:var(--accent)}
+a.pc.wait{border-color:var(--bad)}
+.pc .pn{display:flex;align-items:center;gap:8px;font-weight:700;min-width:0}
+.pc .pn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc .pr{color:var(--faint);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.pc .pf{margin-top:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc .pw{margin-top:10px;color:var(--bad);font-weight:600;font-size:12px}
+.pc .pm{margin-top:8px;color:var(--faint);font-size:11.5px}
 </style>
 </head>
 <body>
@@ -203,6 +226,9 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
   var filter = 'all';
   var connected = false;
   var last = null;
+  var projects = [];
+  var selected = location.hash.slice(1) || null;
+  var es = null;
 
   function esc(s){
     return String(s == null ? '' : s)
@@ -463,12 +489,74 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
       '<div class="flowlist">' + flows + '</div>' + lf + '</div>';
   }
 
+  function liveTag(){
+    return '<span class="live' + (connected ? '' : ' off') + '"><i class="dot"></i>' +
+      (connected ? 'live' : 'offline') + '</span>';
+  }
+
+  function dotClass(p){ return p.blocking ? 'wait' : p.stalled ? 'stall' : p.active ? 'run' : ''; }
+
+  function ago(iso){
+    var t = Date.parse(iso);
+    return isNaN(t) ? '' : dur(Math.max(0, Math.round((Date.now() - t) / 1000))) + ' ago';
+  }
+
+  // One project needs no switcher; the chrome appears once there is something to switch to.
+  function tabs(){
+    if (projects.length < 2 && selected) return '';
+    return '<nav class="tabs"><a href="#"' + (selected ? '' : ' aria-current="page"') + '>all projects</a>' +
+      projects.map(function(p){
+        return '<a href="#' + esc(p.id) + '" title="' + esc(p.root) + '"' +
+          (p.id === selected ? ' aria-current="page"' : '') + '><i class="pd ' + dotClass(p) + '"></i>' +
+          esc(p.name) + (p.blocking ? ' <span class="n">' + p.blocking + '</span>' : '') + '</a>';
+      }).join('') + '</nav>';
+  }
+
+  function projectCard(p){
+    var body;
+    if (p.error) body = '<div class="pf bad">' + esc(p.error) + '</div>';
+    else if (!p.active) body = '<div class="pf dim">idle \\u2014 no flow running</div>';
+    else {
+      var acs = p.acs && p.acs.total ? p.acs : null;
+      body = '<div class="pf"><span class="acc">' + esc(p.flow) + '</span> \\u00b7 <b>' + esc(p.phaseLabel || p.phase) + '</b> ' +
+          '<span class="faint">' + (p.step >= 0 ? 'step ' + (p.step + 1) + ' of ' + p.steps : 'off the rail') + '</span></div>' +
+        (p.title !== p.flow || p.current
+          ? '<div class="pr">' + esc([p.title !== p.flow ? p.title : null, p.current].filter(Boolean).join(' \\u00b7 ')) + '</div>' : '') +
+        (acs ? '<div class="progress"><i style="width:' + Math.round(acs.done / acs.total * 100) + '%"></i></div>' +
+          '<div class="pm">' + acs.done + '/' + acs.total + ' ACs' +
+          (p.agents ? ' \\u00b7 ' + p.agents + ' agent' + (p.agents > 1 ? 's' : '') + ' running' : '') + '</div>' : '');
+    }
+    if (p.blocking) body += '<div class="pw">\\u25b8 waiting on you \\u00b7 ' + p.blocking + ' question' + (p.blocking > 1 ? 's' : '') + '</div>';
+    else if (p.stalled) body += '<div class="pw"><span class="warn">stalled on the same failure</span></div>';
+    var meta = (p.lastAt ? 'last activity ' + ago(p.lastAt) : 'no activity yet') +
+      (p.mismatch ? ' \\u00b7 <span class="warn">last opened by keel ' + esc(p.keel) + '</span>' : '');
+    return '<a class="pc' + (p.blocking ? ' wait' : '') + '" href="#' + esc(p.id) + '">' +
+      '<div class="pn"><i class="pd ' + dotClass(p) + '"></i><span>' + esc(p.name) + '</span></div>' +
+      '<div class="pr" title="' + esc(p.root) + '">' + esc(p.root) + '</div>' + body +
+      '<div class="pm">' + meta + '</div></a>';
+  }
+
+  function renderOverview(){
+    var waiting = projects.filter(function(p){ return p.blocking; }).length;
+    var running = projects.filter(function(p){ return p.active; }).length;
+    var head = '<header class="bar"><span class="brand"><span class="mark">\\u25b2</span> keel</span>' +
+      '<h1>' + projects.length + ' project' + (projects.length === 1 ? '' : 's') + '</h1>' +
+      '<div class="meta"><span><b>' + running + '</b> running</span>' +
+      (waiting ? '<span class="bad"><b class="bad">' + waiting + '</b> waiting on you</span>' : '') +
+      liveTag() + '</div></header>';
+    var body = projects.length
+      ? '<div class="projects">' + projects.map(projectCard).join('') + '</div>'
+      : '<div class="center"><div class="big">No keel projects yet.</div>' +
+        '<div class="dim">A project joins this page when a Claude session starts in it.</div></div>';
+    app.innerHTML = head + tabs() + body;
+  }
+
   function header(v){
     var h = v.header;
-    var live = '<span class="live' + (connected ? '' : ' off') + '"><i class="dot"></i>' +
-      (connected ? 'live' : 'offline') + '</span>';
+    var live = liveTag();
     var meta = h
-      ? '<span>lane <b>' + esc(h.lane) + '</b></span>' +
+      ? (v.name && projects.length > 1 ? '<span>project <b>' + esc(v.name) + '</b></span>' : '') +
+        '<span>lane <b>' + esc(h.lane) + '</b></span>' +
         (h.size ? '<span>flow <b>' + esc(h.size) + '</b></span>' : '') +
         (h.gates ? '<span>gates <b>' + esc(h.gates) + '</b></span>' : '') +
         (v.head ? '<span>head <b>' + esc(v.head) + '</b></span>' : '')
@@ -479,17 +567,16 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
   }
 
   function render(v){
-    last = v;
     if (v.error){
-      app.innerHTML = header(v) + card('error', null, '<div class="bad">' + esc(v.error) + '</div>');
+      app.innerHTML = header(v) + tabs() + card('error', null, '<div class="bad">' + esc(v.error) + '</div>');
       return;
     }
     if (!v.active){
-      app.innerHTML = header(v) + renderQuestions(v) + renderIdle(v);
+      app.innerHTML = header(v) + tabs() + renderQuestions(v) + renderIdle(v);
       bind();
       return;
     }
-    app.innerHTML = header(v) +
+    app.innerHTML = header(v) + tabs() +
       renderQuestions(v) +
       renderFlow(v) +
       '<div class="grid">' + (renderAcs(v) || renderHunt(v) || '') + (renderCurrent(v) || renderAgents(v)) + '</div>' +
@@ -529,17 +616,52 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
     return copy;
   }
 
-  function refetch(){ if (last) render(applyFilter(last)); }
+  // last is always the unfiltered frame: filtering the stored copy lost events for good the
+  // moment you picked a narrower filter and went back to "all".
+  function refetch(){ draw(); }
 
-  var es = new EventSource('/events');
-  es.onopen = function(){ connected = true; };
-  es.onerror = function(){ connected = false; if (last) render(applyFilter(last)); };
-  es.onmessage = function(m){
-    connected = true;
-    var v;
-    try { v = JSON.parse(m.data); } catch (e) { return; }
-    render(applyFilter(v));
-  };
+  function draw(){
+    if (!selected) renderOverview();
+    else if (last) render(applyFilter(last));
+  }
+
+  // The overview stream carries only the project list; a project's stream carries its view too.
+  function connect(){
+    if (es) es.close();
+    connected = false;
+    es = new EventSource(selected ? '/events?project=' + encodeURIComponent(selected) : '/events?overview=1');
+    es.onopen = function(){ connected = true; };
+    es.onerror = function(){
+      connected = false;
+      // CLOSED rather than reconnecting means the hub answered and refused: that project is not on
+      // its list (any more). Anything else is the hub going away, and the browser retries.
+      if (es.readyState === 2 && selected){ location.hash = ''; return; }
+      draw();
+    };
+    es.addEventListener('projects', function(m){
+      connected = true;
+      var d;
+      try { d = JSON.parse(m.data); } catch (e) { return; }
+      projects = d.projects || [];
+      if (selected && !projects.some(function(p){ return p.id === selected; })){ location.hash = ''; return; }
+      draw();
+    });
+    es.onmessage = function(m){
+      connected = true;
+      var v;
+      try { v = JSON.parse(m.data); } catch (e) { return; }
+      last = v;
+      draw();
+    };
+  }
+
+  window.addEventListener('hashchange', function(){
+    selected = location.hash.slice(1) || null;
+    last = null;
+    app.innerHTML = '<div class="center"><div class="big">connecting\\u2026</div></div>';
+    connect();
+  });
+  connect();
 })();
 </script>
 </body>
