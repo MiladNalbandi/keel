@@ -4,6 +4,36 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.59.0
+
+**One dashboard for every project on the machine.** Each session starts its own MCP server, and
+each server used to open its own dashboard on the next free port, blind to the others: four
+projects meant four tabs and nowhere that said which one was waiting on you. Now the first server
+to take the port is the hub. It serves every keel project on the machine's list, and every other
+session hands back the same URL. The page opens on "all projects", with one card per project
+showing its flow, phase, AC progress and a red mark for a blocking question. A tab per project
+leads to that project's full view. When the hub's session ends, another session that has opened
+the dashboard takes the port over, and the list brings every project back.
+
+**`~/.keel/projects.json`** (or `KEEL_HOME`) is that list. The session-start hook and the MCP server
+add their project. Writes are read-merge-write under a lock file and land by rename, so eight
+sessions starting together lose no entry. A project drops off when its `.keel/config.yml` is gone,
+when it has not been seen for 14 days, or with `keel projects forget <name>`. The hub only reads the
+list, so no page can point it at a directory, and it refuses a foreign `Host` header.
+
+**`keel projects` and the `keel_projects` tool** list the same projects in text. Every other `keel_*`
+tool takes `project: "<name>"`, so one session can ask how another is doing.
+
+**The MCP server starts when keel is opened as a project.** `.mcp.json` pointed at
+`${CLAUDE_PLUGIN_ROOT}/mcp/server.js`, and only a plugin install sets that variable. Opened as a plain
+project, the path was `/mcp/server.js` and the server died with "Connection closed". It now falls
+back to the working directory.
+
+**The feed filter no longer eats events.** The page stored the *filtered* frame, so picking
+`failures` and going back to `all` showed only the failures until the next update.
+
+245 scenarios, up from 242.
+
 ## 0.58.0
 
 **The flow card now draws the state machine, not a straight line.** It used to render the flow

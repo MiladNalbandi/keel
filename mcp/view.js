@@ -414,6 +414,63 @@ function build(cwd, opts = {}) {
   return view;
 }
 
+// One project's card on the overview: enough to tell which of several needs you, without paying
+// for the full view — no git, no gate verdicts, no guard matrix.
+function summary(cwd) {
+  const cfg = config.load(cwd || process.cwd());
+  const state = st.read(cfg);
+  const active = st.active(state);
+  const questions = buildQuestions(cfg);
+  const lastEvent = events.read(cfg, { limit: 1 })[0] || null;
+  const out = {
+    root: cfg.root,
+    configured: !!cfg.configured,
+    active,
+    blocking: questions.filter((q) => q.blocking).length,
+    questions: questions.length,
+    lastAt: lastEvent ? lastEvent.at : null,
+    lastFailure: state.last_failure || null,
+    stalled: !!(state.stall && state.stall.count > 1),
+  };
+  if (!active) return out;
+  const sum = st.acSummary(state);
+  const rail = board.RAILS[state.flow] || [];
+  return Object.assign(out, {
+    flow: state.flow,
+    phase: state.phase,
+    phaseLabel: board.SHORT[state.phase] || state.phase,
+    step: rail.indexOf(state.phase),
+    steps: rail.length,
+    title: state.spec ? path.basename(state.spec) : state.flow,
+    current: state.current || null,
+    acs: { done: sum.done, total: sum.total },
+    agents: (() => { try { return (st.agentsRunning(state) || []).length; } catch (e) { return 0; } })(),
+  });
+}
+
+function summaryLine(p, width) {
+  const name = p.name.padEnd(width);
+  if (p.error) return `${name}  unreadable: ${p.error}`;
+  const wait = p.blocking ? `  WAITING ON YOU (${p.blocking})` : p.stalled ? '  stalled' : '';
+  if (!p.active) return `${name}  idle${wait}`;
+  const acs = p.acs && p.acs.total ? `  ${p.acs.done}/${p.acs.total} ACs` : '';
+  const cur = p.current ? `  ${p.current}` : '';
+  return `${name}  ${p.flow} · ${p.phase}${acs}${cur}${wait}`;
+}
+
+// Every project on the machine's list, one line each; `hereId` gets a star. Shared by
+// `keel projects` and the keel_projects tool, so the two cannot disagree.
+function projectsText(hereId) {
+  const all = require('../lib/projects').list();
+  if (!all.length) return 'no keel projects on this machine yet. A project joins the list when a session starts in it.';
+  const width = Math.max(...all.map((p) => p.name.length));
+  return all.map((p) => {
+    let sum;
+    try { sum = summary(p.root); } catch (e) { sum = { error: (e && e.message) || String(e) }; }
+    return (p.id === hereId ? '* ' : '  ') + summaryLine(Object.assign({}, sum, p), width);
+  }).join('\n');
+}
+
 function lastArchived(cfg) {
   try {
     const d = path.join(cfg.root, '.keel', 'archive');
@@ -439,4 +496,4 @@ function fingerprint(cwd) {
   return `${fp}:${q}:${n}`;
 }
 
-module.exports = { build, fingerprint, PHASE_BLURB, FLOW_BLURB };
+module.exports = { build, summary, projectsText, fingerprint, PHASE_BLURB, FLOW_BLURB };

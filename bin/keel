@@ -57,6 +57,7 @@ Flows and state
   keel stall [reset]                  repeated-failure counter and the stall ladder
   keel ask <id> --question "..." [--blocking] | --answer "..." [--by user]
   keel ask list|pending|clear <id>    questions keel will not proceed past
+  keel projects [forget <name>]       every keel project on this machine, as the dashboard shows them
   keel models show|set-all <model> [--effort low|medium|high]   subagent model and effort
 
 Project setup
@@ -146,6 +147,7 @@ switch (cmd) {
   case 'check-size': cli.checkSizeCmd(rest); break;
   case 'models': cli.models(rest); break;
   case 'stall': cli.stall(rest); break;
+  case 'projects': cli.projectsCmd(rest); break;
   case 'simulate': {
     const sim = require('../lib/sim');
     if (rest.includes('--sandbox')) sim.keepRepo();
