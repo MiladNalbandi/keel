@@ -1,0 +1,45 @@
+# Publishes docs/wiki/ to the GitHub wiki. The wiki is a separate repository (keel.wiki.git), so
+# pages live in docs/wiki/ where they are reviewed with the code, and this copies them across.
+# GitHub creates the wiki repository only when the first page is saved in the web UI; until then
+# the clone below fails and says so.
+name: Publish wiki
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/wiki/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync docs/wiki into the wiki repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! git clone --depth 1 "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki; then
+            echo "::error::No wiki repository yet. Open the Wiki tab, save a first page, then re-run this workflow."
+            exit 1
+          fi
+          # --delete keeps the wiki an exact copy: a page removed here is removed there.
+          rsync -a --delete --exclude .git --exclude README.md docs/wiki/ wiki/
+          cd wiki
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki already up to date."
+          else
+            git commit -m "Sync from ${GITHUB_REPOSITORY}@${GITHUB_SHA::7}"
+            git push
+          fi
