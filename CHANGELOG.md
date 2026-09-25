@@ -4,6 +4,58 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.59.0
+
+**One dashboard for every project on the machine.** Each session starts its own MCP server, and
+each server used to open its own dashboard on the next free port, blind to the others: four
+projects meant four tabs and nowhere that said which one was waiting on you. Now the first server
+to take the port is the hub. It serves every keel project on the machine's list, and every other
+session hands back the same URL. The page opens on "all projects", with one card per project
+showing its flow, phase, AC progress and a red mark for a blocking question. A tab per project
+leads to that project's full view. When the hub's session ends, another session that has opened
+the dashboard takes the port over, and the list brings every project back.
+
+**`~/.keel/projects.json`** (or `KEEL_HOME`) is that list. The session-start hook and the MCP server
+add their project. Writes are read-merge-write under a lock file and land by rename, so eight
+sessions starting together lose no entry. A project drops off when its `.keel/config.yml` is gone,
+when it has not been seen for 14 days, or with `keel projects forget <name>`. The hub only reads the
+list, so no page can point it at a directory, and it refuses a foreign `Host` header.
+
+**`keel projects` and the `keel_projects` tool** list the same projects in text. Every other `keel_*`
+tool takes `project: "<name>"`, so one session can ask how another is doing.
+
+**The MCP server starts when keel is opened as a project.** `.mcp.json` pointed at
+`${CLAUDE_PLUGIN_ROOT}/mcp/server.js`, and only a plugin install sets that variable. Opened as a plain
+project, the path was `/mcp/server.js` and the server died with "Connection closed". It now falls
+back to the working directory.
+
+**The feed filter no longer eats events.** The page stored the *filtered* frame, so picking
+`failures` and going back to `all` showed only the failures until the next update.
+
+**`/keel:review` runs a review agent on demand.** The flow's reviewers only ran at its own four
+review points, and starting one by hand meant knowing the agent's name and what scope and lens it
+expects. `/keel:review` with no argument runs `keel:code-reviewer` over the branch. A lens name runs
+one `keel:reviewer`, `all` runs ship's lens set in parallel, and `ac AC-00n` runs `keel:ac-reviewer`
+on that criterion's commits. It reports and never fixes. Its verdict does not move the phase or count
+as a ship round. A scenario holds its lenses and verdict lines to the ones the agents and hooks use.
+
+**keel has a logo.** The mark is the front view of a hull with its keel, split down the middle, in
+the dashboard's accent purple. `assets/brand/` has the symbol, wordmark and lockups as SVG (the text
+is converted to outlines), one-colour and dark versions, PNG icons from 16 to 512px, and a
+1280×640 GitHub social preview. The dashboard header uses the mark in place of the old `▲`, the
+page has a favicon that follows the system theme, and the README opens with the lockup.
+
+**The dashboard takes the brand colours and gets a theme switch.** It could only follow the system
+setting. A `theme:` button in the header now cycles auto, light and dark. The choice is kept in
+that browser, and the page still works where storage is blocked. The selected tab and feed filter,
+the "where you may go next" nodes and the next-step card use the brand accent instead of plain black,
+and text uses the brand ink and paper colours.
+
+**`docs/wiki/`** holds the source of the GitHub wiki: Home, Installation, The Flows, Code Review,
+Dashboard and Brand, with the steps to publish it.
+
+246 scenarios, up from 242.
+
 ## 0.58.0
 
 **The flow card now draws the state machine, not a straight line.** It used to render the flow
