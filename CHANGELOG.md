@@ -45,6 +45,15 @@ is converted to outlines), one-colour and dark versions, PNG icons from 16 to 51
 1280×640 GitHub social preview. The dashboard header uses the mark in place of the old `▲`, the
 page has a favicon that follows the system theme, and the README opens with the lockup.
 
+**The dashboard takes the brand colours and gets a theme switch.** It could only follow the system
+setting. A `theme:` button in the header now cycles auto, light and dark. The choice is kept in
+that browser, and the page still works where storage is blocked. The selected tab and feed filter,
+the "where you may go next" nodes and the next-step card use the brand accent instead of plain black,
+and text uses the brand ink and paper colours.
+
+**`docs/wiki/`** holds the source of the GitHub wiki: Home, Installation, The Flows, Code Review,
+Dashboard and Brand, with the steps to publish it.
+
 246 scenarios, up from 242.
 
 ## 0.58.0
