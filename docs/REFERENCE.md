@@ -595,6 +595,15 @@ go, not get a test. In `coverage-fix`, production buckets are **delete-only** so
 dead lines but never add a line to make a number look better, and `e2e` is **deny** so it cannot reach
 for a browser test to paper over a missing unit test.
 
+**`/keel:review` — a review agent on demand.** The flow reviews at fixed points: the AC gate, phase 6.6,
+ship and the final review. This runs the same agents in between. With no argument (or `code`) it runs
+`keel:code-reviewer` over the branch diff. A lens name (`correctness`, `security`, `performance`,
+`architecture`, `assertions`) runs one `keel:reviewer`, and `all` runs ship's whole lens set in parallel.
+`ac AC-00n` runs `keel:ac-reviewer` on that criterion's commits. `--base <ref>` changes what the branch
+diff is taken against. It is read-only and reports each finding in the agent's own words. A verdict
+here does not move the phase, pass a gate or count as a ship review round. A fix still goes through
+`review-fix`.
+
 **`/keel:memory` — read the knowledge base back.** `keel memory sections`, `show`,
 `--section <n>`, `check`, `update`. Use it after a `/clear`: cheaper and more reliable than re-deriving the architecture from the
 tree. `check` is what the push gate consults.
