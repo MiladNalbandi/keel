@@ -29,21 +29,24 @@ function html() {
 <link rel="icon" type="image/svg+xml" href="${FAVICON}">
 <style>
 :root{
-  --bg:#f7f6f3; --panel:#ffffff; --border:#e3e0d9; --fg:#1c1b19; --dim:#6f6b63;
+  --bg:#f7f6f3; --panel:#ffffff; --border:#e3e0d9; --fg:#131314; --dim:#6f6b63;
   --faint:#9b968c; --accent:#7a5cff; --ok:#1f8a4c; --warn:#b26a00; --bad:#c0392b;
   --run:#0b74c4; --rail:#d9d5cc; --shadow:0 1px 2px rgba(0,0,0,.05);
+  --accent-soft:#ece6ff; --on-accent:#ffffff;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#131314; --panel:#1a1a1c; --border:#2c2c30; --fg:#e9e7e3; --dim:#9a958c;
+    --bg:#131314; --panel:#1a1a1c; --border:#2c2c30; --fg:#f7f6f3; --dim:#9a958c;
     --faint:#6b675f; --accent:#a48bff; --ok:#4ec07c; --warn:#e0a13a; --bad:#f0685a;
     --run:#57aeff; --rail:#333338; --shadow:none;
+    --accent-soft:#2a2342; --on-accent:#131314;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#131314; --panel:#1a1a1c; --border:#2c2c30; --fg:#e9e7e3; --dim:#9a958c;
+  --bg:#131314; --panel:#1a1a1c; --border:#2c2c30; --fg:#f7f6f3; --dim:#9a958c;
   --faint:#6b675f; --accent:#a48bff; --ok:#4ec07c; --warn:#e0a13a; --bad:#f0685a;
   --run:#57aeff; --rail:#333338; --shadow:none;
+  --accent-soft:#2a2342; --on-accent:#131314;
 }
 *{box-sizing:border-box}
 body{
@@ -56,9 +59,11 @@ body{
 header.bar{
   display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 18px;
   padding:14px 16px;margin-bottom:16px;
-  background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);
+  background:var(--panel);border:1px solid var(--border);border-top:2px solid var(--accent);
+  border-radius:10px;box-shadow:var(--shadow);
 }
-.brand{font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12px}
+/* The lockup's spacing (assets/brand), so the header reads as the logo rather than a label. */
+.brand{font-weight:800;letter-spacing:.24em;text-transform:uppercase;font-size:13px}
 .brand{display:inline-flex;align-items:center;gap:8px}
 .brand .mark{color:var(--accent);width:22px;height:13px;flex:none;align-self:center}
 h1{font-size:14px;margin:0;font-weight:600}
@@ -103,7 +108,7 @@ section.card{
 .g-node text{fill:var(--faint);font-size:11px;font-family:inherit}
 .g-node.done rect{stroke:color-mix(in srgb,var(--ok) 55%,transparent)}
 .g-node.done text{fill:var(--ok)}
-.g-node.legal rect{stroke:var(--accent);stroke-width:1.4}
+.g-node.legal rect{stroke:var(--accent);stroke-width:1.4;fill:var(--accent-soft)}
 .g-node.legal text{fill:var(--fg)}
 .g-node.current rect{fill:var(--accent);stroke:var(--accent)}
 .g-node.current text{fill:var(--bg);font-weight:700}
@@ -169,7 +174,7 @@ section.card{
   background:transparent;color:var(--dim);border:1px solid var(--border);
 }
 .filters button:hover{color:var(--fg)}
-.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.filters button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 
 /* status glyphs */
 .g{flex:none;width:12px;display:inline-block;text-align:center}
@@ -197,9 +202,14 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
 .bk.c{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
 
 /* next */
-.next{border-color:var(--accent)}
+.next{border-color:var(--accent);background:var(--accent-soft)}
 .next .do{font-size:14px;font-weight:600;margin-bottom:10px}
 .next code{background:var(--fg);color:var(--bg);padding:6px 12px;display:inline-block;border-radius:6px}
+
+/* theme switch — auto follows the system; the choice is remembered in this browser only */
+.theme{font:inherit;font-size:11.5px;padding:2px 10px;border-radius:99px;cursor:pointer;
+  background:transparent;color:var(--dim);border:1px solid var(--border)}
+.theme:hover{color:var(--fg);border-color:var(--accent)}
 
 .empty{color:var(--faint)}
 .center{text-align:center;padding:52px 16px}
@@ -214,7 +224,8 @@ nav.tabs{display:flex;gap:5px;overflow-x:auto;margin:-4px 0 14px;padding-bottom:
 nav.tabs a{flex:none;display:inline-flex;align-items:center;gap:7px;padding:4px 12px;border-radius:99px;
   border:1px solid var(--border);background:var(--panel);color:var(--dim);text-decoration:none;font-size:12px}
 nav.tabs a:hover{color:var(--fg)}
-nav.tabs a[aria-current="page"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+nav.tabs a[aria-current="page"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+nav.tabs a[aria-current="page"] .n{color:inherit}
 nav.tabs a .n{font-weight:700;color:var(--bad)}
 .pd{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none;display:inline-block}
 .pd.run{background:var(--run)} .pd.wait{background:var(--bad)} .pd.stall{background:var(--warn)}
@@ -507,8 +518,31 @@ a.pc.wait{border-color:var(--bad)}
 
   function liveTag(){
     return '<span class="live' + (connected ? '' : ' off') + '"><i class="dot"></i>' +
-      (connected ? 'live' : 'offline') + '</span>';
+      (connected ? 'live' : 'offline') + '</span>' + themeButton();
   }
+
+  // auto -> light -> dark. Browser storage can be missing or throw (private windows, blocked
+  // site data), and the page must still work, so every access is guarded.
+  var THEMES = ['auto', 'light', 'dark'];
+  var theme = 'auto';
+  try { theme = localStorage.getItem('keel-theme') || 'auto'; } catch (e) { theme = 'auto'; }
+  if (THEMES.indexOf(theme) < 0) theme = 'auto';
+  function applyTheme(){
+    if (theme === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', theme);
+  }
+  applyTheme();
+  function themeButton(){
+    return '<button class="theme" data-theme-toggle title="theme: ' + theme + ' (click to change)">' +
+      'theme: ' + theme + '</button>';
+  }
+  app.addEventListener('click', function(e){
+    if (!e.target.closest || !e.target.closest('[data-theme-toggle]')) return;
+    theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+    try { localStorage.setItem('keel-theme', theme); } catch (err) { /* this browser only */ }
+    applyTheme();
+    draw();
+  });
 
   function dotClass(p){ return p.blocking ? 'wait' : p.stalled ? 'stall' : p.active ? 'run' : ''; }
 
