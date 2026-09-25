@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/keel-lockup-dark.svg">
+    <img alt="keel" src="assets/brand/keel-lockup.svg" width="300">
+  </picture>
+</p>
+
 # keel
 
 <!-- No version number here on purpose: it sat at 0.13.0 for thirty releases. The version lives

@@ -39,6 +39,12 @@ one `keel:reviewer`, `all` runs ship's lens set in parallel, and `ac AC-00n` run
 on that criterion's commits. It reports and never fixes. Its verdict does not move the phase or count
 as a ship round. A scenario holds its lenses and verdict lines to the ones the agents and hooks use.
 
+**keel has a logo.** The mark is the front view of a hull with its keel, split down the middle, in
+the dashboard's accent purple. `assets/brand/` has the symbol, wordmark and lockups as SVG (the text
+is converted to outlines), one-colour and dark versions, PNG icons from 16 to 512px, and a
+1280×640 GitHub social preview. The dashboard header uses the mark in place of the old `▲`, the
+page has a favicon that follows the system theme, and the README opens with the lockup.
+
 246 scenarios, up from 242.
 
 ## 0.58.0

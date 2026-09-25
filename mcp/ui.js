@@ -5,6 +5,20 @@
 // The embedded script deliberately uses string concatenation rather than template literals, so
 // that this outer template literal needs no escaping and stays readable.
 
+// The keel mark (assets/brand/keel-mark.svg): a hull section with its keel, split down the middle.
+// Inlined for the same reason as everything else here. It takes its colour from the page, so the
+// header follows the light and dark themes. The favicon cannot see the page's tokens, so it
+// carries its own two colours.
+const MARK_PATH = 'M4 0H116Q120 0 119.4 4C118 22 92 38 66.6 50Q64 51.5 64 54L62.2 64.5Q61.8 67 60 67Q58.2 67 57.8 64.5L56 54Q56 51.5 53.4 50C28 38 2 22 .6 4Q0 0 4 0Z';
+const MARK_SPLIT = '<rect x="58.7" y="-2" width="2.6" height="61" rx="1.3" fill="#000"/>';
+const MARK = '<svg class="mark" viewBox="0 0 120 68" aria-hidden="true"><mask id="keel-split">'
+  + '<rect width="120" height="68" fill="#fff"/>' + MARK_SPLIT + '</mask>'
+  + '<path mask="url(#keel-split)" fill="currentColor" d="' + MARK_PATH + '"/></svg>';
+const FAVICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -26 120 120">'
+  + '<style>path{fill:#7a5cff}@media (prefers-color-scheme:dark){path{fill:#a48bff}}</style>'
+  + '<mask id="s"><rect y="-26" width="120" height="120" fill="#fff"/>' + MARK_SPLIT + '</mask>'
+  + '<path mask="url(#s)" d="' + MARK_PATH + '"/></svg>');
+
 function html() {
   return `<!doctype html>
 <html lang="en">
@@ -12,6 +26,7 @@ function html() {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>keel</title>
+<link rel="icon" type="image/svg+xml" href="${FAVICON}">
 <style>
 :root{
   --bg:#f7f6f3; --panel:#ffffff; --border:#e3e0d9; --fg:#1c1b19; --dim:#6f6b63;
@@ -44,7 +59,8 @@ header.bar{
   background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);
 }
 .brand{font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12px}
-.brand .mark{color:var(--accent)}
+.brand{display:inline-flex;align-items:center;gap:8px}
+.brand .mark{color:var(--accent);width:22px;height:13px;flex:none;align-self:center}
 h1{font-size:14px;margin:0;font-weight:600}
 .meta{color:var(--dim);display:flex;flex-wrap:wrap;gap:14px;margin-left:auto;font-size:12px}
 .meta b{font-weight:600;color:var(--fg)}
@@ -539,7 +555,7 @@ a.pc.wait{border-color:var(--bad)}
   function renderOverview(){
     var waiting = projects.filter(function(p){ return p.blocking; }).length;
     var running = projects.filter(function(p){ return p.active; }).length;
-    var head = '<header class="bar"><span class="brand"><span class="mark">\\u25b2</span> keel</span>' +
+    var head = '<header class="bar"><span class="brand">${MARK}keel</span>' +
       '<h1>' + projects.length + ' project' + (projects.length === 1 ? '' : 's') + '</h1>' +
       '<div class="meta"><span><b>' + running + '</b> running</span>' +
       (waiting ? '<span class="bad"><b class="bad">' + waiting + '</b> waiting on you</span>' : '') +
@@ -561,7 +577,7 @@ a.pc.wait{border-color:var(--bad)}
         (h.gates ? '<span>gates <b>' + esc(h.gates) + '</b></span>' : '') +
         (v.head ? '<span>head <b>' + esc(v.head) + '</b></span>' : '')
       : '';
-    return '<header class="bar"><span class="brand"><span class="mark">\\u25b2</span> keel</span>' +
+    return '<header class="bar"><span class="brand">${MARK}keel</span>' +
       '<h1>' + esc(h ? h.title : 'no active flow') + '</h1>' +
       '<div class="meta">' + meta + live + '</div></header>';
   }
