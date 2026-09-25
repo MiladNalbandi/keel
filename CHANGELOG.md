@@ -32,7 +32,14 @@ back to the working directory.
 **The feed filter no longer eats events.** The page stored the *filtered* frame, so picking
 `failures` and going back to `all` showed only the failures until the next update.
 
-245 scenarios, up from 242.
+**`/keel:review` runs a review agent on demand.** The flow's reviewers only ran at its own four
+review points, and starting one by hand meant knowing the agent's name and what scope and lens it
+expects. `/keel:review` with no argument runs `keel:code-reviewer` over the branch. A lens name runs
+one `keel:reviewer`, `all` runs ship's lens set in parallel, and `ac AC-00n` runs `keel:ac-reviewer`
+on that criterion's commits. It reports and never fixes. Its verdict does not move the phase or count
+as a ship round. A scenario holds its lenses and verdict lines to the ones the agents and hooks use.
+
+246 scenarios, up from 242.
 
 ## 0.58.0
 

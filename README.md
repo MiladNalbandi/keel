@@ -109,7 +109,7 @@ keel simulate [name] [--sandbox]
 
 ## Skills
 
-Flows: `/keel:init`, `/keel:change`, `/keel:feature`, `/keel:fix`, `/keel:diagnose`, `/keel:hunt`, `/keel:hunt-next`, `/keel:cover`, `/keel:ship`, `/keel:status`, `/keel:memory`.
+Flows: `/keel:init`, `/keel:change`, `/keel:feature`, `/keel:fix`, `/keel:diagnose`, `/keel:hunt`, `/keel:hunt-next`, `/keel:cover`, `/keel:ship`, `/keel:review`, `/keel:status`, `/keel:memory`.
 
 Loaded on demand, one reference at a time: spec authoring, Kotlin/Spring testing, frontend testing, Playwright, architecture, frontend implementation, security, debugging.
 
