@@ -1,14 +1,13 @@
 # Wiki source
 
-These files are the source of the GitHub wiki. A wiki is a separate git repository
-(`keel.wiki.git`), so this folder is published by copying it there:
+These files are the GitHub wiki. The wiki is a separate git repository (`keel.wiki.git`), so the
+pages live here, where they are reviewed with the code. `.github/workflows/wiki.yml` copies them
+to the wiki whenever this folder changes on `main`. Run it by hand from the Actions tab with
+**Publish wiki → Run workflow**.
 
-```bash
-git clone https://github.com/MiladNalbandi/keel.wiki.git
-cp docs/wiki/*.md keel.wiki/ && rm keel.wiki/README.md
-cd keel.wiki && git add -A && git commit -m "Update wiki" && git push
-```
-
-GitHub creates that repository only after the first page is saved in the web interface
-(Wiki → Create the first page), so do that once before the first push.
-File names map to page titles: `The-Flows.md` becomes "The Flows".
+- **First time only:** GitHub creates the wiki repository when the first page is saved in the web
+  UI (Wiki → Create the first page). Do that once, then run the workflow.
+- **File names are page titles:** `The-Flows.md` becomes "The Flows". `_Sidebar.md` is the menu.
+- **Edit here, not in the wiki.** The workflow makes the wiki an exact copy of this folder, so a
+  page edited only in the web UI is overwritten on the next sync.
+- This README is not copied.
