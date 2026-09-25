@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/keel-lockup-dark.svg">
+    <img alt="keel" src="assets/brand/keel-lockup.svg" width="300">
+  </picture>
+</p>
+
 # keel
 
 <!-- No version number here on purpose: it sat at 0.13.0 for thirty releases. The version lives
@@ -109,7 +116,7 @@ keel simulate [name] [--sandbox]
 
 ## Skills
 
-Flows: `/keel:init`, `/keel:change`, `/keel:feature`, `/keel:fix`, `/keel:diagnose`, `/keel:hunt`, `/keel:hunt-next`, `/keel:cover`, `/keel:ship`, `/keel:status`, `/keel:memory`.
+Flows: `/keel:init`, `/keel:change`, `/keel:feature`, `/keel:fix`, `/keel:diagnose`, `/keel:hunt`, `/keel:hunt-next`, `/keel:cover`, `/keel:ship`, `/keel:review`, `/keel:status`, `/keel:memory`.
 
 Loaded on demand, one reference at a time: spec authoring, Kotlin/Spring testing, frontend testing, Playwright, architecture, frontend implementation, security, debugging.
 

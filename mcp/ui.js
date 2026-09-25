@@ -5,6 +5,20 @@
 // The embedded script deliberately uses string concatenation rather than template literals, so
 // that this outer template literal needs no escaping and stays readable.
 
+// The keel mark (assets/brand/keel-mark.svg): a hull section with its keel, split down the middle.
+// Inlined for the same reason as everything else here. It takes its colour from the page, so the
+// header follows the light and dark themes. The favicon cannot see the page's tokens, so it
+// carries its own two colours.
+const MARK_PATH = 'M4 0H116Q120 0 119.4 4C118 22 92 38 66.6 50Q64 51.5 64 54L62.2 64.5Q61.8 67 60 67Q58.2 67 57.8 64.5L56 54Q56 51.5 53.4 50C28 38 2 22 .6 4Q0 0 4 0Z';
+const MARK_SPLIT = '<rect x="58.7" y="-2" width="2.6" height="61" rx="1.3" fill="#000"/>';
+const MARK = '<svg class="mark" viewBox="0 0 120 68" aria-hidden="true"><mask id="keel-split">'
+  + '<rect width="120" height="68" fill="#fff"/>' + MARK_SPLIT + '</mask>'
+  + '<path mask="url(#keel-split)" fill="currentColor" d="' + MARK_PATH + '"/></svg>';
+const FAVICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -26 120 120">'
+  + '<style>path{fill:#7a5cff}@media (prefers-color-scheme:dark){path{fill:#a48bff}}</style>'
+  + '<mask id="s"><rect y="-26" width="120" height="120" fill="#fff"/>' + MARK_SPLIT + '</mask>'
+  + '<path mask="url(#s)" d="' + MARK_PATH + '"/></svg>');
+
 function html() {
   return `<!doctype html>
 <html lang="en">
@@ -12,23 +26,27 @@ function html() {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>keel</title>
+<link rel="icon" type="image/svg+xml" href="${FAVICON}">
 <style>
 :root{
-  --bg:#f7f6f3; --panel:#ffffff; --border:#e3e0d9; --fg:#1c1b19; --dim:#6f6b63;
+  --bg:#f7f6f3; --panel:#ffffff; --border:#e3e0d9; --fg:#131314; --dim:#6f6b63;
   --faint:#9b968c; --accent:#7a5cff; --ok:#1f8a4c; --warn:#b26a00; --bad:#c0392b;
   --run:#0b74c4; --rail:#d9d5cc; --shadow:0 1px 2px rgba(0,0,0,.05);
+  --accent-soft:#ece6ff; --on-accent:#ffffff;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#131314; --panel:#1a1a1c; --border:#2c2c30; --fg:#e9e7e3; --dim:#9a958c;
+    --bg:#131314; --panel:#1a1a1c; --border:#2c2c30; --fg:#f7f6f3; --dim:#9a958c;
     --faint:#6b675f; --accent:#a48bff; --ok:#4ec07c; --warn:#e0a13a; --bad:#f0685a;
     --run:#57aeff; --rail:#333338; --shadow:none;
+    --accent-soft:#2a2342; --on-accent:#131314;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#131314; --panel:#1a1a1c; --border:#2c2c30; --fg:#e9e7e3; --dim:#9a958c;
+  --bg:#131314; --panel:#1a1a1c; --border:#2c2c30; --fg:#f7f6f3; --dim:#9a958c;
   --faint:#6b675f; --accent:#a48bff; --ok:#4ec07c; --warn:#e0a13a; --bad:#f0685a;
   --run:#57aeff; --rail:#333338; --shadow:none;
+  --accent-soft:#2a2342; --on-accent:#131314;
 }
 *{box-sizing:border-box}
 body{
@@ -41,10 +59,13 @@ body{
 header.bar{
   display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 18px;
   padding:14px 16px;margin-bottom:16px;
-  background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);
+  background:var(--panel);border:1px solid var(--border);border-top:2px solid var(--accent);
+  border-radius:10px;box-shadow:var(--shadow);
 }
-.brand{font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12px}
-.brand .mark{color:var(--accent)}
+/* The lockup's spacing (assets/brand), so the header reads as the logo rather than a label. */
+.brand{font-weight:800;letter-spacing:.24em;text-transform:uppercase;font-size:13px}
+.brand{display:inline-flex;align-items:center;gap:8px}
+.brand .mark{color:var(--accent);width:22px;height:13px;flex:none;align-self:center}
 h1{font-size:14px;margin:0;font-weight:600}
 .meta{color:var(--dim);display:flex;flex-wrap:wrap;gap:14px;margin-left:auto;font-size:12px}
 .meta b{font-weight:600;color:var(--fg)}
@@ -87,7 +108,7 @@ section.card{
 .g-node text{fill:var(--faint);font-size:11px;font-family:inherit}
 .g-node.done rect{stroke:color-mix(in srgb,var(--ok) 55%,transparent)}
 .g-node.done text{fill:var(--ok)}
-.g-node.legal rect{stroke:var(--accent);stroke-width:1.4}
+.g-node.legal rect{stroke:var(--accent);stroke-width:1.4;fill:var(--accent-soft)}
 .g-node.legal text{fill:var(--fg)}
 .g-node.current rect{fill:var(--accent);stroke:var(--accent)}
 .g-node.current text{fill:var(--bg);font-weight:700}
@@ -153,7 +174,7 @@ section.card{
   background:transparent;color:var(--dim);border:1px solid var(--border);
 }
 .filters button:hover{color:var(--fg)}
-.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.filters button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 
 /* status glyphs */
 .g{flex:none;width:12px;display:inline-block;text-align:center}
@@ -181,9 +202,14 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
 .bk.c{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
 
 /* next */
-.next{border-color:var(--accent)}
+.next{border-color:var(--accent);background:var(--accent-soft)}
 .next .do{font-size:14px;font-weight:600;margin-bottom:10px}
 .next code{background:var(--fg);color:var(--bg);padding:6px 12px;display:inline-block;border-radius:6px}
+
+/* theme switch — auto follows the system; the choice is remembered in this browser only */
+.theme{font:inherit;font-size:11.5px;padding:2px 10px;border-radius:99px;cursor:pointer;
+  background:transparent;color:var(--dim);border:1px solid var(--border)}
+.theme:hover{color:var(--fg);border-color:var(--accent)}
 
 .empty{color:var(--faint)}
 .center{text-align:center;padding:52px 16px}
@@ -192,6 +218,30 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
 .flowlist .fl{display:flex;gap:14px}
 .flowlist .fl code{flex:none}
 .flowlist .fl span{color:var(--dim)}
+
+/* project tabs — one hub serves every keel project on the machine */
+nav.tabs{display:flex;gap:5px;overflow-x:auto;margin:-4px 0 14px;padding-bottom:2px}
+nav.tabs a{flex:none;display:inline-flex;align-items:center;gap:7px;padding:4px 12px;border-radius:99px;
+  border:1px solid var(--border);background:var(--panel);color:var(--dim);text-decoration:none;font-size:12px}
+nav.tabs a:hover{color:var(--fg)}
+nav.tabs a[aria-current="page"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+nav.tabs a[aria-current="page"] .n{color:inherit}
+nav.tabs a .n{font-weight:700;color:var(--bad)}
+.pd{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none;display:inline-block}
+.pd.run{background:var(--run)} .pd.wait{background:var(--bad)} .pd.stall{background:var(--warn)}
+
+/* overview */
+.projects{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+a.pc{display:block;min-width:0;color:inherit;text-decoration:none;background:var(--panel);
+  border:1px solid var(--border);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow)}
+a.pc:hover{border-color:var(--accent)}
+a.pc.wait{border-color:var(--bad)}
+.pc .pn{display:flex;align-items:center;gap:8px;font-weight:700;min-width:0}
+.pc .pn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc .pr{color:var(--faint);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.pc .pf{margin-top:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc .pw{margin-top:10px;color:var(--bad);font-weight:600;font-size:12px}
+.pc .pm{margin-top:8px;color:var(--faint);font-size:11.5px}
 </style>
 </head>
 <body>
@@ -203,6 +253,9 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
   var filter = 'all';
   var connected = false;
   var last = null;
+  var projects = [];
+  var selected = location.hash.slice(1) || null;
+  var es = null;
 
   function esc(s){
     return String(s == null ? '' : s)
@@ -463,33 +516,117 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
       '<div class="flowlist">' + flows + '</div>' + lf + '</div>';
   }
 
+  function liveTag(){
+    return '<span class="live' + (connected ? '' : ' off') + '"><i class="dot"></i>' +
+      (connected ? 'live' : 'offline') + '</span>' + themeButton();
+  }
+
+  // auto -> light -> dark. Browser storage can be missing or throw (private windows, blocked
+  // site data), and the page must still work, so every access is guarded.
+  var THEMES = ['auto', 'light', 'dark'];
+  var theme = 'auto';
+  try { theme = localStorage.getItem('keel-theme') || 'auto'; } catch (e) { theme = 'auto'; }
+  if (THEMES.indexOf(theme) < 0) theme = 'auto';
+  function applyTheme(){
+    if (theme === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', theme);
+  }
+  applyTheme();
+  function themeButton(){
+    return '<button class="theme" data-theme-toggle title="theme: ' + theme + ' (click to change)">' +
+      'theme: ' + theme + '</button>';
+  }
+  app.addEventListener('click', function(e){
+    if (!e.target.closest || !e.target.closest('[data-theme-toggle]')) return;
+    theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+    try { localStorage.setItem('keel-theme', theme); } catch (err) { /* this browser only */ }
+    applyTheme();
+    draw();
+  });
+
+  function dotClass(p){ return p.blocking ? 'wait' : p.stalled ? 'stall' : p.active ? 'run' : ''; }
+
+  function ago(iso){
+    var t = Date.parse(iso);
+    return isNaN(t) ? '' : dur(Math.max(0, Math.round((Date.now() - t) / 1000))) + ' ago';
+  }
+
+  // One project needs no switcher; the chrome appears once there is something to switch to.
+  function tabs(){
+    if (projects.length < 2 && selected) return '';
+    return '<nav class="tabs"><a href="#"' + (selected ? '' : ' aria-current="page"') + '>all projects</a>' +
+      projects.map(function(p){
+        return '<a href="#' + esc(p.id) + '" title="' + esc(p.root) + '"' +
+          (p.id === selected ? ' aria-current="page"' : '') + '><i class="pd ' + dotClass(p) + '"></i>' +
+          esc(p.name) + (p.blocking ? ' <span class="n">' + p.blocking + '</span>' : '') + '</a>';
+      }).join('') + '</nav>';
+  }
+
+  function projectCard(p){
+    var body;
+    if (p.error) body = '<div class="pf bad">' + esc(p.error) + '</div>';
+    else if (!p.active) body = '<div class="pf dim">idle \\u2014 no flow running</div>';
+    else {
+      var acs = p.acs && p.acs.total ? p.acs : null;
+      body = '<div class="pf"><span class="acc">' + esc(p.flow) + '</span> \\u00b7 <b>' + esc(p.phaseLabel || p.phase) + '</b> ' +
+          '<span class="faint">' + (p.step >= 0 ? 'step ' + (p.step + 1) + ' of ' + p.steps : 'off the rail') + '</span></div>' +
+        (p.title !== p.flow || p.current
+          ? '<div class="pr">' + esc([p.title !== p.flow ? p.title : null, p.current].filter(Boolean).join(' \\u00b7 ')) + '</div>' : '') +
+        (acs ? '<div class="progress"><i style="width:' + Math.round(acs.done / acs.total * 100) + '%"></i></div>' +
+          '<div class="pm">' + acs.done + '/' + acs.total + ' ACs' +
+          (p.agents ? ' \\u00b7 ' + p.agents + ' agent' + (p.agents > 1 ? 's' : '') + ' running' : '') + '</div>' : '');
+    }
+    if (p.blocking) body += '<div class="pw">\\u25b8 waiting on you \\u00b7 ' + p.blocking + ' question' + (p.blocking > 1 ? 's' : '') + '</div>';
+    else if (p.stalled) body += '<div class="pw"><span class="warn">stalled on the same failure</span></div>';
+    var meta = (p.lastAt ? 'last activity ' + ago(p.lastAt) : 'no activity yet') +
+      (p.mismatch ? ' \\u00b7 <span class="warn">last opened by keel ' + esc(p.keel) + '</span>' : '');
+    return '<a class="pc' + (p.blocking ? ' wait' : '') + '" href="#' + esc(p.id) + '">' +
+      '<div class="pn"><i class="pd ' + dotClass(p) + '"></i><span>' + esc(p.name) + '</span></div>' +
+      '<div class="pr" title="' + esc(p.root) + '">' + esc(p.root) + '</div>' + body +
+      '<div class="pm">' + meta + '</div></a>';
+  }
+
+  function renderOverview(){
+    var waiting = projects.filter(function(p){ return p.blocking; }).length;
+    var running = projects.filter(function(p){ return p.active; }).length;
+    var head = '<header class="bar"><span class="brand">${MARK}keel</span>' +
+      '<h1>' + projects.length + ' project' + (projects.length === 1 ? '' : 's') + '</h1>' +
+      '<div class="meta"><span><b>' + running + '</b> running</span>' +
+      (waiting ? '<span class="bad"><b class="bad">' + waiting + '</b> waiting on you</span>' : '') +
+      liveTag() + '</div></header>';
+    var body = projects.length
+      ? '<div class="projects">' + projects.map(projectCard).join('') + '</div>'
+      : '<div class="center"><div class="big">No keel projects yet.</div>' +
+        '<div class="dim">A project joins this page when a Claude session starts in it.</div></div>';
+    app.innerHTML = head + tabs() + body;
+  }
+
   function header(v){
     var h = v.header;
-    var live = '<span class="live' + (connected ? '' : ' off') + '"><i class="dot"></i>' +
-      (connected ? 'live' : 'offline') + '</span>';
+    var live = liveTag();
     var meta = h
-      ? '<span>lane <b>' + esc(h.lane) + '</b></span>' +
+      ? (v.name && projects.length > 1 ? '<span>project <b>' + esc(v.name) + '</b></span>' : '') +
+        '<span>lane <b>' + esc(h.lane) + '</b></span>' +
         (h.size ? '<span>flow <b>' + esc(h.size) + '</b></span>' : '') +
         (h.gates ? '<span>gates <b>' + esc(h.gates) + '</b></span>' : '') +
         (v.head ? '<span>head <b>' + esc(v.head) + '</b></span>' : '')
       : '';
-    return '<header class="bar"><span class="brand"><span class="mark">\\u25b2</span> keel</span>' +
+    return '<header class="bar"><span class="brand">${MARK}keel</span>' +
       '<h1>' + esc(h ? h.title : 'no active flow') + '</h1>' +
       '<div class="meta">' + meta + live + '</div></header>';
   }
 
   function render(v){
-    last = v;
     if (v.error){
-      app.innerHTML = header(v) + card('error', null, '<div class="bad">' + esc(v.error) + '</div>');
+      app.innerHTML = header(v) + tabs() + card('error', null, '<div class="bad">' + esc(v.error) + '</div>');
       return;
     }
     if (!v.active){
-      app.innerHTML = header(v) + renderQuestions(v) + renderIdle(v);
+      app.innerHTML = header(v) + tabs() + renderQuestions(v) + renderIdle(v);
       bind();
       return;
     }
-    app.innerHTML = header(v) +
+    app.innerHTML = header(v) + tabs() +
       renderQuestions(v) +
       renderFlow(v) +
       '<div class="grid">' + (renderAcs(v) || renderHunt(v) || '') + (renderCurrent(v) || renderAgents(v)) + '</div>' +
@@ -529,17 +666,52 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
     return copy;
   }
 
-  function refetch(){ if (last) render(applyFilter(last)); }
+  // last is always the unfiltered frame: filtering the stored copy lost events for good the
+  // moment you picked a narrower filter and went back to "all".
+  function refetch(){ draw(); }
 
-  var es = new EventSource('/events');
-  es.onopen = function(){ connected = true; };
-  es.onerror = function(){ connected = false; if (last) render(applyFilter(last)); };
-  es.onmessage = function(m){
-    connected = true;
-    var v;
-    try { v = JSON.parse(m.data); } catch (e) { return; }
-    render(applyFilter(v));
-  };
+  function draw(){
+    if (!selected) renderOverview();
+    else if (last) render(applyFilter(last));
+  }
+
+  // The overview stream carries only the project list; a project's stream carries its view too.
+  function connect(){
+    if (es) es.close();
+    connected = false;
+    es = new EventSource(selected ? '/events?project=' + encodeURIComponent(selected) : '/events?overview=1');
+    es.onopen = function(){ connected = true; };
+    es.onerror = function(){
+      connected = false;
+      // CLOSED rather than reconnecting means the hub answered and refused: that project is not on
+      // its list (any more). Anything else is the hub going away, and the browser retries.
+      if (es.readyState === 2 && selected){ location.hash = ''; return; }
+      draw();
+    };
+    es.addEventListener('projects', function(m){
+      connected = true;
+      var d;
+      try { d = JSON.parse(m.data); } catch (e) { return; }
+      projects = d.projects || [];
+      if (selected && !projects.some(function(p){ return p.id === selected; })){ location.hash = ''; return; }
+      draw();
+    });
+    es.onmessage = function(m){
+      connected = true;
+      var v;
+      try { v = JSON.parse(m.data); } catch (e) { return; }
+      last = v;
+      draw();
+    };
+  }
+
+  window.addEventListener('hashchange', function(){
+    selected = location.hash.slice(1) || null;
+    last = null;
+    app.innerHTML = '<div class="center"><div class="big">connecting\\u2026</div></div>';
+    connect();
+  });
+  connect();
 })();
 </script>
 </body>

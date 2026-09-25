@@ -14,13 +14,26 @@ const config = require('../lib/config');
 const st = require('../lib/state');
 const events = require('../lib/events');
 const guards = require('../lib/guards');
+const projects = require('../lib/projects');
 
 const SUPPORTED = ['2025-06-18', '2025-03-26', '2024-11-05'];
 const FALLBACK = '2024-11-05';
 
+// `project` names any project on the machine's list, so one session can ask after another.
 function projectDir(args) {
+  if (args && args.project) {
+    const p = projects.resolve(args.project);
+    if (!p) {
+      const known = projects.list().map((x) => x.name);
+      throw new Error(`no project "${args.project}". keel knows: ${known.join(', ') || 'none yet'}`);
+    }
+    return p.root;
+  }
   return (args && args.cwd) || process.env.CLAUDE_PROJECT_DIR || process.cwd();
 }
+
+const PROJECT = { type: 'string', description: 'Another project on this machine, by the name keel_projects lists. Defaults to this session\'s project.' };
+const CWD = { type: 'string', description: 'Project directory. Defaults to the session cwd.' };
 
 const TOOLS = [
   {
@@ -30,8 +43,15 @@ const TOOLS = [
       + 'Use this to answer "where are we" without running several commands.',
     inputSchema: {
       type: 'object',
-      properties: { cwd: { type: 'string', description: 'Project directory. Defaults to the session cwd.' } },
+      properties: { project: PROJECT, cwd: CWD },
     },
+  },
+  {
+    name: 'keel_projects',
+    description: 'Every keel project on this machine, one line each: its flow and phase, criteria '
+      + 'done, and whether it is waiting on the user. Use this to answer "what is running" across '
+      + 'projects; pass a name from it as `project` to any other keel tool.',
+    inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'keel_timeline',
@@ -43,6 +63,7 @@ const TOOLS = [
       properties: {
         filter: { type: 'string', enum: Object.keys(events.FILTERS), description: 'Which kind of event. Default all.' },
         limit: { type: 'number', description: 'How many events, 1-1000. Default 40.' },
+        project: PROJECT,
         cwd: { type: 'string' },
       },
     },
@@ -50,7 +71,7 @@ const TOOLS = [
   {
     name: 'keel_next',
     description: 'The single next action in the current keel flow, plus anything blocking it.',
-    inputSchema: { type: 'object', properties: { cwd: { type: 'string' } } },
+    inputSchema: { type: 'object', properties: { project: PROJECT, cwd: { type: 'string' } } },
   },
   {
     name: 'keel_explain',
@@ -60,16 +81,17 @@ const TOOLS = [
       type: 'object',
       properties: {
         phase: { type: 'string', description: 'A phase name such as red, green, gate, hunt-sweep. Defaults to the current one.' },
+        project: PROJECT,
         cwd: { type: 'string' },
       },
     },
   },
   {
     name: 'keel_dashboard',
-    description: 'Open the live keel dashboard: a local web page showing the flow, acceptance '
-      + 'criteria, running agents, a live tool feed and what is blocking a push, updating as it '
-      + 'happens. Returns the URL to give the user.',
-    inputSchema: { type: 'object', properties: { cwd: { type: 'string' } } },
+    description: 'Open the live keel dashboard: one local web page for every keel project on this '
+      + 'machine, each with its flow, acceptance criteria, running agents, a live tool feed and '
+      + 'what is blocking a push, updating as it happens. Returns the URL to give the user.',
+    inputSchema: { type: 'object', properties: { project: PROJECT, cwd: { type: 'string' } } },
   },
 ];
 
@@ -186,23 +208,37 @@ function fmtExplain(args) {
   return out.join('\n');
 }
 
+function fmtProjects() {
+  const here = projects.idOf(config.load(projectDir({})).root);
+  const text = view.projectsText(here);
+  return text.startsWith('no keel projects') ? text
+    : text + '\n\n* this session. Pass a name as `project` to any keel tool to look at another.';
+}
+
 function fmtDashboard(args) {
   const cwd = projectDir(args);
   return require('./http').start(cwd).then((r) => {
     const v = view.build(cwd);
+    const count = projects.list().length;
+    const mine = projects.keelVersion();
     return [
       `keel dashboard ${r.started ? 'started' : 'already running'} at ${r.url}`,
       '',
       v.active
-        ? `Showing ${v.header.flow} · phase ${v.flow.phase}${v.acs && v.acs.total ? ` · ${v.acs.done}/${v.acs.total} ACs` : ''}.`
-        : 'No flow is running yet; the page will fill in as soon as one starts.',
+        ? `Opens on this project: ${v.header.flow} · phase ${v.flow.phase}${v.acs && v.acs.total ? ` · ${v.acs.done}/${v.acs.total} ACs` : ''}.`
+        : 'No flow is running here yet; the page will fill in as soon as one starts.',
+      count > 1 ? `It shows all ${count} keel projects on this machine — pick one at the top.` : null,
+      r.version && mine && r.version !== mine
+        ? `The page is served by keel ${r.version} from another session; this one runs ${mine}.`
+        : null,
       'It updates by itself as the flow moves — leave it open.',
-    ].join('\n');
+    ].filter((l) => l !== null).join('\n');
   }).catch((e) => `could not start the dashboard: ${(e && e.message) || e}`);
 }
 
 const HANDLERS = {
   keel_status: fmtStatus,
+  keel_projects: fmtProjects,
   keel_timeline: fmtTimeline,
   keel_next: fmtNext,
   keel_explain: fmtExplain,
@@ -272,6 +308,9 @@ function main() {
     }
   });
   process.stdin.on('end', () => process.exit(0));
+  // On the machine's list from the first moment, so another session's dashboard shows this
+  // project before anyone here asks for it.
+  try { projects.register(config.load(projectDir({})).root); } catch (e) { /* never fatal */ }
   // stdout must carry protocol only; anything else would corrupt the stream.
   process.on('uncaughtException', (e) => { process.stderr.write('keel-mcp: ' + e.stack + '\n'); });
 }
