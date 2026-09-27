@@ -286,14 +286,13 @@ then code, then a gate.
 |---|---|---|---|
 | `preflight` | Clean tree, checks pass, branch created | `other` | `keel preflight <slug>` |
 | `workspace` | Stack up, lane chosen | `other` | `keel state phase spec` |
-| `spec` | Interview, numbered ACs, ASCII mockup of four states, ASCII request path | `specs`, `other` | approval, then `keel commit docs` |
-| `plan` | Files to touch, patterns to follow, order of ACs — written into the spec | `specs`, `other` | approval |
+| `spec` | Interview, numbered ACs, ASCII mockup of four states, ASCII request path — then the explorers, and the plan (order, files per AC, test layer) appended under them | `specs`, `other` | approval, then `keel commit docs` |
 | `contract` | Change `openapi.yaml` first, regenerate the client | `contract`, `other` | `keel commit contract` |
 | `red` | The failing test for one AC — **and nothing else** | `api-test`, `web-test`, `other` | `keel state red-done` |
 | `green` | Minimum code to pass it — **tests are frozen** | `api-main`, `web-src`, `migration`(new), `other` | `keel state green-done` |
 | `gate` | Present the AC and its evidence | `other` | `keel gate ac approve` |
 | `review-fix` | Address a reviewer's blocking finding | all code + tests | `keel state phase gate` |
-| `integration` | Wire the pieces together across ACs | `api-main`, `web-src`, `other` | `keel state phase security` |
+| `integration` | Wire the pieces together across ACs, then the optional review gate | `api-main`, `web-src`, `other` | `keel gate integration review\|approve\|skip` |
 | `security` | Two pipelines in parallel: auditor on the diff, triager on the deps | `other` | `keel state phase e2e` |
 | `e2e` | Playwright specs for the E2E-tagged criteria | `e2e`, `other` | `keel commit e2e <AC>` |
 | `smoke` | The always-on checks | `smoke`, `other` | `keel commit smoke` |
@@ -303,7 +302,7 @@ then code, then a gate.
 
 ```mermaid
 flowchart LR
-  S["spec<br/>numbered ACs"] --> PL["plan"] --> CT["contract<br/>then codegen"]
+  S["spec<br/>numbered ACs<br/>+ plan under them"] --> CT["contract<br/>then codegen"]
   CT --> R["red<br/>test files only<br/>prod code DENIED"]
   R -->|"keel state red-done"| G["green<br/>prod code only<br/>TESTS FROZEN"]
   G -->|"keel state green-done"| GA{{"gate ac<br/>approve / review<br/>reject / skip"}}
@@ -311,7 +310,9 @@ flowchart LR
   GA -->|"review"| RV["keel:ac-reviewer<br/>fresh context"]
   RV --> RF["review-fix"] --> GA
   GA -->|"reject"| R
-  GA -->|"last AC"| I["integration"] --> SEC["security"] --> E["e2e"] --> SM["smoke"] --> SH["ship"]
+  GA -->|"last AC"| I["integration"] --> IG{{"gate integration<br/>review / approve / skip"}}
+  IG -->|"findings"| RF2["review-fix"] --> IG
+  IG --> SEC["security"] --> E["e2e"] --> SM["smoke"] --> SH["ship"]
 ```
 
 The two locks that make the loop mean something: in `red` the production file is denied, so a test
@@ -685,7 +686,6 @@ flow — is `*: allow`.
 | `workspace` | nothing | all |
 | `triage` | nothing | change |
 | `spec` | `specs` | feature |
-| `plan` | `specs` | feature |
 | `contract` | `contract` | feature |
 | `red` | `api-test`, `web-test` | feature, change |
 | `green` | `api-main`, `web-src`, `migration` *(new-only)* | feature, change |
@@ -846,8 +846,8 @@ Ten gates plus one optional checkpoint. Everything not listed here runs without 
 | Gate R — the reproduction | fix | `keel gate R approve` | `--no-gates`, recorded in the PR |
 | Gate F — the fix plan | fix | `keel gate F approve` | `--no-gates`, recorded in the PR |
 | Per-criterion gate | feature, change | `keel gate ac approve` | `skip`, recorded in the PR |
+| Integration review | feature | `keel gate integration approve` | `skip`, recorded in the PR; automatic when the flow waived its gates |
 | Spec approval | feature | — | no — `contract` and `red` come after it |
-| Plan approval | feature | — | no |
 | Final review | all | `keel gate final approve` | **never** |
 | git repository | init | `keel ask git-repo --answer ...` | answerable either way |
 | Rung failed x3 | init | `keel ask rung-<id> --answer ...` | answerable either way |

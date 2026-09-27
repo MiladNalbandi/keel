@@ -49,7 +49,7 @@ Flows and state
   keel state red-done                 confirm a real RED for the current AC
   keel state green-done               confirm the AC and suite are green
   keel state repro-done               confirm a bug reproduction
-  keel gate <ac|R|F|final> <decision> record a human gate decision
+  keel gate <ac|integration|R|F|final> <decision>  record a human gate decision
   keel escalate [--override "why"]    turn a small change into a spec flow
   keel board [--watch] [--for <s>]    tasks, agents in flight, what blocks a push
   keel status                         alias for keel board

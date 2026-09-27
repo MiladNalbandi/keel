@@ -4,6 +4,51 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.60.0
+
+**Spec and plan are one phase now.** The feature flow had two: write the criteria, stop at a gate,
+start a fresh session, run the explorers, append the order and the files, stop at a second gate.
+The second gate asked for approval of a document the user had already watched take shape, and the
+session boundary landed in the middle of writing it. `plan` is gone from `PHASES`, `TRANSITIONS`,
+the guard matrix, the board and the checklist; `spec` covers all of it and closes with one
+blocking question and one `keel commit docs`. A repo parked in `phase: plan` is moved to `spec` by
+config migration 3 rather than left holding a phase the CLI no longer knows — which every guard
+lookup would have failed on.
+
+What the merge could quietly have destroyed is what `approved` certifies: *the criteria were
+agreed before anyone read the implementation.* The order inside the phase is what protects it —
+interview, drawings, criteria, and only then the explorers. Both dates are now stamped at the same
+gate, because the document stops growing there; `frozen` waited a phase only for as long as the
+plan was appended after the spec gate. `keel spec check` now reports an empty `## Plan` section,
+since it is agreed at the same moment as the criteria.
+
+Everything downstream shifts up one: contract is phase 2, the AC loops 3 and 4, integration 5,
+security 5.5, the full-diff review 5.6, E2E 6, smoke 7, ship 8, close 9.
+
+**The work-placement probe.** `keel:spec-authoring` had one probe worth never skipping — what
+"user" means. It now has two. The second asks where a filter, sort, search, page or total actually
+runs: in the browser over rows it already holds, on the server in a query, or on both with the
+server as the truth. The three read identically on a screen and differ in the contract, the tests,
+and which one survives its own data. It carries the two questions that settle it, what each
+reading turns into as criteria, and the per-side optimization rules — including the case that is
+not a performance question at all: a filter over rows the server should never have sent is an
+authorization bug, and the client is never trusted to hide a row from the person holding it.
+
+**An optional human gate after integration.** Phase 5 writes production code — the real client
+wired to the real API — and then the flow ran 5.5, 5.6, 6 and 7 without stopping, so the first
+question anyone was asked since the last AC gate arrived at ship, with the diff long cold.
+`keel gate integration review|approve|skip` sits at the end of phase 5. `review` runs one
+`keel:code-reviewer` over the branch diff in a fresh context and holds the phase; its findings
+leave through `review-fix`, which `integration` may now reach, because tests are frozen in
+`integration` and a finding usually wants one. `approve` and `skip` both move to `security`, and
+both are recorded — a flow that waived its gates skips it automatically and says so.
+
+The skip had to be made visible as well as recorded: `gates.skipped` is keyed by **lane**, and
+this gate belongs to the flow, so `prBody` read the log for it. Without that, the ship skill's
+"every skipped gate is in the body" was a promise the PR body did not keep for this one.
+
+251 scenarios, up from 246.
+
 ## 0.59.0
 
 **One dashboard for every project on the machine.** Each session starts its own MCP server, and

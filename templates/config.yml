@@ -1,5 +1,5 @@
 # keel configuration. Written by `keel init --write`; edit freely.
-version: 2
+version: 3
 flow_default: full
 
 runtime:

@@ -1,37 +1,53 @@
-# Phase 8 — smoke
+# Phase 8 — ship
 
-The `[SMOKE]` items, as checks that work locally **and** after a deploy. Under `smoke.max_seconds` (60) in total.
+`/keel:ship` runs the blueprint. It is fixed steps around agent steps, with caps, ending in a human review that cannot be skipped. This file is the reference for what each step checks and what to do when it fails.
 
 ```
-keel state phase smoke
-# write smoke/NNN-slug.sh and one @smoke test
-keel smoke
-keel commit smoke SPEC-NNN "<checks>"
+keel lane status          # merge any open lane first
+keel verify fast && keel verify module api && keel verify module web
+keel verify coverage
+keel audit
+keel trace --strict
+keel verify release
+# three reviewer lenses in parallel
+keel gate final approve
+keel pr
 ```
 
-## What goes in
+## The steps
 
-Plain Bash against `BASE_URL` and `API_URL`, which `keel smoke` sets from `e2e.web_url` and `e2e.api_url`:
-
-| Check | How | Passes when |
+| Step | Cap | Fails when |
 |---|---|---|
-| API health | `curl /actuator/health` | `status` is `UP` |
-| A critical write | `curl -X POST` with a fixture body | `201`, and `jq` finds the expected fields |
-| A critical read | `curl GET` the resource just created | body matches what was written |
-| The app loads | the `@smoke` Playwright test | the shell renders and the critical route is reachable |
+| `verify fast`, `verify module` | 2 fix rounds | any compile, typecheck or test failure |
+| `verify coverage` | 2 coverage-fix rounds | changed lines below 95%, branches below 90%, or global below the `ratchet` baseline |
+| `keel audit` | none — stops | a red commit holds production code, a green commit holds tests, a disabled marker was added, an unlock has no reason, or the branch is `spike/` |
+| `keel trace --strict` | none — stops | an AC has no test, or no green commit |
+| `verify release` | none — stops | E2E or smoke fails. Requires `commands.e2e` |
+| 3 × `keel:reviewer` | 2 review rounds | any lens ends `BLOCKING: yes` after the second round |
+| Final human review | none — **cannot be skipped** | you request changes or stop |
+| `keel pr` | none | push or `gh` fails |
 
-`keel smoke` runs every `smoke/*.sh` then `commands.smoke_e2e`, and exits non-zero on the first failure with one line per check.
+## Coverage fixes
 
-## Rules
+In the `coverage-fix` phase, test files are writable and production code is **delete-only** — unreachable lines may go, nothing may be added. `keel commit coverage` enforces the other half: any added line in a production file is refused, and the commit may not touch `.keel/config.yml`, because raising coverage cannot include lowering the threshold.
 
-- Only the `smoke` bucket is writable this phase.
-- Smoke is a **subset**, not a second E2E suite: one `@smoke` test covering the single most critical path.
-- Every check must be safe to run against a deployed environment. Nothing destructive, nothing that assumes an empty database.
-- Portable shell — no GNU-only flags, since this may run on a different machine than yours.
+## The reviewers
+
+Three at once on the same diff and spec, one lens each — correctness, security, performance (`review.lenses`). Each must end `BLOCKING: yes|no`; the `SubagentStop` hook asks a reviewer that forgets the line to repeat its findings and add it. Apply blocking findings one commit each:
+
+```
+keel commit fix AC-00n "review — <what changed>"
+```
+
+Then go back to step 1. Non-blocking findings go to the final review, not into this branch.
+
+## The final review
+
+Show: the spec summary or inline ACs, the trace table, coverage per app, every non-blocking finding, the unlock log, every skipped gate, and a diffstat. Then ask. On approval `keel gate final approve`, then `keel pr` — which pushes and opens the PR with the generated body.
 
 ## Failure modes
 
-- **The check depends on data E2E created** — it will pass locally and fail after a deploy. Seed what it needs, or assert something that is always true.
-- **It takes too long** — `smoke.max_seconds` exists because a slow smoke check stops being run. Trim it rather than raising the limit.
-- **`commands.smoke_e2e` is unset** — it is optional, so `keel smoke` runs the shell checks and reports the Playwright part as skipped rather than passing silently.
-- **Two fix rounds is the cap.** If it still fails, stop and report rather than grinding.
+- **`keel pr` is blocked by the coverage gate** — the verdict is missing or for an older commit. `keel verify coverage` again; the gate only reads the stored verdict, it never runs tests.
+- **`trace --strict` reports an AC with no test** — the AC ID is missing from the test name or tag. That is a real gap, not a formatting problem.
+- **`audit` flags a commit composition** — it cannot be fixed by amending history here. Add the missing piece as its own correctly-typed commit.
+- **A spike branch** — `/keel:ship` refuses it by design. Spikes are for learning; redo the work as a real flow.

@@ -62,7 +62,7 @@ commit — and shipping is not resumed until they do.
 0. If a lane is still open (`keel lane status`), merge it first: `keel lane merge web`.
 1. `keel verify fast` and `keel verify module api` / `keel verify module web`. At most 2 fix rounds.
 1b. `keel verify release` — every module suite, the full E2E suite and smoke, against **this**
-   commit. Steps 1 and 6 can change code after phase 7 ran, so without this the branch ships on a
+   commit. Steps 1 and 6 can change code after phase 6 ran, so without this the branch ships on a
    suite that never saw its last commit. The verdict is stored per sha in `.keel/release.json` and
    the push is refused until it matches HEAD. A project with no browser surface records that once:
    `keel verify release --skip "<why>"`, which is printed in the PR body like an unlock. **Re-run
@@ -89,7 +89,7 @@ commit — and shipping is not resumed until they do.
    | Review findings | blocking ones fixed, the non-blocking ones nobody fixed, and **every blocking finding dismissed as not real, with the reason** |
    | Release | the `keel verify release` verdict for this sha, and the `--skip` reason if e2e was skipped |
    | **Ship steps skipped** | every step the opening question turned off, with its reason — and for anything in the deferred band, that its push gate is still outstanding |
-   | Security | what phase 6.5 found, and what was triaged as unreachable |
+   | Security | what phase 5.5 found, and what was triaged as unreachable |
    | Step 6b | anything in the diff that implements no criterion |
    | Gates | **every skipped gate, and its scope** — including a background lane, where they were skipped by definition and no one chose it per AC |
    | Unlocks | every `keel unlock`, with the reason given at the time |
@@ -110,4 +110,4 @@ keel commit memory SPEC-NNN "<what changed in the knowledge base>"
 ```
 
 9. `keel pr` — it pushes and opens the PR with the trace table, the coverage numbers, every unlock, every accepted coverage line and every skipped gate in the body. The push is refused until the coverage verdict, and the dependency verdict when a manifest changed, both match this commit.
-9. After the merge, finish the flow: `/keel:feature` phase 10 — the ADR, then `keel state close`.
+9. After the merge, finish the flow: `/keel:feature` phase 9 — the ADR, then `keel state close`.

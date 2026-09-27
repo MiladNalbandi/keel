@@ -15,21 +15,25 @@ decides which files may be written. The pre-tool hook enforces that table on eve
 ## The feature flow
 
 ```
-preflight → workspace → spec → plan → contract
-                                        │
-             ┌──────────────────────────┘
+preflight → workspace → spec → contract
+                                  │
+             ┌────────────────────┘
              ▼
    ┌──► RED ──► GREEN ──► gate ──┐      one loop per acceptance criterion
    └─────────────────────────────┘
              │ all criteria done
              ▼
- integration → security → e2e → smoke → ship → final review → memory → close
+ integration → gate → security → e2e → smoke → ship → final review → memory → close
 ```
 
-- **spec**: numbered, layer-tagged acceptance criteria (`AC-001 [API] …`), approved by a human.
+- **spec**: numbered, layer-tagged acceptance criteria (`AC-001 [API] …`), and the plan under them
+  — AC order, files per AC, test layer. One phase, one human approval, one commit.
+- **contract**: `openapi.yaml` changes first; both sides are generated from it.
 - **RED**: write the failing test. Production code is frozen.
 - **GREEN**: the minimum code to pass. Tests are frozen.
 - **gate**: a human decides whether the criterion is really met: `approve`, `review`, `reject` or `skip`.
+- **integration**: the frontend stops answering itself with a mock and calls the real API. Tests are
+  frozen here, then an optional gate offers a review of the wiring: `review`, `approve` or `skip`.
 - **ship**: verify, coverage, audit, trace, reviewers in parallel, then the final human review and the PR.
 
 Off the main line there are repair phases: `refactor`, `review-fix` and `coverage-fix`. Each exists

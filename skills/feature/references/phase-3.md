@@ -1,43 +1,45 @@
-# Phase 3 — contract
+# Phase 3 — the backend AC loop
 
-The contract changes before any controller or client code. Both sides are generated from it, which is what keeps them from drifting.
-
-```
-# edit contracts/openapi.yaml
-keel verify contract
-keel commit contract SPEC-NNN "<what changed>"
-```
-
-## What `keel verify contract` runs
-
-In order, stopping at the first failure:
-
-| Step | Command key | Required |
-|---|---|---|
-| contract lint | `contract_lint` | no — reported as skipped if unset |
-| codegen | `codegen` | **yes** — the tier fails if unset |
-| api compile | `api_compile` | yes |
-| web typecheck | `web_typecheck` | yes |
-
-A missing **required** command fails the tier with `MISSING: <step>`; a missing optional one is listed as `skipped:` in the success output. Neither is silently dropped. `keel doctor` shows which are set.
-
-## Rules
-
-- Only the contract file is writable this phase — `api-main`, `web-src` and test buckets are all denied by the matrix.
-- Generated code is never committed and never hand-edited; the guard blocks the `generated` bucket in every phase.
-- Additive changes only, unless the spec says a break is intended and the Decisions section records it.
-
-## Then
-
-Both lanes can start. If a web lane is running, this is the earliest point it may begin:
+Every `[API]` acceptance criterion, in plan order. The loop itself is in **`references/ac-loop.md`** — read that for the RED and GREEN rules, the failure classification, the gate options and the stall ladder. This file covers only what is specific to the backend lane.
 
 ```
-keel lane start web [--background]
+keel state lane api        # if a web lane ran last
+keel state phase red
 ```
+
+## Lane scoping
+
+In the `api` lane, RED may write `api-test` files and GREEN may write `api-main` files plus **new** migrations. A `web-src` or `web-test` edit is refused and names the lane. That is deliberate: an `[API]` criterion that touches the frontend is either mis-tagged or two ACs.
+
+## Choosing the layer
+
+Load the `kotlin-spring-testing` skill for the patterns. Lowest layer that can express the AC:
+
+| AC is about | Layer |
+|---|---|
+| A pure rule, no framework | unit, JUnit 5 + MockK + AssertJ |
+| A status code, validation, an auth rule | `@WebMvcTest` slice |
+| A request or response body matching the contract | body test, MockMvc + the swagger validator |
+| A query, a constraint, a migration | `@DataJpaTest` + Testcontainers |
+| A cross-layer flow or a transaction | `@SpringBootTest` + `@ServiceConnection` |
+
+Every endpoint an AC touches should get a body test, because that is what makes a contract mismatch fail on this side.
+
+## Migrations
+
+New Flyway files are allowed in GREEN. Existing migration files are immutable in every phase — the guard refuses the edit and tells you to add a new file. A new migration applies automatically to the fresh Testcontainers database but **not** to the long-running dev stack; `keel stack migrate` does that, and the E2E phase checks for drift.
+
+## Test scope per AC
+
+`tests.per_ac_scope` defaults to `changed-packages`: `red-done` and `green-done` run this AC's tagged tests **plus** the tests in every package this change touched, so breaking a neighbour shows up now rather than at the gate. The full module suite runs at the gate (`tests.module_suite_at: gate`).
+
+## Delegation
+
+With `loops.green_author: subagent`, hand GREEN to `keel:implementer` — a fresh context per AC, useful on long features. It ends `GREEN-RESULT: pass` or `stalled`. RED can go to `keel:test-author` the same way. The hooks enforce the phase either way, so delegation changes who writes, not what is allowed.
 
 ## Failure modes
 
-- **`codegen` is not configured** — the tier fails by design rather than pretending to pass. Set `commands.codegen` (typically the generator task plus the client generator) in `.keel/config.yml`.
-- **Codegen succeeds, compile fails** — the contract introduced a required field the existing code does not supply. That is a real AC, not a contract problem; note it and let the AC loop handle it.
-- **Lint objects to an existing part of the file** — fix only what your change introduced. Pre-existing lint debt is a separate `/keel:change`.
-- **The generated folder shows as modified** — it should be gitignored. If it is tracked, that is a repo problem to fix before continuing, or every commit will carry generated noise.
+- **`red-done` says the tests already pass** — the behaviour exists. Mark it `--status already-met` with the evidence, or fix a test that asserts nothing.
+- **A Spring context failure in RED** — refused as a setup problem. Fix the test's configuration; do not commit it as red.
+- **Testcontainers cannot find Docker** — same refusal. Check `docker info`; on Colima or Podman the socket needs configuring.
+- **The module suite breaks at `green-done`** — an earlier AC's behaviour changed. Fix it in this GREEN rather than moving on, or the gate will not open.

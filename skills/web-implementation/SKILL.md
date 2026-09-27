@@ -32,7 +32,7 @@ Most `[WEB]` criteria need two: `data.md` plus one of `components.md` or `forms.
 
 ## Four rules that outrank any pattern
 
-1. **The generated client is the only way to reach the API.** Never hand-write a `fetch`. The generated directory is gitignored and the hooks refuse edits to it — if the shape is wrong, the contract is wrong, and that is a phase-3 change.
+1. **The generated client is the only way to reach the API.** Never hand-write a `fetch`. The generated directory is gitignored and the hooks refuse edits to it — if the shape is wrong, the contract is wrong, and that is a phase-2 change.
 
 2. **Loading, error and empty are three states, not one flag.** A single `isLoading` boolean cannot express "succeeded and there is nothing to show", which is the state users hit most and tests forget.
 

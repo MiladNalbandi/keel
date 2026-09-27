@@ -2,17 +2,17 @@
 id: NNN
 slug: <NNN-kebab-name>
 title: <feature>
-# draft → approved at the spec gate → frozen at the plan gate → superseded if a rewrite replaces it.
+# draft → approved and frozen together at the spec gate → superseded if a rewrite replaces it.
 status: draft
 created: YYYY-MM-DD
 # The spec gate. What it certifies is that the criteria were agreed *before* anyone read the
-# implementation — which is the whole reason phase 1 is written from the interview and the
-# contract rather than from the code.
+# implementation — which is why phase 1 writes them from the interview and the contract, and
+# only then lets the explorers open the code to fill in the plan below.
 approved: ''
-# The plan gate, one phase later. Phase 2 appends the AC order, the files per AC and the test
-# layer to this same document, so it is still growing after the spec gate; this is the date it
-# actually stops. From here the phase guards deny specs/ in red, green and gate, and a change is
-# an amendment.
+# The same gate. The plan — AC order, files per AC, test layer — is appended before it, so the
+# document stops growing at the moment it is approved and both dates are the same day. They were
+# a phase apart while the plan had a gate of its own. From here the phase guards deny specs/ in
+# red, green and gate, and a change is an amendment.
 frozen: ''
 # Set only when another spec replaces this one, so an archived spec says what happened to it.
 superseded_by: ''
@@ -101,6 +101,22 @@ architecture style.>
 
 <links to ADRs for anything with a real alternative>
 
+## Plan
+
+<!-- Written in phase 1, after the criteria are settled and the explorers have read the code.
+     Criteria first, explorers second: a spec written with the code already open describes what
+     is convenient rather than what was wanted, and nothing afterwards can tell the two apart.
+
+     One table, one row per criterion, dependencies first:
+
+       | AC     | Order | Files                | Test layer | Lane |
+       |--------|-------|----------------------|------------|------|
+       | AC-001 | 1     | the explorer's map   | the lowest that can express it | api |
+
+     Then one line for the contract delta: which paths and schemas change, or "none". -->
+
+<the AC order, the files per AC, the test layer per AC, the lane, and the contract delta>
+
 ## Definition of done
 
 This feature is mergeable only when all of it holds. Most is enforced — the point of writing it
@@ -121,9 +137,9 @@ down is the two or three lines that are not, and the fact that a reviewer can re
 
 ---
 
-<!-- Amendments go below, appended and dated, once `frozen` is set at the plan gate. Never edit
+<!-- Amendments go below, appended and dated, once `frozen` is set at the spec gate. Never edit
      above this line: a criterion rewritten in place leaves a document that reads as though it
-     always said that. Before `frozen`, phase 2 may still append and the criteria may still
+     always said that. Before `frozen`, phase 1 may still append and the criteria may still
      change — that is not an amendment, it is the document not being finished. -->
 
 ## Amendments

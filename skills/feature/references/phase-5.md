@@ -1,49 +1,54 @@
-# Phase 5 — the frontend AC loop
+# Phase 5 — integration
 
-Every `[WEB]` acceptance criterion. The loop is in **`references/ac-loop.md`** — RED and GREEN rules, failure classification, gates, stall ladder. This file covers the web lane only.
-
-```
-keel state lane web
-keel state phase red
-```
-
-## Lane scoping
-
-In the `web` lane, RED writes `web-test` files (`*.test.tsx`) and GREEN writes `web-src` files. An `api-main`, `api-test` or migration edit is refused and names the lane.
-
-## Running as a separate lane
-
-Only after the contract commit — both lanes need the generated client. Either:
+Both lanes are done; now the real client talks to the real API instead of a mock.
 
 ```
-keel lane start web                  # a second terminal in the worktree
-keel lane start web --background     # keel:lane-runner drives it
+keel lane merge web        # if a web lane ran
+keel state phase integration
+keel verify module api
+keel verify module web
 ```
 
-Each lane gets its own worktree, branch (`lane/web-<repo>`), Compose project name and port offset, so two lanes never share a database or a port. In a background lane that lane's human gates are skipped by definition; every automatic check still runs, and it ends `LANE-RESULT: done` or `stopped`.
+## What changes here
 
-`keel lane merge web` brings it back — do that before phase 6. A conflict stops and reports the files.
+Production code in both apps is writable (`api-main` and `web-src` allow, tests deny). This is where the frontend stops using MSW handlers for the paths under test and calls the generated client against the running API — wiring, not new behaviour.
 
-## Choosing the layer
+If you find yourself needing new behaviour, that is a missed AC. Go back to the loop rather than writing untested code here; tests are frozen in this phase precisely to stop that.
 
-Load the `web-testing` skill. Component tests with Vitest, Testing Library and MSW handlers generated from the contract — so a contract change breaks the test rather than passing silently. Parse at least one response per endpoint with the generated zod schema.
+```
+keel commit fix SPEC-NNN "integrate"    # only if there are changes
+```
 
-| AC is about | Assert |
-|---|---|
-| Rendering | Roles, labels and text, never class names |
-| Validation | The message the user sees, **and** that no request was sent |
-| An error state | The message for a 4xx or 5xx handler |
-| Loading | The intermediate state, via a delayed handler |
+## The gate — optional, but asked
 
-## Rules that bite here
+```
+keel gate integration review|approve|skip [--note "..."]
+```
 
-- Never hand-edit the generated client folder — the `generated` bucket is denied in every phase.
-- Component tests never start a real backend. Crossing the network is what phase 7 is for.
-- `.skip(`, `.only(`, `xit(` and `test.fixme` are rejected at the edit by the test-integrity hook, not at commit.
-- `web_test_ac` is `vitest run -t {AC}`, so the AC ID must appear in the test **name**, not just a comment.
+Phase 5 writes production code, and phases 5.5 through 7 run without stopping. Without this, the
+first question since the last AC gate arrives at ship, with the diff cold.
+
+Show the diff since the contract commit and ask. `review` runs one `keel:code-reviewer` over the
+branch diff in a fresh context and holds the phase; findings leave through `review-fix`, because
+tests are frozen here and a finding usually wants one. `approve` and `skip` both move to
+`security`, and both are recorded — a skip carries its reason to the final review and the PR body.
+
+A flow that waived its gates skips this one automatically and says so.
+
+## Before moving on
+
+`keel verify full` is the honest check at this point — both module suites plus static checks. It is also where an unconfigured `static_checks` surfaces as `MISSING`, because that tier requires it.
+
+Bring the dev stack up if it is not already, since phase 6 needs it:
+
+```
+keel stack up
+keel stack migrate        # if a new migration landed in this feature
+```
 
 ## Failure modes
 
-- **A test passes because MSW returned a stub the real API would not** — the handler drifted from the contract. Regenerate it rather than adjusting the assertion.
-- **`vitest -t AC-004` matches nothing** — `red-done` sees `no tests found`, which is in `red_reject`, so it is refused as a setup problem. The AC ID is missing from the test name.
-- **A component needs a test id for E2E** — that is a `[WEB]` AC change made here, not an edit during phase 7.
+- **The client sends a field the API does not accept** — the contract is the arbiter. Whichever side disagrees with `openapi.yaml` is the wrong one.
+- **A test fails that passed in its lane** — the two lanes each passed against their own assumptions. This is the phase that exists to catch it; fix the production code, not the test.
+- **`verify module web` passes but the app is broken in a browser** — component tests mock the network. That gap is E2E's job, next phase.
+- **Migration drift** — `keel stack migrate` applies pending migrations to the long-running dev database. `keel stack reset` drops the volume when the data has drifted too far to be worth keeping.

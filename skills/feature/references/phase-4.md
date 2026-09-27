@@ -1,45 +1,49 @@
-# Phase 4 — the backend AC loop
+# Phase 4 — the frontend AC loop
 
-Every `[API]` acceptance criterion, in plan order. The loop itself is in **`references/ac-loop.md`** — read that for the RED and GREEN rules, the failure classification, the gate options and the stall ladder. This file covers only what is specific to the backend lane.
+Every `[WEB]` acceptance criterion. The loop is in **`references/ac-loop.md`** — RED and GREEN rules, failure classification, gates, stall ladder. This file covers the web lane only.
 
 ```
-keel state lane api        # if a web lane ran last
+keel state lane web
 keel state phase red
 ```
 
 ## Lane scoping
 
-In the `api` lane, RED may write `api-test` files and GREEN may write `api-main` files plus **new** migrations. A `web-src` or `web-test` edit is refused and names the lane. That is deliberate: an `[API]` criterion that touches the frontend is either mis-tagged or two ACs.
+In the `web` lane, RED writes `web-test` files (`*.test.tsx`) and GREEN writes `web-src` files. An `api-main`, `api-test` or migration edit is refused and names the lane.
+
+## Running as a separate lane
+
+Only after the contract commit — both lanes need the generated client. Either:
+
+```
+keel lane start web                  # a second terminal in the worktree
+keel lane start web --background     # keel:lane-runner drives it
+```
+
+Each lane gets its own worktree, branch (`lane/web-<repo>`), Compose project name and port offset, so two lanes never share a database or a port. In a background lane that lane's human gates are skipped by definition; every automatic check still runs, and it ends `LANE-RESULT: done` or `stopped`.
+
+`keel lane merge web` brings it back — do that before phase 5. A conflict stops and reports the files.
 
 ## Choosing the layer
 
-Load the `kotlin-spring-testing` skill for the patterns. Lowest layer that can express the AC:
+Load the `web-testing` skill. Component tests with Vitest, Testing Library and MSW handlers generated from the contract — so a contract change breaks the test rather than passing silently. Parse at least one response per endpoint with the generated zod schema.
 
-| AC is about | Layer |
+| AC is about | Assert |
 |---|---|
-| A pure rule, no framework | unit, JUnit 5 + MockK + AssertJ |
-| A status code, validation, an auth rule | `@WebMvcTest` slice |
-| A request or response body matching the contract | body test, MockMvc + the swagger validator |
-| A query, a constraint, a migration | `@DataJpaTest` + Testcontainers |
-| A cross-layer flow or a transaction | `@SpringBootTest` + `@ServiceConnection` |
+| Rendering | Roles, labels and text, never class names |
+| Validation | The message the user sees, **and** that no request was sent |
+| An error state | The message for a 4xx or 5xx handler |
+| Loading | The intermediate state, via a delayed handler |
 
-Every endpoint an AC touches should get a body test, because that is what makes a contract mismatch fail on this side.
+## Rules that bite here
 
-## Migrations
-
-New Flyway files are allowed in GREEN. Existing migration files are immutable in every phase — the guard refuses the edit and tells you to add a new file. A new migration applies automatically to the fresh Testcontainers database but **not** to the long-running dev stack; `keel stack migrate` does that, and the E2E phase checks for drift.
-
-## Test scope per AC
-
-`tests.per_ac_scope` defaults to `changed-packages`: `red-done` and `green-done` run this AC's tagged tests **plus** the tests in every package this change touched, so breaking a neighbour shows up now rather than at the gate. The full module suite runs at the gate (`tests.module_suite_at: gate`).
-
-## Delegation
-
-With `loops.green_author: subagent`, hand GREEN to `keel:implementer` — a fresh context per AC, useful on long features. It ends `GREEN-RESULT: pass` or `stalled`. RED can go to `keel:test-author` the same way. The hooks enforce the phase either way, so delegation changes who writes, not what is allowed.
+- Never hand-edit the generated client folder — the `generated` bucket is denied in every phase.
+- Component tests never start a real backend. Crossing the network is what phase 6 is for.
+- `.skip(`, `.only(`, `xit(` and `test.fixme` are rejected at the edit by the test-integrity hook, not at commit.
+- `web_test_ac` is `vitest run -t {AC}`, so the AC ID must appear in the test **name**, not just a comment.
 
 ## Failure modes
 
-- **`red-done` says the tests already pass** — the behaviour exists. Mark it `--status already-met` with the evidence, or fix a test that asserts nothing.
-- **A Spring context failure in RED** — refused as a setup problem. Fix the test's configuration; do not commit it as red.
-- **Testcontainers cannot find Docker** — same refusal. Check `docker info`; on Colima or Podman the socket needs configuring.
-- **The module suite breaks at `green-done`** — an earlier AC's behaviour changed. Fix it in this GREEN rather than moving on, or the gate will not open.
+- **A test passes because MSW returned a stub the real API would not** — the handler drifted from the contract. Regenerate it rather than adjusting the assertion.
+- **`vitest -t AC-004` matches nothing** — `red-done` sees `no tests found`, which is in `red_reject`, so it is refused as a setup problem. The AC ID is missing from the test name.
+- **A component needs a test id for E2E** — that is a `[WEB]` AC change made here, not an edit during phase 6.

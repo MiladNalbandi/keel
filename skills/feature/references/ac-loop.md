@@ -1,6 +1,6 @@
 # The acceptance-criteria loop
 
-One AC at a time, in plan order. Two commits per AC, one gate. Runs for `[API]` ACs in phase 4 and `[WEB]` ACs in phase 5.
+One AC at a time, in plan order. Two commits per AC, one gate. Runs for `[API]` ACs in phase 3 and `[WEB]` ACs in phase 4.
 
 ```
 keel state phase red
@@ -50,7 +50,7 @@ keel state dep                      # what has been approved on this flow
 
 What is *not* this rule: restoring what a lockfile already names. A bare `npm install`, `npm ci` or `./gradlew build` installs nothing new and is left alone.
 
-**If the harness turns out to be large** — no container setup at all, no test database, an entire mocking layer absent — stop and say so before building it. That is a planning finding, not a RED step: `keel:explorer` reports *the test layer that fits, and where similar tests live*, so "nothing like this exists yet" was information phase 2 should have had. Building a test platform inside one AC's RED step buries a real decision inside a commit that claims to be about one criterion.
+**If the harness turns out to be large** — no container setup at all, no test database, an entire mocking layer absent — stop and say so before building it. That is a planning finding, not a RED step: `keel:explorer` reports *the test layer that fits, and where similar tests live*, so "nothing like this exists yet" was information phase 1 should have had. Building a test platform inside one AC's RED step buries a real decision inside a commit that claims to be about one criterion.
 
 `keel state red-done` runs this AC's tests plus the tests in changed packages, then decides:
 

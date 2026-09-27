@@ -10,7 +10,7 @@ import { useListBookmarks, useCreateBookmark } from '@/api/generated/bookmarks';
 
 Never hand-write a `fetch` or an axios call to your own API. A hand-written call cannot drift *visibly*: the contract changes, codegen changes the generated types, and your call keeps compiling against a shape the server no longer returns. With the generated client, the same change breaks the build — which is the point.
 
-If the generated shape is wrong or missing, the **contract** is wrong. That is a phase-3 change (`keel commit contract`), not something to patch around in a component.
+If the generated shape is wrong or missing, the **contract** is wrong. That is a phase-2 change (`keel commit contract`), not something to patch around in a component.
 
 ## Parse at the boundary
 

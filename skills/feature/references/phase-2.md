@@ -1,36 +1,43 @@
-# Phase 2 — plan
+# Phase 2 — contract
 
-Plan mode. The output is a plan section appended to the spec, and an approved order of work.
-
-## Ask the explorers, in parallel
-
-Start one `keel:explorer` per area — API, web, data — in a single message so they run concurrently. Each returns a file map for the ACs in its area, the patterns to follow, and ends `MAP-END`. They are read-only and capped at 60 lines.
-
-Explorers deliberately **do not** comment on architecture. That prohibition protects the AC loop from drive-by refactors; architecture is `keel:arch-surveyor`'s job at init, not a planning opinion.
-
-## Append to the spec
-
-- **AC order.** Dependencies first: the AC that creates the row before the one that reads it.
-- **Files per AC.** From the explorer maps.
-- **Contract delta.** Which paths and schemas change, or "none".
-- **Test layer per AC.** The lowest layer that can express it.
-
-## The gate — cannot be skipped by config
-
-Get the plan approved, then:
+The contract changes before any controller or client code. Both sides are generated from it, which is what keeps them from drifting.
 
 ```
-keel commit docs SPEC-NNN "plan"
+# edit contracts/openapi.yaml
+keel verify contract
+keel commit contract SPEC-NNN "<what changed>"
 ```
 
-`/clear` is recommended after this phase.
+## What `keel verify contract` runs
 
-## Lane assignment
+In order, stopping at the first failure:
 
-ACs are already tagged, so the lanes follow. If both lanes have work, decide here whether the web lane runs interactively in a second terminal or in the background — it cannot start until after the contract commit in phase 3, because both lanes need the generated client.
+| Step | Command key | Required |
+|---|---|---|
+| contract lint | `contract_lint` | no — reported as skipped if unset |
+| codegen | `codegen` | **yes** — the tier fails if unset |
+| api compile | `api_compile` | yes |
+| web typecheck | `web_typecheck` | yes |
+
+A missing **required** command fails the tier with `MISSING: <step>`; a missing optional one is listed as `skipped:` in the success output. Neither is silently dropped. `keel doctor` shows which are set.
+
+## Rules
+
+- Only the contract file is writable this phase — `api-main`, `web-src` and test buckets are all denied by the matrix.
+- Generated code is never committed and never hand-edited; the guard blocks the `generated` bucket in every phase.
+- Additive changes only, unless the spec says a break is intended and the Decisions section records it.
+
+## Then
+
+Both lanes can start. If a web lane is running, this is the earliest point it may begin:
+
+```
+keel lane start web [--background]
+```
 
 ## Failure modes
 
-- **An AC whose files overlap another AC's** — order them adjacently and in one lane, or the second one's RED will fail on the first one's half-finished code.
-- **A plan that renames things** — a rename is not part of an AC. It is a separate `/keel:change` before or after, because the AC loop's GREEN rule forbids code no test drives.
-- **An explorer that returns nothing useful** — its area probably has no existing code. Say so in the plan instead of inventing structure.
+- **`codegen` is not configured** — the tier fails by design rather than pretending to pass. Set `commands.codegen` (typically the generator task plus the client generator) in `.keel/config.yml`.
+- **Codegen succeeds, compile fails** — the contract introduced a required field the existing code does not supply. That is a real AC, not a contract problem; note it and let the AC loop handle it.
+- **Lint objects to an existing part of the file** — fix only what your change introduced. Pre-existing lint debt is a separate `/keel:change`.
+- **The generated folder shows as modified** — it should be gitignored. If it is tracked, that is a repo problem to fix before continuing, or every commit will carry generated noise.

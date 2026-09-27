@@ -1,53 +1,40 @@
-# Phase 9 — ship
+# Phase 9 — close
 
-`/keel:ship` runs the blueprint. It is fixed steps around agent steps, with caps, ending in a human review that cannot be skipped. This file is the reference for what each step checks and what to do when it fails.
-
-```
-keel lane status          # merge any open lane first
-keel verify fast && keel verify module api && keel verify module web
-keel verify coverage
-keel audit
-keel trace --strict
-keel verify release
-# three reviewer lenses in parallel
-keel gate final approve
-keel pr
-```
-
-## The steps
-
-| Step | Cap | Fails when |
-|---|---|---|
-| `verify fast`, `verify module` | 2 fix rounds | any compile, typecheck or test failure |
-| `verify coverage` | 2 coverage-fix rounds | changed lines below 95%, branches below 90%, or global below the `ratchet` baseline |
-| `keel audit` | none — stops | a red commit holds production code, a green commit holds tests, a disabled marker was added, an unlock has no reason, or the branch is `spike/` |
-| `keel trace --strict` | none — stops | an AC has no test, or no green commit |
-| `verify release` | none — stops | E2E or smoke fails. Requires `commands.e2e` |
-| 3 × `keel:reviewer` | 2 review rounds | any lens ends `BLOCKING: yes` after the second round |
-| Final human review | none — **cannot be skipped** | you request changes or stop |
-| `keel pr` | none | push or `gh` fails |
-
-## Coverage fixes
-
-In the `coverage-fix` phase, test files are writable and production code is **delete-only** — unreachable lines may go, nothing may be added. `keel commit coverage` enforces the other half: any added line in a production file is refused, and the commit may not touch `.keel/config.yml`, because raising coverage cannot include lowering the threshold.
-
-## The reviewers
-
-Three at once on the same diff and spec, one lens each — correctness, security, performance (`review.lenses`). Each must end `BLOCKING: yes|no`; the `SubagentStop` hook asks a reviewer that forgets the line to repeat its findings and add it. Apply blocking findings one commit each:
+After the PR merges. Without this the flow never formally ends, and the next one starts on top of stale state.
 
 ```
-keel commit fix AC-00n "review — <what changed>"
+keel state phase close
+# write an ADR if a decision had a real alternative
+keel state close
 ```
 
-Then go back to step 1. Non-blocking findings go to the final review, not into this branch.
+## The ADR
 
-## The final review
+One per decision that had a genuine alternative — not one per feature. `docs/adr/NNNN-title.md`:
 
-Show: the spec summary or inline ACs, the trace table, coverage per app, every non-blocking finding, the unlock log, every skipped gate, and a diffstat. Then ask. On approval `keel gate final approve`, then `keel pr` — which pushes and opens the PR with the generated body.
+- **Context** — the forces, in three sentences.
+- **Decision** — what was chosen, in the present tense.
+- **Alternatives** — what else was considered and why it lost.
+- **Consequences** — what this makes easy, and what it makes hard.
+
+An ADR is immutable once merged. Supersede it with a new one that references it by number rather than editing it.
+
+If nothing had a real alternative, write no ADR. A file recording "we used the obvious approach" is noise.
+
+Commit it with `keel commit docs ADR-NNNN "<title>"` — the `close` phase allows the `specs` and `other` buckets and denies application code.
+
+## `keel state close`
+
+Archives the whole flow state to `.keel/archive/<flow>-<spec>-<timestamp>.json` and clears the working state, so `keel status` reports no active flow. The archive keeps the AC table, both commit shas per AC, the gate log with every skip and forced transition, the unlock log, and the flaky record — which is what makes a past flow auditable after the branch is gone.
+
+It reports `<done>/<total> ACs done`. If that is not what you expect, check the board before closing.
+
+## Then
+
+`/clear`. The next flow starts from `keel preflight`.
 
 ## Failure modes
 
-- **`keel pr` is blocked by the coverage gate** — the verdict is missing or for an older commit. `keel verify coverage` again; the gate only reads the stored verdict, it never runs tests.
-- **`trace --strict` reports an AC with no test** — the AC ID is missing from the test name or tag. That is a real gap, not a formatting problem.
-- **`audit` flags a commit composition** — it cannot be fixed by amending history here. Add the missing piece as its own correctly-typed commit.
-- **A spike branch** — `/keel:ship` refuses it by design. Spikes are for learning; redo the work as a real flow.
+- **"no active flow to close"** — it was already closed, or `keel state abort` was used. `abort` throws state away without archiving; `close` is the one that keeps the record.
+- **ACs not all done** — closing does not check. If the count is short, something was skipped: look at the board and the gate log before you archive.
+- **The branch is still open** — close is about keel's state, not git's. Delete the branch separately once the merge is confirmed.

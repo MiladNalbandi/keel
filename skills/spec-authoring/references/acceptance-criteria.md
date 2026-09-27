@@ -15,10 +15,10 @@ Given / when / then, and the *then* must be observable from outside: a status co
 
 | Tag | Loop | Test layer |
 |---|---|---|
-| `[API]` | Phase 4, `api` lane | unit, web slice, body, data slice |
-| `[WEB]` | Phase 5, `web` lane | component, hook |
-| `[E2E]` | Phase 7, `keel:e2e-author` | Playwright journey |
-| `[SMOKE]` | Phase 8 | a shell check plus one `@smoke` test |
+| `[API]` | Phase 3, `api` lane | unit, web slice, body, data slice |
+| `[WEB]` | Phase 4, `web` lane | component, hook |
+| `[E2E]` | Phase 6, `keel:e2e-author` | Playwright journey |
+| `[SMOKE]` | Phase 7 | a shell check plus one `@smoke` test |
 
 The tag is not a label: it routes the criterion. It picks the lane, which the guard matrix then enforces — an `[API]` criterion cannot edit frontend code — and it picks which testing skill loads in RED. A mis-tagged criterion sends the whole loop to the wrong place, so tag by *where the assertion lives*, not where the work feels like it belongs.
 
