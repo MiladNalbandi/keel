@@ -4,6 +4,8 @@ keel has a live dashboard: one local web page for **every keel project on your m
 
 Ask Claude to open it (the `keel_dashboard` MCP tool), or open `http://127.0.0.1:7391`.
 
+![Three projects on one dashboard: kdemo-api shipping, kdemo-blog at a gate, kdemo-shop mid-RED with a blocking question waiting](images/dashboard-hub.png)
+
 ```
 Session A (shop) ─┐
 Session B (blog) ─┼──► ~/.keel/projects.json ──► one hub on :7391 ──► all projects
