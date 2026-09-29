@@ -91,7 +91,9 @@ const TOOLS = [
     description: 'Open the live keel dashboard: one local web page for every keel project on this '
       + 'machine, each with its flow, acceptance criteria, running agents, a live tool feed and '
       + 'what is blocking a push, updating as it happens. Returns the URL to give the user.',
-    inputSchema: { type: 'object', properties: { project: PROJECT, cwd: { type: 'string' } } },
+    inputSchema: { type: 'object', properties: { project: PROJECT, cwd: { type: 'string' },
+      view: { type: 'string', enum: ['flow', 'map', 'er'],
+        description: 'Which view to open on: the flow board (default), the project map, or the database schema.' } } },
   },
 ];
 
@@ -217,7 +219,8 @@ function fmtProjects() {
 
 function fmtDashboard(args) {
   const cwd = projectDir(args);
-  return require('./http').start(cwd).then((r) => {
+  const want = ['map', 'er'].includes(args && args.view) ? args.view : null;
+  return require('./http').start(cwd, want ? { view: want } : {}).then((r) => {
     const v = view.build(cwd);
     const count = projects.list().length;
     const mine = projects.keelVersion();
@@ -231,6 +234,7 @@ function fmtDashboard(args) {
       r.version && mine && r.version !== mine
         ? `The page is served by keel ${r.version} from another session; this one runs ${mine}.`
         : null,
+      want ? `It opens on the ${want === 'er' ? 'database schema' : 'project map'}.` : null,
       'It updates by itself as the flow moves — leave it open.',
     ].filter((l) => l !== null).join('\n');
   }).catch((e) => `could not start the dashboard: ${(e && e.message) || e}`);

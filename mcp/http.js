@@ -77,7 +77,7 @@ function viewOf(root) {
 function mapFor(root) {
   const map = require('../lib/map');
   try {
-    if (demoMode) return map.demo();
+    if (demoMode || !root) return map.demo();
     return map.forDashboard(require('../lib/config').load(root));
   } catch (e) { return null; }
 }
@@ -234,8 +234,8 @@ function handle(req, res) {
   // thing this server sends, and it changes only when somebody runs `keel map build`.
   if (route === '/api/map') {
     const e = entries.get(pick);
-    if (!e) return json(res, 404, { error: `no project "${pick}"` });
-    const m = mapFor(e.root);
+    if (!e && !demoMode) return json(res, 404, { error: `no project "${pick}"` });
+    const m = mapFor(e ? e.root : null);
     if (!m) return json(res, 404, { error: 'no map, and no bundled example to fall back to' });
     return json(res, 200, m);
   }

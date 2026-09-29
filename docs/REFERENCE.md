@@ -895,6 +895,10 @@ Project setup
   keel arch detect|show|set <style>   architecture style and its import boundaries
   keel memory sections [--confirm a,b|--all|--none]    which sections to build
   keel memory show|reload --section <n>|check|update
+  keel upgrade [--write]              add config keys and state fields a newer keel needs
+  keel skills for <lane>|packs|show   which skills and stack pack a lane resolves to
+  keel map build|show|check           the project map the dashboard draws
+  keel dashboard [--demo] [--port N] [--view map|er]   open the dashboard
 
 Checks and commits
   keel verify fast|ac|arch|deps|module|contract|full|e2e|release|coverage
