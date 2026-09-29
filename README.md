@@ -9,9 +9,12 @@
 
 <!-- No version number here on purpose: .claude-plugin/plugin.json holds it and CHANGELOG.md is the history. -->
 
-A Claude Code plugin that keeps an AI coding agent on a strict, test-first workflow for a
-Kotlin + Spring Boot backend with a TypeScript frontend. **Hooks and a small CLI enforce the rules,
-so the model does not have to remember them.**
+A Claude Code plugin that keeps an AI coding agent on a strict, test-first workflow.
+**Hooks and a small CLI enforce the rules, so the model does not have to remember them.**
+
+Kotlin + Spring Boot and TypeScript React are built in; Symfony and plain-JS React ship in
+[`packs/`](packs/README.md), and a new stack is one YAML file plus a testing skill — nothing in the
+workflow is written in terms of Gradle, Composer or Vitest.
 
 ## What it enforces
 
@@ -21,6 +24,20 @@ so the model does not have to remember them.**
 - **Phase order.** An illegal move (say, `spec` straight to `green`) is refused, and the legal ones are named.
 - **No disabled tests, no secrets in reads or commits, no push without a coverage verdict** for the current commit.
 - **Human gates.** Spec approval and the final review before the PR cannot be skipped.
+
+## Stacks
+
+`keel packs list` shows what is available. The two built-ins need no install; anything else is
+opt-in, so a stack you do not use costs you nothing.
+
+```
+keel packs add packs              # Symfony and plain-JS React, this machine
+keel packs add packs --project    # or just this project, which wins over the machine copy
+```
+
+An installed pack brings its own testing and implementation skills, its own placement references
+and its own `keel init --new` starter — keel carries nothing for a language it does not ship.
+[`stacks/README.md`](stacks/README.md) documents every key.
 
 ## Install
 
@@ -45,8 +62,12 @@ your project.
 | `/keel:ship` | verify, coverage, reviewers, final human review, PR |
 | `/keel:status` | where you are and the next command |
 
-**The dashboard** (the `keel_dashboard` MCP tool) is one live local page for every keel project on
-your machine: the flow as a state machine, criteria, agents, a tool feed and what blocks a push.
+**The dashboard** — `keel dashboard`, or the `keel_dashboard` MCP tool — is one live local page for
+every keel project on your machine: the flow as a state machine, criteria, agents, a tool feed and
+what blocks a push. `keel map build` adds a **map** view drawn from what the project actually
+exposes: the system, the business flow, the modules, the classes in one module, and the database
+schema. Every derivation states what it could not read, because a map that quietly under-reports is
+worse than one that says so. `keel dashboard --demo` shows it without a project to point at.
 
 ## Try it without a project
 

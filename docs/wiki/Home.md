@@ -1,8 +1,10 @@
 <p align="center"><img alt="keel" src="https://raw.githubusercontent.com/MiladNalbandi/keel/main/assets/brand/keel-lockup.svg" width="300"></p>
 
-**keel** is a Claude Code plugin that keeps an AI coding agent on a strict, test-first workflow for
-Kotlin + Spring Boot backends with a TypeScript frontend. Hooks and a small CLI enforce the rules,
-so the model does not have to remember them.
+**keel** is a Claude Code plugin that keeps an AI coding agent on a strict, test-first workflow.
+Hooks and a small CLI enforce the rules, so the model does not have to remember them.
+
+Kotlin + Spring Boot and TypeScript React are built in; Symfony and plain-JS React install on
+demand, and a new stack is one YAML file plus a testing skill.
 
 > Hooks and a CLI decide the rules, rather than the model remembering them.
 
@@ -19,8 +21,9 @@ so the model does not have to remember them.
 
 - [[Installation]]: install the plugin and set up a project
 - [[The Flows]]: feature, change, fix, hunt, diagnose and ship
+- [[Stacks]]: the built-in stacks, installing more, and adding your own
 - [[Code Review]]: the four review points and `/keel:review`
-- [[Dashboard]]: the live dashboard for every project on your machine
+- [[Dashboard]]: the live dashboard, and the project map it draws
 - [[Brand]]: the logo, colours and type
 
 The full command reference lives in the repo: [`docs/REFERENCE.md`](https://github.com/MiladNalbandi/keel/blob/main/docs/REFERENCE.md).

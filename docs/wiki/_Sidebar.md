@@ -3,6 +3,7 @@
 - [[Home]]
 - [[Installation]]
 - [[The Flows]]
+- [[Stacks]]
 - [[Code Review]]
 - [[Dashboard]]
 - [[Brand]]

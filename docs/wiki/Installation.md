@@ -39,6 +39,18 @@ Init detects the layout, proves the machine can build, test and run the project 
 writes `.keel/config.yml`, and builds a small knowledge base under `docs/knowledge/`. It stops and
 asks when something is missing, rather than guessing.
 
+## Optional: another stack
+
+Kotlin + Spring Boot and TypeScript React need no install. For Symfony or plain-JS React:
+
+```
+keel packs add packs              # this machine
+keel packs add packs --project    # or just this project
+keel packs list                   # what keel can see, and where each came from
+```
+
+See [[Stacks]] for how a pack is chosen, and how to add your own.
+
 ## Try it without a project
 
 keel ships a simulator. It builds a throwaway repo with fake build tools and drives the real hooks
