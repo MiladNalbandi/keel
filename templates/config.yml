@@ -66,6 +66,12 @@ commands:
   web_health_check: ''        # e.g. curl -fsS http://localhost:5173
   smoke: ''                   # a single smoke command for the run ladder
 
+# Every commit `keel commit` makes is authored as this identity, not as whichever human or
+# coding agent is driving the shell. Override per project if you want your own bot identity.
+commit:
+  author_name: keelbot
+  author_email: keel.dev.bot@gmail.com
+
 gates:
   mode: every-ac              # every-ac | end-of-lane | end
   ai_review_on_skip: false
