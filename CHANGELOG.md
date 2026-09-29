@@ -4,6 +4,59 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.62.0
+
+**The project map.** keel knew the architecture style, the module directories and the run commands,
+and nothing at all about what a project actually exposes. `keel map build` now writes
+`.keel/map.json` — five figures, keyed to a sha and to a hash of the sources it read — and the
+dashboard grows a `map` view that draws them: the whole system, the business flow, the modules, the
+classes inside one module, and the database schema. `keel dashboard` exists for the first time, with
+`--demo` for showing the thing without a project to point at.
+
+Three readers do the deriving, each from the source that already encodes the answer and each
+reporting what it could not read. `lib/contract.js` reads the contract with the parser `config.load`
+already uses rather than a second line-oriented one — `config.detect` accepts a `.json` contract, so
+a regex extractor would have been two implementations. Three `parseYaml` warts are contained rather
+than fixed, by taking a verb only when the key is one of the eight methods **and** its value is a
+map. `lib/schema.js` reads migrations in applied order. `lib/symbols.js` reads declarations, imports,
+literal queue names and `@Scheduled` expressions.
+
+Every derivation states its limit on screen. A path item behind a `$ref`, a publish site whose queue
+name is assembled at runtime, a module grouped by endpoint prefix because no role directories exist:
+each is counted and named, because a map that quietly under-reports is worse than one that says so.
+A silent drop reads as "this project has no such endpoint", which is a lie.
+
+**`journeys` is a sixth knowledge section.** The business flow is the one level code cannot answer:
+a call graph shows which class calls which, not that placing an order and charging for it are one
+piece of business. So it is read from what a person wrote, with the same citation bar as the other
+five — and, until somebody writes it, from the specs, labelled as such. A step with no citation
+behind it is drawn dashed and counted unsourced.
+
+**The console is the first write path in `mcp/`, and it refuses before it acts.** `hostOk` blocks
+DNS rebinding but not a page the developer has open in another tab POSTing with `mode: 'no-cors'` —
+that request is delivered. So four barriers guard every console POST, then five gates guard every
+action: the config switch (off, and off after an upgrade), a host that must be loopback or a compose
+service, SQL that must be one read, and a command named by key from `commands` and still passed
+through `guards.checkBash`, so the phase matrix is inherited rather than re-implemented. Everything
+that runs lands in the event log; a power that leaves no trace is the actual escalation.
+
+Freshness is the sha **and** a content hash, the lesson `.keel/memory.json` already learned: keyed
+to HEAD alone, a map rebuilt from edited sources reads as current, and one nobody rebuilt re-stamps
+itself on every commit. `keel map check` re-resolves every node's citation and exits 3 on one that
+no longer lands.
+
+One renderer, two routers. `renderGraph` became generic rather than forked — every difference is a
+callback whose default is the flow graph's behaviour — so the flow reads exactly as it did and there
+is no second SVG emitter to keep in step. The routers differ because a rail and a schema want
+different shapes, which is said out loud rather than forced through one solver.
+
+Three guards this change earned, all of which found something immediately: the page's embedded
+script is now parsed as well as grepped for backticks (it is only text to node, so a syntax error
+there would leave the dashboard on "connecting…" for ever, and nothing else in the repo would
+notice); every command `bin/keel` dispatches must appear in both usage texts (which found that
+`keel skills` was in neither and `keel upgrade` was missing from the reference); and the map's
+geometry is held to the same invariants as the flow graph's, across all five figures.
+
 ## 0.61.0
 
 **Symfony and plain-JS React, and stack packs are finally pluggable.** `stacks/README.md` has

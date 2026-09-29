@@ -91,6 +91,26 @@ file writes.
 
 ## Shipped since this file was written
 
+### A visual map of the project — **0.62.0**
+
+`keel map build` writes `.keel/map.json`: five figures, keyed to a sha and to a hash of the sources
+it read, every node citing the `file:line` it came from. The dashboard grows a `map` view at
+`#<id>/map` — whole system, business flow, modules, classes, and the database schema — plus a
+console that can call an endpoint or run a configured command against the local stack.
+
+The parts worth not regressing:
+
+- **It refuses to be quietly wrong.** Freshness is the sha *and* the content hash, so a map rebuilt
+  from edited sources at the same commit reads as changed and one nobody rebuilt does not re-stamp
+  itself. `keel map check` re-resolves every citation and exits 3 on one that no longer lands.
+- **One renderer, two routers.** `renderGraph` takes callbacks whose defaults are the flow graph's
+  behaviour, so there is no second SVG emitter to keep in step. The routers differ because a rail
+  and a schema want different shapes, and that is said out loud rather than forced.
+- **The console refuses before it acts.** Four CSRF barriers, then five gates. The scenario that
+  tries all four ways past the barriers is the one that must never regress.
+- **The example is unmistakably not yours.** `templates/map.json` is a real build of a fictional
+  project, carries no sha, draws hatched, and the console is hard-off against it.
+
 ### A human gate on the knowledge build — **0.13.0**
 
 `keel memory sections [--confirm a,b | --all | --none]`, modelled on `keel hunt lenses --confirm`:
@@ -113,6 +133,15 @@ Two properties worth not regressing, both covered by scenarios:
 
 Recorded so none of these is mistaken for an oversight.
 
+- **The map's derivations are crude, and each says so on screen.** Endpoints come from the
+  contract, so one a controller serves without a contract entry is invisible. Tables come from the
+  migrations, so an ORM-generated schema is not seen. A queue is a literal name at a publish or
+  listen site. Class edges are imports, not calls — a same-package Kotlin reference needs no import
+  and is invisible. A module is a directory unless no role directories exist, in which case it is an
+  endpoint path prefix.
+- **The console cannot read a database or publish to a queue by itself.** Both need a client keel
+  does not ship, so both refuse and name the `db_query` / `queue_publish` command a project can
+  define. Running a scheduled job on demand is not offered at all.
 - **`keel init --write` overwrites a hand-edited `.keel/config.yml`.** Merge-or-refuse needs a decision
   about what merging a commented YAML file means. It is why the gitignore repair lives in
   `keel hunt start` rather than in advice to re-run init.
