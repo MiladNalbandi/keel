@@ -74,6 +74,10 @@ Project setup
   keel memory sections [--confirm a,b|--all|--none]    which sections to build
   keel memory show|reload --section <n>|check|update   the project knowledge base
 
+  keel skills for <lane>|packs|show    which skills and stack pack a lane resolves to
+  keel map build|show|check           the project map the dashboard draws
+  keel dashboard [--demo] [--port N] [--view map|er]   open the dashboard
+
 Checks and commits
   keel verify fast|ac|arch|deps|module|contract|full|e2e|release|coverage
   keel cover [decide <key> test|delete|accept]  the coverage-fix loop
@@ -119,6 +123,8 @@ switch (cmd) {
   case 'upgrade': cli.upgrade(rest); break;
   case 'preflight': cli.preflight(rest); break;
   case 'arch': cli.archCmd(rest); break;
+  case 'map': cli.mapCmd(rest); break;
+  case 'dashboard': run(cli.dashboardCmd(rest)); break;
   case 'skills': cli.skillsCmd(rest); break;
   case 'packs': cli.packsCmd(rest); break;
   case 'cover': cli.coverCmd(rest); break;

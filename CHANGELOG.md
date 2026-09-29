@@ -4,33 +4,7 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
-## 0.62.1
-
-**A repository with no frontend could not run `verify fast` at all.** `frontend.dir: ''` is what
-`keel init` writes for a backend-only project, and both `guards.js` and `skills.js` read a blank
-directory as "this lane does not exist". `verify.js` did not. `touched()` treats a blank directory
-as the repository root — correct for a single-module project, where the module *is* the root — so
-every changed file matched the web lane, a web typecheck step was appended, and `web_typecheck`
-was blank and required. `keel verify fast` then failed on every change, in the tier that runs most
-often: once per RED and once per GREEN. The two readings cannot be told apart inside `touched()`,
-where both are live, so the question is asked at the call site instead, by `hasWeb(cfg)`. `verify
-contract`, `full` and `release` appended the same unconditional web step and are gated the same
-way.
-
-**`keel doctor` counted commands that could not run.** A config still holding a template
-placeholder — `api_compile: '{{BUILD}} -q compile test-compile'`, left unsubstituted because the
-file was written by hand rather than by `init --write` — was reported as *set*, and the tier using
-it died much later with `{{BUILD}}: command not found`. doctor now names every command holding an
-unsubstituted `{{...}}` placeholder, and says what to put there instead.
-
-doctor also stopped reporting web gaps in a repository that has no web lane, where seven lines of
-`web_typecheck — needed by fast` buried the four gaps that were real. Its set count is now taken
-from the commands actually configured rather than by subtracting the gaps from the total — which
-counted the dropped web keys as configured, and read `14/23` for a project that had set eight.
-
-264 scenarios, unchanged, all passing.
-
-## 0.62.0
+## 0.63.0
 
 **Stack packs install, instead of shipping inside keel.** Every new language used to grow keel's
 own repo and wait for a keel release. Packs now come from three roots, most specific winning:
@@ -66,6 +40,32 @@ contributes at the moment of install, because installing a pack installs configu
 The pack scenarios were rewritten against a fixture pack installed into the sandbox rather than
 against whichever stacks keel happens to ship — a stronger test, since it exercises the external
 path. 264 scenarios, up from 260.
+
+## 0.62.1
+
+**A repository with no frontend could not run `verify fast` at all.** `frontend.dir: ''` is what
+`keel init` writes for a backend-only project, and both `guards.js` and `skills.js` read a blank
+directory as "this lane does not exist". `verify.js` did not. `touched()` treats a blank directory
+as the repository root — correct for a single-module project, where the module *is* the root — so
+every changed file matched the web lane, a web typecheck step was appended, and `web_typecheck`
+was blank and required. `keel verify fast` then failed on every change, in the tier that runs most
+often: once per RED and once per GREEN. The two readings cannot be told apart inside `touched()`,
+where both are live, so the question is asked at the call site instead, by `hasWeb(cfg)`. `verify
+contract`, `full` and `release` appended the same unconditional web step and are gated the same
+way.
+
+**`keel doctor` counted commands that could not run.** A config still holding a template
+placeholder — `api_compile: '{{BUILD}} -q compile test-compile'`, left unsubstituted because the
+file was written by hand rather than by `init --write` — was reported as *set*, and the tier using
+it died much later with `{{BUILD}}: command not found`. doctor now names every command holding an
+unsubstituted `{{...}}` placeholder, and says what to put there instead.
+
+doctor also stopped reporting web gaps in a repository that has no web lane, where seven lines of
+`web_typecheck — needed by fast` buried the four gaps that were real. Its set count is now taken
+from the commands actually configured rather than by subtracting the gaps from the total — which
+counted the dropped web keys as configured, and read `14/23` for a project that had set eight.
+
+264 scenarios, unchanged, all passing.
 
 ## 0.62.0
 
