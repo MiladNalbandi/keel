@@ -8,7 +8,8 @@ The premise: the most reliable description of how a project runs is not the READ
 
 | Source | What it yields |
 |---|---|
-| `build.gradle.kts`, `settings.gradle.kts`, `gradlew` / `mvnw` | the build tool and its wrapper |
+| `build.gradle.kts`, `settings.gradle.kts`, `gradlew` / `mvnw`, `composer.json` | the build tool and its wrapper |
+| every `stacks/*.yml`'s `detect:` block, probed against the backend and frontend directories | which stack(s) actually match — not just the two this table's other rows happen to name. A new pack (a new yml file) shows up here with no code change |
 | `package.json`, `pnpm-lock.yaml` / `yarn.lock` / `bun.lock` | the package manager |
 | `.github/workflows/*`, `.gitlab-ci.yml`, `Jenkinsfile` | commands that are known to pass — every `run:` line mentioning gradlew, mvnw, npm, pnpm, yarn, docker or playwright, capped at 15 |
 | `compose.yml`, `compose.yaml`, `docker-compose*.yml` | service names and images |
@@ -20,7 +21,12 @@ Directory candidates, first match wins: backend `apps/api`, `api`, `backend`, `e
 
 ## Report it as one table
 
-Backend, frontend, build tool, package manager, contract file, Compose file, services, required environment variable **names**, and what is missing. **Names only, never values** — reading `.env` is blocked in every phase, and `keel env` is the way to see which are set.
+Backend, frontend, **the matched stack pack(s) for each**, build tool, package manager, contract file, Compose file, services, required environment variable **names**, and what is missing. **Names only, never values** — reading `.env` is blocked in every phase, and `keel env` is the way to see which are set.
+
+## Failure modes, stack matching
+
+- **No pack matches a lane** — say so plainly (`keel discover` prints "none matched") rather than silently assuming kotlin-spring or ts-react. The interview should ask what the stack actually is, and `stacks/README.md` explains how to add a pack for it.
+- **Two packs match one lane** — a real state once a project has started moving to a new stack, not necessarily a mistake. Report both and point at `architecture.backend_stack` / `architecture.frontend_stack` as the way to pick one, rather than guessing.
 
 ## The two questions
 

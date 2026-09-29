@@ -1,9 +1,13 @@
 # Stack pack: TypeScript + React frontend.
 name: ts-react
 lane: web
+# Which `skills/architecture/references/<style>-<suffix>.md` file this stack reads.
+arch_ref_suffix: web
 
 detect:
-  files: [package.json, tsconfig.json]
+  # `package.json` alone used to be enough to match — every JS project has one, TypeScript or
+  # not, and once react-js existed that stopped being a TypeScript signal at all.
+  files: [tsconfig.json]
   extensions: ['.ts', '.tsx']
 
 layers:

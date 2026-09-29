@@ -1,12 +1,14 @@
 {
   "name": "keel-marketplace",
-  "owner": { "name": "Milad Nalbandi" },
-  "description": "keel: an enforced spec and acceptance-criteria workflow for Kotlin/Spring Boot and TypeScript, where hooks and a CLI decide the rules rather than the model remembering them.",
+  "owner": {
+    "name": "Milad Nalbandi"
+  },
+  "description": "keel: an enforced spec and acceptance-criteria workflow for Kotlin/Spring Boot, Symfony, and TypeScript or plain-JS React, where hooks and a CLI decide the rules rather than the model remembering them.",
   "plugins": [
     {
       "name": "keel",
       "source": "./",
-      "description": "Enforced spec and acceptance-criteria workflow for Kotlin/Spring Boot with a TypeScript frontend: RED/GREEN loops, guarded commits, coverage gate, review and ship blueprint."
+      "description": "Enforced spec and acceptance-criteria workflow for a pluggable backend and frontend stack (Kotlin/Spring, Symfony, React with or without TypeScript): RED/GREEN loops, guarded commits, coverage gate, review and ship blueprint."
     }
   ]
 }

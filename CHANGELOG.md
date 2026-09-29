@@ -4,6 +4,48 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.61.0
+
+**Symfony and plain-JS React, and stack packs are finally pluggable.** `stacks/README.md` has
+said since the split "adding a stack is one yml file plus one testing skill" — untrue in three
+places. `lib/skills.js#PACK_FOR_LAYER` named `kotlin-spring`/`ts-react` literally, so a new pack's
+`detect:` block was never read when deciding which stack a layer's skills come from.
+`lib/config.js#detect()`'s discovery table only ever looked for Gradle/Maven and npm signals.
+And `skills.js#architectureReference` hardcoded a `-kotlin` reference-file suffix for every
+backend regardless of which stack actually matched, so a Symfony project selecting `hexagonal`
+would have read Kotlin-specific placement advice.
+
+All three are fixed. `resolvePackForLane` (`lib/skills.js`) now probes every pack's `detect:`
+against the lane's directory: one match uses it, zero matches falls back to the historical
+default with a stated reason, and more than one — a real state once a repo is mid-migration
+between two stacks — refuses to guess and names the `architecture.backend_stack` /
+`frontend_stack` config key that resolves it. `config.detect()` reports which pack(s) actually
+matched (`keel discover` now prints a `backend stack:` / `frontend stack:` line) instead of
+inferring the stack purely from Gradle/npm presence. Every pack now declares `arch_ref_suffix`,
+so `hexagonal-php.md` (and `ddd-php.md`, `layered-php.md`) exist and are the ones a Symfony
+project actually reads.
+
+Two new packs prove it: **`stacks/symfony.yml`** (PHPUnit layers, PHPStan + PHP-CS-Fixer static
+checks, Doctrine migrations, a `composer.json` dependency guard, `keel:symfony-testing` and
+`keel:symfony-implementation`) and **`stacks/react-js.yml`**, a plain-JavaScript React pack for
+projects with no TypeScript (`keel:react-testing`/`keel:react-implementation`, both short
+"read `keel:web-testing`/`keel:web-implementation`, here is the delta" skills rather than a
+second copy of component/state/forms/accessibility guidance that would only drift from the
+original). `react-js` and `ts-react` can both plausibly match a `react`-in-`package.json`
+directory; `packApplies` gained `package_deps` (dependency-name detection, more reliable than
+sniffing file extensions) and `exclude_files` (a negative signal, checked first) specifically so
+`react-js` can mean "React, and no `tsconfig.json`" without the two becoming ambiguous on every
+TypeScript project — `ts-react`'s own `detect.files` narrowed from `[package.json, tsconfig.json]`
+to just `[tsconfig.json]`, since `package.json` alone was never actually a TypeScript signal.
+
+`keel init --new` takes `--stack <name>` / `--frontend-stack <name>` to scaffold a Symfony or
+plain-JS-React starter instead of the Kotlin/TS one (`templates/starter/composer.json`,
+`HealthTest.php`, `vitest.config.js`). The dependency guard (`lib/guards.js`) recognises
+`composer.json`'s `"name": "constraint"` shape alongside `package.json`'s identical one, and its
+test-path detection recognises `*Test.php` alongside `*Test.kt`/`*Test.java`.
+
+260 scenarios, up from 247.
+
 ## 0.60.0
 
 **Spec and plan are one phase now.** The feature flow had two: write the criteria, stop at a gate,

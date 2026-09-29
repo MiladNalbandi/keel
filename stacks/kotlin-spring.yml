@@ -2,6 +2,8 @@
 # A new stack is one file like this plus one testing skill; the flow skills never change.
 name: kotlin-spring
 lane: api
+# Which `skills/architecture/references/<style>-<suffix>.md` file this stack reads.
+arch_ref_suffix: kotlin
 
 # How to recognise this stack in a repo, cheapest signal first.
 detect:
