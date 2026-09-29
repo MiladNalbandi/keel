@@ -1,5 +1,5 @@
 # keel configuration. Written by `keel init --write`; edit freely.
-version: 3
+version: 4
 flow_default: full
 
 runtime:
@@ -165,3 +165,15 @@ caps:
   green_turns: 15
   e2e_turns: 40
   ship_rounds: 2
+
+# The dashboard console. Every part of it is off, and stays off until you turn it on here: the
+# page is served on loopback, but another tab can still POST to it, so a route with side effects
+# behind a default-on flag would be web-triggerable execution on this machine.
+console:
+  enabled: false
+  endpoints: off             # off | read | write
+  db: off                    # off | read — there is no write
+  queue: off
+  commands: off              # runs a key from `commands` below, never a string from the page
+  base_url: http://localhost:8080
+  db_url_env: DATABASE_URL   # the env var holding the DSN; never a literal DSN

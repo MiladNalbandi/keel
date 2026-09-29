@@ -22,7 +22,10 @@ const FAVICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://w
 
 const uiMap = require('./ui-map');
 
-function html() {
+// The console token is handed to the page and to nothing else. It is the barrier a cross-origin
+// page cannot pass: it can neither read this nor set the header that carries it.
+function html(consoleToken) {
+  const token = String(consoleToken || '');
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -247,6 +250,7 @@ a.pc.wait{border-color:var(--bad)}
 .pc .pw{margin-top:10px;color:var(--bad);font-weight:600;font-size:12px}
 .pc .pm{margin-top:8px;color:var(--faint);font-size:11.5px}
 </style>
+<meta name="keel-console" content="${token}">
 </head>
 <body>
 <div class="wrap" id="app"><div class="center"><div class="big">connecting…</div></div></div>
@@ -720,6 +724,13 @@ ${uiMap.SCRIPT}
     if (!box) return;
     mapHide[box.getAttribute('data-mhide')] = !box.checked;
     draw();
+  });
+
+  app.addEventListener('click', function(e){
+    var tab = e.target.closest ? e.target.closest('[data-con-tab]') : null;
+    if (tab){ conTab = tab.getAttribute('data-con-tab'); conOut = null; draw(); return; }
+    var run = e.target.closest ? e.target.closest('[data-con-run]') : null;
+    if (run) conSend(run.getAttribute('data-con-run'));
   });
 
   function applyFilter(v){

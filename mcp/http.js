@@ -50,6 +50,10 @@ let heartbeat = null;
 let registryPoll = null;
 let registryMtime = -1;
 let takeover = null;
+// Minted per hub and handed only to the page this server serves. A cross-origin page can read
+// neither this nor set a custom header on a no-cors request, which is what stops it driving the
+// console by guessing the port.
+let consoleToken = require('crypto').randomBytes(24).toString('hex');
 
 function send(res, code, type, body) {
   res.writeHead(code, {
@@ -224,8 +228,9 @@ function handle(req, res) {
   const pick = u.searchParams.get('project') || homeId;
 
   if (route === '/' || route === '/index.html') {
-    return send(res, 200, 'text/html; charset=utf-8', ui.html());
+    return send(res, 200, 'text/html; charset=utf-8', ui.html(consoleToken));
   }
+  if (route.startsWith('/api/console/')) return console_(req, res, route.slice('/api/console/'.length), pick);
   if (route === '/api/hello') return json(res, 200, hello());
   if (route === '/api/projects') {
     return json(res, 200, { at: new Date().toISOString(), version: projects.keelVersion(), home: homeId, projects: projectList() });
@@ -262,6 +267,43 @@ function handle(req, res) {
     return undefined;
   }
   return send(res, 404, 'text/plain; charset=utf-8', 'not found');
+}
+
+// Four barriers, and every one of them has to hold. hostOk (already applied above) stops DNS
+// rebinding. The other three stop the case it never covered: a page the developer has open in
+// another tab can POST here with mode:'no-cors' and the request is delivered, even though the
+// reply is unreadable. That was harmless while every route was a side-effect-free GET.
+function csrfOk(req) {
+  const h = req.headers || {};
+  const origin = h.origin;
+  if (origin && origin !== url && origin !== `http://localhost:${server ? server.address().port : ''}`) return false;
+  const site = h['sec-fetch-site'];
+  if (site && site !== 'same-origin' && site !== 'none') return false;
+  if (!/^application\/json/.test(String(h['content-type'] || ''))) return false;
+  return h['x-keel-console'] === consoleToken;
+}
+
+function console_(req, res, tab, pick) {
+  if (req.method !== 'POST') return json(res, 405, { error: 'the console is POST only' });
+  if (!csrfOk(req)) return json(res, 403, { error: 'this request did not come from the dashboard page' });
+  const e = entries.get(pick);
+  if (!e && !demoMode) return json(res, 404, { error: `no project "${pick}"` });
+  let raw = '';
+  let over = false;
+  req.on('data', (d) => {
+    raw += d;
+    // A console request is a few hundred bytes. Anything larger is not one.
+    if (raw.length > 64 * 1024) { over = true; req.destroy(); }
+  });
+  req.on('end', () => {
+    if (over) return json(res, 413, { error: 'that request is too large to be a console request' });
+    let body = {};
+    try { body = raw ? JSON.parse(raw) : {}; } catch (err) { return json(res, 400, { error: 'the body is not JSON' }); }
+    return require('./console').run(e ? e.root : null, tab, body, { demo: demoMode })
+      .then((r) => json(res, r.status || (r.ok ? 200 : 403), r))
+      .catch((err) => json(res, 500, { ok: false, error: String((err && err.message) || err) }));
+  });
+  return undefined;
 }
 
 function tryListen(port) {

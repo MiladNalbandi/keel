@@ -66,6 +66,22 @@ const CSS = `
 .mfilters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
 .mfilters input{accent-color:var(--accent);margin:0}
 
+.mcon{margin-top:14px}
+.mctabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.mctabs button{font:inherit;font-size:11.5px;background:var(--panel);border:1px solid var(--border);
+  border-radius:99px;color:var(--dim);padding:4px 12px;cursor:pointer}
+.mctabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);
+  color:var(--on-accent);font-weight:700}
+.mcrow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:9px}
+.mcrow select,.mcrow input{font:inherit;font-size:12px;background:var(--bg);color:var(--fg);
+  border:1px solid var(--border);border-radius:6px;padding:5px 8px;min-width:0;flex:1 1 180px}
+.mcrow button{font:inherit;font-size:12px;font-weight:700;border-radius:7px;padding:6px 13px;
+  cursor:pointer;background:var(--accent);color:var(--on-accent);border:1px solid var(--accent)}
+.mcout{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 11px;
+  font-size:11.5px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;
+  overflow:auto}
+.mcout .bad{color:var(--bad)} .mcout .ok{color:var(--ok)}
+.mchint{color:var(--faint);font-size:11px;margin:0 0 9px}
 .mdl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:12px;align-items:baseline}
 .mdl dt{color:var(--faint);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
 .mdl dd{margin:0;min-width:0;overflow-wrap:anywhere}
@@ -222,6 +238,80 @@ const SCRIPT = `
     }).join('') + '</div>';
   }
 
+  // The console. Everything it can do is refused by default and refused again by the server, so
+  // what the page does here is collect a key and show what came back — never build a command.
+  var conTab = 'command';
+  var conOut = null;
+
+  function conBody(){
+    var m = mapData || {};
+    if (conTab === 'command'){
+      var keys = Object.keys((m.commands || {}));
+      return '<p class="mchint">Runs a command this project already defines. The page sends its key, never a string.</p>' +
+        '<div class="mcrow"><select data-con="key">' +
+        (keys.length ? keys.map(function(k){ return '<option>' + esc(k) + '</option>'; }).join('')
+                     : '<option value="">no commands are configured</option>') +
+        '</select><button data-con-run="command">Run</button></div>';
+    }
+    if (conTab === 'endpoint'){
+      var eps = Object.keys(m.nodes || {}).filter(function(id){ return m.nodes[id].kind === 'endpoint'; });
+      return '<p class="mchint">Calls an endpoint the map knows, on the local stack only.</p>' +
+        '<div class="mcrow"><select data-con="ep">' +
+        eps.map(function(id){ return '<option value="' + esc(id) + '">' + esc(m.nodes[id].label) + '</option>'; }).join('') +
+        '</select><button data-con-run="endpoint">Send</button></div>';
+    }
+    if (conTab === 'db'){
+      return '<p class="mchint">One read, against a database keel can prove is local. There is no write mode.</p>' +
+        '<div class="mcrow"><input data-con="sql" value="select 1" spellcheck="false">' +
+        '<button data-con-run="db">Run</button></div>';
+    }
+    return '<p class="mchint">Puts a message on a queue, through a command this project defines.</p>' +
+      '<div class="mcrow"><button data-con-run="queue">Publish</button></div>';
+  }
+
+  function renderConsole(){
+    var tabs = [['command', 'Run a command'], ['endpoint', 'Call an endpoint'],
+      ['db', 'Read the database'], ['queue', 'Send a queue message']];
+    var body = '<div class="mctabs">' + tabs.map(function(t){
+      return '<button data-con-tab="' + t[0] + '" aria-selected="' + (conTab === t[0]) + '">' + t[1] + '</button>';
+    }).join('') + '</div>' + conBody() +
+      '<div class="mcout">' + (conOut || 'Nothing run yet. Everything here is off until it is turned on in .keel/config.yml.') + '</div>';
+    return '<div class="mcon">' + card('try it', 'against the running project', body) + '</div>';
+  }
+
+  function conSend(tab){
+    var meta = document.querySelector('meta[name="keel-console"]');
+    var body = { };
+    if (tab === 'command'){ var k = app.querySelector('[data-con="key"]'); body.command = k ? k.value : ''; }
+    if (tab === 'db'){ var q = app.querySelector('[data-con="sql"]'); body.sql = q ? q.value : ''; }
+    if (tab === 'endpoint'){
+      var sel = app.querySelector('[data-con="ep"]');
+      var node = sel && mapData.nodes[sel.value];
+      if (node){
+        var bits = String(node.label).split(' ');
+        body.method = bits[0];
+        body.path = bits[1];
+        body.knownPaths = Object.keys(mapData.nodes).filter(function(id){ return mapData.nodes[id].kind === 'endpoint'; })
+          .map(function(id){ return String(mapData.nodes[id].label).split(' ')[1]; });
+      }
+    }
+    conOut = 'Running\u2026';
+    draw();
+    fetch('/api/console/' + tab + (selected ? '?project=' + encodeURIComponent(selected) : ''), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-keel-console': meta ? meta.content : '' },
+      body: JSON.stringify(body)
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d && d.ok && d.result){
+        conOut = '<span class="ok">ok</span>\\n' + esc(JSON.stringify(d.result, null, 1));
+      } else {
+        conOut = '<span class="bad">refused: ' + esc((d && d.error) || 'unknown') + '</span>' +
+          (d && d.fix ? '\\n' + esc(d.fix) : '');
+      }
+      draw();
+    }).catch(function(e){ conOut = '<span class="bad">' + esc(String(e)) + '</span>'; draw(); });
+  }
+
   function renderMap(v, view, crumb){
     fetchMap();
     var level = view === 'er' ? 'er' : (crumb[0] || 'system');
@@ -276,7 +366,8 @@ const SCRIPT = `
     return mapBanner(v) +
       '<div class="mbar">' + levelNav + crumbs + '<span class="mtip">' + esc(MTIP[level] || '') + '</span></div>' +
       card('map', tag, body + mapFilterBar() + limits) +
-      mapDetail();
+      mapDetail() +
+      renderConsole();
   }
 `;
 
