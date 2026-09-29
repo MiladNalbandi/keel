@@ -16,6 +16,7 @@ const ask = require('../lib/ask');
 const todos = require('../lib/todos');
 const events = require('../lib/events');
 const hooks = require('../lib/hooks');
+const map = require('../lib/map');
 const { gitOut, readJson } = require('../lib/util');
 
 // Why this phase is what it is, in the user's terms. The rails and the guard matrix say what is
@@ -352,6 +353,19 @@ function buildQuestions(cfg) {
 }
 
 // The whole picture, in one object.
+// Cheap by construction: a verdict reads one JSON file and re-hashes the sources, and nothing here
+// draws a figure. The figure is fetched from /api/map when somebody opens the map view.
+function mapSummary(cfg, opts = {}) {
+  if (opts.demo) return { present: true, demo: true, stale: false, reason: 'the bundled example', counts: (map.demo() || {}).counts || {} };
+  try {
+    const v = map.verdict(cfg);
+    if (!v.exists) return { present: false, demo: false, stale: false, reason: v.reason, counts: {} };
+    return { present: true, demo: false, sha: v.sha, stale: v.stale, behind: v.behind, reason: v.reason, counts: v.counts || {} };
+  } catch (e) {
+    return { present: false, demo: false, stale: false, reason: 'the map could not be read', counts: {} };
+  }
+}
+
 function build(cwd, opts = {}) {
   const cfg = config.load(cwd || process.cwd());
   const state = st.read(cfg);
@@ -367,6 +381,7 @@ function build(cwd, opts = {}) {
     questions: buildQuestions(cfg),
     timeline: events.read(cfg, { filter: opts.filter || 'all', limit: opts.limit || 40 }),
     timelineTotal: events.count(cfg),
+    map: mapSummary(cfg, opts),
   };
 
   if (!active) {
@@ -492,7 +507,9 @@ function fingerprint(cwd) {
   try { q = fs.statSync(ask.file(cfg)).mtimeMs; } catch (e) { q = 0; }
   let n = 0;
   try { n = fs.statSync(events.file(cfg)).size; } catch (e) { n = 0; }
-  return `${fp}:${q}:${n}`;
+  let m = 0;
+  try { m = fs.statSync(map.file(cfg)).mtimeMs; } catch (e) { m = 0; }
+  return `${fp}:${q}:${n}:${m}`;
 }
 
-module.exports = { build, summary, projectsText, fingerprint, PHASE_BLURB, FLOW_BLURB };
+module.exports = { build, summary, projectsText, fingerprint, mapSummary, PHASE_BLURB, FLOW_BLURB };

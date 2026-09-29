@@ -21,6 +21,10 @@ const fs = require('fs');
 const path = require('path');
 
 const view = require('./view');
+
+// Set once by `keel dashboard --demo`: every project then draws the bundled example instead of
+// its own map, so the console can be refused and a screenshot never shows somebody's real code.
+let demoMode = false;
 const ui = require('./ui');
 const config = require('../lib/config');
 const projects = require('../lib/projects');
@@ -64,8 +68,18 @@ function hello() {
 }
 
 function viewOf(root) {
-  try { return view.build(root); }
+  try { return view.build(root, demoMode ? { demo: true } : {}); }
   catch (e) { return { at: new Date().toISOString(), error: String((e && e.message) || e), active: false }; }
+}
+
+// A project's map, or the bundled example when it has none. `--demo` forces the example for every
+// project, which is what makes a screenshot reproducible without a repo to point it at.
+function mapFor(root) {
+  const map = require('../lib/map');
+  try {
+    if (demoMode) return map.demo();
+    return map.forDashboard(require('../lib/config').load(root));
+  } catch (e) { return null; }
 }
 
 function summaryOf(root) {
@@ -216,6 +230,15 @@ function handle(req, res) {
   if (route === '/api/projects') {
     return json(res, 200, { at: new Date().toISOString(), version: projects.keelVersion(), home: homeId, projects: projectList() });
   }
+  // The figure, fetched once per view rather than pushed on every frame: it is the only large
+  // thing this server sends, and it changes only when somebody runs `keel map build`.
+  if (route === '/api/map') {
+    const e = entries.get(pick);
+    if (!e) return json(res, 404, { error: `no project "${pick}"` });
+    const m = mapFor(e.root);
+    if (!m) return json(res, 404, { error: 'no map, and no bundled example to fall back to' });
+    return json(res, 200, m);
+  }
   if (route === '/api/view') {
     const e = entries.get(pick);
     if (!e) return json(res, 404, { error: `no project "${pick}"` });
@@ -324,6 +347,7 @@ function rootOf(cwd) {
 // Resolves { url, port, started, hub, id } — `started: false` means a hub was already listening,
 // in this process or another. `id` is the caller's project, for the page to open on.
 function start(cwd, opts = {}) {
+  if (opts.demo) demoMode = true;
   const root = cwd ? rootOf(cwd) : null;
   let id = null;
   if (root) {
@@ -332,7 +356,8 @@ function start(cwd, opts = {}) {
     wanted.set(id, root);
     homeId = homeId || id;
   }
-  const finish = (r) => Object.assign({}, r, { id, url: r.url + (id ? `/#${id}` : '') });
+  const suffix = opts.view ? `/${opts.view}` : '';
+  const finish = (r) => Object.assign({}, r, { url: r.url + (id ? `/#${id}${suffix}` : ''), id });
 
   if (server && url) {
     syncProjects();

@@ -1,6 +1,7 @@
 'use strict';
-// The dashboard page: one file, inlined, no build step and no CDN — keel has never had a
-// package.json and this is not the feature that should give it one.
+// The dashboard page: two files, inlined, no build step and no CDN — keel has never had a
+// package.json and this is not the feature that should give it one. The map half lives in
+// mcp/ui-map.js and is joined in as two strings; the seam is a string join, not a module boundary.
 //
 // The embedded script deliberately uses string concatenation rather than template literals, so
 // that this outer template literal needs no escaping and stays readable.
@@ -18,6 +19,8 @@ const FAVICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://w
   + '<style>path{fill:#7a5cff}@media (prefers-color-scheme:dark){path{fill:#a48bff}}</style>'
   + '<mask id="s"><rect y="-26" width="120" height="120" fill="#fff"/>' + MARK_SPLIT + '</mask>'
   + '<path mask="url(#s)" d="' + MARK_PATH + '"/></svg>');
+
+const uiMap = require('./ui-map');
 
 function html() {
   return `<!doctype html>
@@ -91,6 +94,7 @@ section.card{
 .note{color:var(--dim);font-size:11.5px;line-height:1.5;margin-top:12px;
   padding-left:11px;border-left:2px solid var(--border)}
 
+${uiMap.CSS}
 /* flow graph */
 .graph{width:100%;overflow-x:auto}
 .graph svg{display:block;margin:0 auto;max-width:100%;height:auto}
@@ -254,7 +258,14 @@ a.pc.wait{border-color:var(--bad)}
   var connected = false;
   var last = null;
   var projects = [];
-  var selected = location.hash.slice(1) || null;
+  // #<id> is the board, as it always was; #<id>/map and #<id>/er are views of the same project,
+  // with anything after that a breadcrumb the view reads. Every existing bookmark still resolves.
+  function parseHash(){
+    var p = location.hash.slice(1).split('/').filter(Boolean);
+    return { id: p[0] || null, view: p[1] || 'flow', crumb: p.slice(2) };
+  }
+  var route = parseHash();
+  var selected = route.id;
   var es = null;
 
   function esc(s){
@@ -288,10 +299,35 @@ a.pc.wait{border-color:var(--bad)}
   var GLYPH = { done:'\\u2714', current:'\\u25b6', pending:'\\u00b7',
     pass:'\\u2714', fail:'\\u2717', stale:'\\u00b7', none:'\\u00b7', skipped:'\\u2014' };
 
-  // The flow as a graph: the rail is the spine, and every branch TRANSITIONS allows is drawn.
-  // Geometry arrives from the server already solved; this only turns it into elements.
-  function renderGraph(g, phase){
-    var defs = '<defs>' +
+  var FLOW_LEGEND =
+    '<span class="acc">\\u25a0 you are here</span>' +
+    '<span class="acc">\\u25a1 where you may go next</span>' +
+    '<span class="ok">\\u25a1 passed through</span>' +
+    '<span>dashed box = a detour, not on the rail</span>' +
+    '<span>dashed line = a route back</span>';
+
+  // One renderer for every figure on this page. Geometry arrives from the server already solved —
+  // by mcp/view.js for the flow, by lib/map.js for the map — and this only turns it into elements.
+  // Everything that differs between the two is a callback with the flow's behaviour as its default,
+  // so the flow graph reads exactly as it did and there is no second emitter to keep in step.
+  function renderGraph(g, opts){
+    var o = opts || {};
+    var edgeClass = o.edgeClass || function(e){ return 'g-edge ' + e.kind + (e.live ? ' live' : ''); };
+    var edgeMarker = o.edgeMarker || function(e){ return e.live ? 'ahl' : 'ah'; };
+    var nodeClass = o.nodeClass || function(n){
+      return 'g-node' + (n.current ? ' current' : n.legal ? ' legal' : n.done ? ' done' : '') +
+        (n.onRail ? '' : ' side');
+    };
+    var nodeAttrs = o.nodeAttrs || function(){ return ''; };
+    var nodeBox = o.nodeBox || function(n){
+      return '<rect x="' + n.x + '" y="' + n.y + '" width="' + g.box.w + '" height="' + g.box.h + '" rx="5"></rect>';
+    };
+    var nodeBody = o.nodeBody || function(n){
+      return '<text x="' + (n.x + g.box.w/2) + '" y="' + (n.y + g.box.h/2 + 0.5) + '" text-anchor="middle" ' +
+        'dominant-baseline="central">' + esc(n.label) + '</text>';
+    };
+
+    var defs = '<defs>' + (o.defs || '') +
       '<marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">' +
         '<path d="M0 0 L8 4 L0 8 z" fill="var(--rail)"/></marker>' +
       '<marker id="ahl" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6.5" markerHeight="6.5" orient="auto">' +
@@ -299,30 +335,23 @@ a.pc.wait{border-color:var(--bad)}
       '</defs>';
 
     var edges = g.edges.map(function(e){
-      var cls = 'g-edge ' + e.kind + (e.live ? ' live' : '');
-      return '<path class="' + cls + '" d="' + e.d + '" marker-end="url(#' + (e.live ? 'ahl' : 'ah') + ')"></path>';
+      var s = '<path class="' + edgeClass(e) + '" d="' + e.d + '" marker-end="url(#' + edgeMarker(e) + ')"></path>';
+      var label = o.edgeLabel ? o.edgeLabel(e) : '';
+      if (label && isFinite(e.lx) && isFinite(e.ly)){
+        s += '<text class="mlabel" x="' + e.lx + '" y="' + e.ly + '" text-anchor="middle">' + esc(label) + '</text>';
+      }
+      return s;
     }).join('');
 
     var nodes = g.nodes.map(function(n){
-      var cls = 'g-node' + (n.current ? ' current' : n.legal ? ' legal' : n.done ? ' done' : '') +
-        (n.onRail ? '' : ' side');
-      return '<g class="' + cls + '">' +
-        '<rect x="' + n.x + '" y="' + n.y + '" width="' + g.box.w + '" height="' + g.box.h + '" rx="5"></rect>' +
-        '<text x="' + (n.x + g.box.w/2) + '" y="' + (n.y + g.box.h/2 + 0.5) + '" text-anchor="middle" ' +
-          'dominant-baseline="central">' + esc(n.label) + '</text></g>';
+      return '<g class="' + nodeClass(n) + '"' + nodeAttrs(n) + '>' + nodeBox(n) + nodeBody(n) + '</g>';
     }).join('');
 
-    return '<div class="graph"><svg viewBox="0 0 ' + g.width + ' ' + g.height + '" ' +
+    return '<div class="' + (o.wrapClass || 'graph') + '"><svg viewBox="0 0 ' + g.width + ' ' + g.height + '" ' +
       'width="' + g.width + '" height="' + g.height + '" role="img" ' +
-      'aria-label="flow graph, current phase ' + esc(phase) + '">' +
-      defs + edges + nodes + '</svg></div>' +
-      '<div class="glegend">' +
-        '<span class="acc">\\u25a0 you are here</span>' +
-        '<span class="acc">\\u25a1 where you may go next</span>' +
-        '<span class="ok">\\u25a1 passed through</span>' +
-        '<span>dashed box = a detour, not on the rail</span>' +
-        '<span>dashed line = a route back</span>' +
-      '</div>';
+      'aria-label="' + esc(o.label || 'diagram') + '">' +
+      defs + edges + nodes + (o.after || '') + '</svg></div>' +
+      '<div class="glegend">' + (o.legend == null ? FLOW_LEGEND : o.legend) + '</div>';
   }
 
   function renderFlow(v){
@@ -330,7 +359,7 @@ a.pc.wait{border-color:var(--bad)}
     var tag = f.onRail ? ('phase ' + (f.index+1) + ' of ' + f.total)
                        : (esc(f.phase) + ' \\u2014 off the rail');
     var body;
-    if (v.graph) body = renderGraph(v.graph, f.phase);
+    if (v.graph) body = renderGraph(v.graph, { label: 'flow graph, current phase ' + f.phase });
     else body = '<div class="rail">' + f.steps.map(function(s){
       return '<span class="rs ' + s.state + '"><i class="g">' + GLYPH[s.state] + '</i>' + esc(s.label) + '</span>';
     }).join('') + '</div>';
@@ -616,17 +645,36 @@ a.pc.wait{border-color:var(--bad)}
       '<div class="meta">' + meta + live + '</div></header>';
   }
 
+${uiMap.SCRIPT}
+
+  // One project's views. The board is what #<id> has always meant, so it stays the default.
+  function views(v){
+    if (!selected) return '';
+    var n = v && v.map && v.map.counts ? v.map.counts.endpoints : 0;
+    return '<nav class="mviews">' +
+      '<a href="#' + esc(selected) + '"' + (route.view === 'flow' ? ' aria-current="page"' : '') + '>flow</a>' +
+      '<a href="#' + esc(selected) + '/map"' + (route.view === 'map' ? ' aria-current="page"' : '') + '>map' +
+        (n ? ' <span class="n">' + n + '</span>' : '') + '</a>' +
+      '<a href="#' + esc(selected) + '/er"' + (route.view === 'er' ? ' aria-current="page"' : '') + '>database</a>' +
+      '</nav>';
+  }
+
   function render(v){
-    if (v.error){
-      app.innerHTML = header(v) + tabs() + card('error', null, '<div class="bad">' + esc(v.error) + '</div>');
-      return;
-    }
-    if (!v.active){
-      app.innerHTML = header(v) + tabs() + renderQuestions(v) + renderIdle(v);
+    if (route.view === 'map' || route.view === 'er'){
+      app.innerHTML = header(v) + tabs() + views(v) + renderMap(v, route.view, route.crumb);
       bind();
       return;
     }
-    app.innerHTML = header(v) + tabs() +
+    if (v.error){
+      app.innerHTML = header(v) + tabs() + views(v) + card('error', null, '<div class="bad">' + esc(v.error) + '</div>');
+      return;
+    }
+    if (!v.active){
+      app.innerHTML = header(v) + tabs() + views(v) + renderQuestions(v) + renderIdle(v);
+      bind();
+      return;
+    }
+    app.innerHTML = header(v) + tabs() + views(v) +
       renderQuestions(v) +
       renderFlow(v) +
       '<div class="grid">' + (renderAcs(v) || renderHunt(v) || '') + (renderCurrent(v) || renderAgents(v)) + '</div>' +
@@ -648,6 +696,31 @@ a.pc.wait{border-color:var(--bad)}
       });
     }
   }
+
+  // The map's controls are delegated on #app, like the theme toggle, so a redraw never drops them
+  // and nothing has to be re-bound per node.
+  app.addEventListener('click', function(e){
+    var node = e.target.closest ? e.target.closest('[data-node]') : null;
+    if (!node) return;
+    var id = node.getAttribute('data-node');
+    var drill = node.getAttribute('data-drill');
+    // First click selects, a second click on the same box opens it. One gesture, two outcomes,
+    // and no double-click to discover.
+    if (drill && mapSel === id){
+      if (drill === 'er') location.hash = mapUrl('er');
+      else location.hash = mapUrl('map', drill, drill === 'classes' ? node.getAttribute('data-module') : null);
+      return;
+    }
+    mapSel = id;
+    draw();
+  });
+
+  app.addEventListener('change', function(e){
+    var box = e.target.closest ? e.target.closest('[data-mhide]') : null;
+    if (!box) return;
+    mapHide[box.getAttribute('data-mhide')] = !box.checked;
+    draw();
+  });
 
   function applyFilter(v){
     if (filter === 'all') return v;
@@ -706,7 +779,13 @@ a.pc.wait{border-color:var(--bad)}
   }
 
   window.addEventListener('hashchange', function(){
-    selected = location.hash.slice(1) || null;
+    var next = parseHash();
+    var sameProject = next.id === selected;
+    route = next;
+    selected = next.id;
+    // Moving between views of one project is a redraw, not a reconnect: tearing the stream down
+    // to look at the map would lose the frame and blank the page for a round trip.
+    if (sameProject){ draw(); return; }
     last = null;
     app.innerHTML = '<div class="center"><div class="big">connecting\\u2026</div></div>';
     connect();
