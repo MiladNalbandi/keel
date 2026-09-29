@@ -895,6 +895,7 @@ Project setup
   keel arch detect|show|set <style>   architecture style and its import boundaries
   keel memory sections [--confirm a,b|--all|--none]    which sections to build
   keel memory show|reload --section <n>|check|update
+  keel packs list|add <url|path> [--project]|remove <name>   stack packs, and installing more
 
 Checks and commits
   keel verify fast|ac|arch|deps|module|contract|full|e2e|release|coverage

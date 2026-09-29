@@ -43,6 +43,17 @@ commands:
 
 coverage_report: build/reports/kover/report.xml
 
+# What `keel init --new --stack kotlin-spring` writes. Paths in `from:` are relative to this
+# pack's own directory; `{BACKEND}`, `{FRONTEND}` and `{CONTRACT}` in `to:` come from the
+# project's config, so a pack never has to know this project's layout.
+starter:
+  - from: ../templates/starter/settings.gradle.kts
+    to: settings.gradle.kts
+  - from: ../templates/starter/api-build.gradle.kts
+    to: '{BACKEND}/build.gradle.kts'
+  - from: ../templates/starter/HealthTest.kt
+    to: '{BACKEND}/src/test/kotlin/app/HealthTest.kt'
+
 # What this stack needs inside a dev container. Merged with every other matched pack's
 # block, so the keys are identical across packs and a generator can combine them without
 # knowing which stack it is looking at.

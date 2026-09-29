@@ -28,6 +28,11 @@ commands:
 
 coverage_report: coverage/lcov.info
 
+# See kotlin-spring.yml's starter block for how `from:` and `to:` are resolved.
+starter:
+  - from: ../templates/starter/vitest.config.ts
+    to: '{FRONTEND}/vitest.config.ts'
+
 # Same keys as every other pack's devcontainer block, so a generator can merge them without
 # knowing which stack it is looking at. `primary: false` means this pack does not supply the
 # Dockerfile's FROM — when it is matched alongside a primary pack it contributes its
