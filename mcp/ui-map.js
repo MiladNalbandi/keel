@@ -37,6 +37,10 @@ const CSS = `
 .mbanner.demo{border-left-color:var(--accent)}
 .mbanner code{background:var(--rail);border-radius:4px;padding:1px 5px}
 
+.mband{fill:var(--rail);opacity:.3}
+.mbandl{font-size:9.5px;fill:var(--faint);letter-spacing:.09em;text-transform:uppercase}
+.munsourced .mbox{stroke-dasharray:5 4;stroke:var(--warn)}
+.msource{color:var(--faint);font-size:11.5px}
 .mnode{cursor:pointer}
 .mnode .mbox{fill:var(--panel);stroke:var(--border);stroke-width:1.1}
 .mnode:hover .mbox{stroke:var(--accent)}
@@ -83,11 +87,13 @@ const SCRIPT = `
 
   var MLEVELS = [
     { k: 'system', n: 'Whole system' },
+    { k: 'flow', n: 'Business flow' },
     { k: 'modules', n: 'Modules' },
     { k: 'classes', n: 'Classes' }
   ];
   var MTIP = {
     system: 'Click the api box to open its modules.',
+    flow: 'Each row is a part of the system. Read the steps left to right.',
     modules: 'Click a module to see the classes inside it.',
     classes: 'Every box is a declaration. The lines are imports, not calls.',
     er: 'Every box is a table. \\u25aa is a key, \\u2197 points at another table.'
@@ -150,12 +156,17 @@ const SCRIPT = `
                     '<rect width="9" height="9" fill="none"></rect>' +
                     '<line x1="0" y1="0" x2="0" y2="9" stroke="var(--accent)" stroke-width="1.2" opacity="0.13"></line>' +
                     '</pattern>' : ''),
+      // Swimlanes sit under everything: they are the background a step is placed on, not a node.
+      under: (g.bands || []).map(function(b){
+        return '<rect class="mband" x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="6"></rect>' +
+          '<text class="mbandl" x="' + (b.x + 8) + '" y="' + (b.y + b.h / 2 + 3) + '">' + esc(b.label) + '</text>';
+      }).join(''),
       // A hatch over the whole figure, so a cropped screenshot of the demo still says it is one.
       after: demo ? '<rect x="0" y="0" width="' + g.width + '" height="' + g.height + '" fill="url(#mhatch)" pointer-events="none"></rect>' : '',
       edgeClass: function(e){ return 'g-edge m-' + e.kind; },
       edgeMarker: function(e){ return 'mah-' + e.kind; },
       edgeLabel: function(e){ return e.label || ''; },
-      nodeClass: function(n){ return 'mnode' + (mapSel === n.id ? ' sel' : ''); },
+      nodeClass: function(n){ return 'mnode' + (mapSel === n.id ? ' sel' : '') + (n.unsourced ? ' munsourced' : ''); },
       nodeAttrs: function(n){
         return ' data-node="' + esc(n.id) + '"' +
           (n.drill ? ' data-drill="' + esc(n.drill) + '"' : '') +
@@ -251,9 +262,10 @@ const SCRIPT = `
 
     var body;
     if (!g || !g.nodes || !g.nodes.length){
-      body = '<div class="mempty">Nothing to draw at this level' + (mod ? ' for ' + esc(mod) : '') + '.</div>';
+      body = '<div class="mempty">' + esc((g && g.empty) || ('Nothing to draw at this level' + (mod ? ' for ' + mod : '') + '.')) + '</div>';
     } else {
       body = mapFigure(g, Boolean(mapData.demo));
+      if (g.source) body += '<div class="msource">Steps read from ' + esc(g.source) + '. A dashed box is a step with no citation behind it.</div>';
       if (overflow) body += note(overflow + ' more declaration(s) in this module are not drawn.');
     }
 

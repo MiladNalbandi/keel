@@ -350,7 +350,7 @@ a.pc.wait{border-color:var(--bad)}
     return '<div class="' + (o.wrapClass || 'graph') + '"><svg viewBox="0 0 ' + g.width + ' ' + g.height + '" ' +
       'width="' + g.width + '" height="' + g.height + '" role="img" ' +
       'aria-label="' + esc(o.label || 'diagram') + '">' +
-      defs + edges + nodes + (o.after || '') + '</svg></div>' +
+      defs + (o.under || '') + edges + nodes + (o.after || '') + '</svg></div>' +
       '<div class="glegend">' + (o.legend == null ? FLOW_LEGEND : o.legend) + '</div>';
   }
 

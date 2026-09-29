@@ -676,32 +676,289 @@
      "to": "app:api",
      "kind": "http",
      "label": "REST",
-     "d": "M 220 157 H 255 V 146 H 283"
+     "d": "M 220 157 H 255 V 146 H 283",
+     "lx": 255,
+     "ly": 151.5
     },
     {
      "from": "app:api",
      "to": "db:main",
      "kind": "sql",
      "label": "",
-     "d": "M 510 146 H 537 V 67 H 593"
+     "d": "M 510 146 H 537 V 67 H 593",
+     "lx": 537,
+     "ly": 106.5
     },
     {
      "from": "app:api",
      "to": "mq:main",
      "kind": "queue",
      "label": "",
-     "d": "M 510 146 H 551.4 V 167 H 593"
+     "d": "M 510 146 H 551.4 V 167 H 593",
+     "lx": 551.4,
+     "ly": 156.5
     },
     {
      "from": "app:api",
      "to": "cron:all",
      "kind": "call",
      "label": "",
-     "d": "M 510 146 H 565.8 V 267 H 593"
+     "d": "M 510 146 H 565.8 V 267 H 593",
+     "lx": 565.8,
+     "ly": 206.5
     }
    ],
    "width": 820,
    "height": 324
+  },
+  "flow": {
+   "nodes": [
+    {
+     "id": "step:Placing an order:1",
+     "kind": "app",
+     "title": "browses the catalogue",
+     "sub": "Placing an order · anyone, no ",
+     "rows": [],
+     "cite": {
+      "rel": "apps/api/src/main/kotlin/com/acme/catalog/adapter/in/ProductController.kt",
+      "line": 1
+     },
+     "journey": "Placing an order",
+     "unsourced": false,
+     "x": 92,
+     "w": 158,
+     "h": 56,
+     "y": 176
+    },
+    {
+     "id": "step:Placing an order:2",
+     "kind": "app",
+     "title": "fills in the basket",
+     "sub": "Placing an order · a signed-in",
+     "rows": [],
+     "cite": {
+      "rel": "apps/web/src/components/Basket.tsx",
+      "line": 1
+     },
+     "journey": "Placing an order",
+     "unsourced": false,
+     "x": 266,
+     "w": 158,
+     "h": 56,
+     "y": 104
+    },
+    {
+     "id": "step:Placing an order:3",
+     "kind": "app",
+     "title": "places the order",
+     "sub": "Placing an order · the order m",
+     "rows": [],
+     "cite": {
+      "rel": "apps/api/src/main/kotlin/com/acme/orders/application/PlaceOrder.kt",
+      "line": 1
+     },
+     "journey": "Placing an order",
+     "unsourced": false,
+     "x": 440,
+     "w": 158,
+     "h": 56,
+     "y": 176
+    },
+    {
+     "id": "step:Placing an order:4",
+     "kind": "data",
+     "title": "is recorded",
+     "sub": "Placing an order · two tables,",
+     "rows": [],
+     "cite": {
+      "rel": "apps/api/src/main/resources/db/migration/V1__orders.sql",
+      "line": 1
+     },
+     "journey": "Placing an order",
+     "unsourced": false,
+     "x": 614,
+     "w": 158,
+     "h": 56,
+     "y": 248
+    },
+    {
+     "id": "step:Placing an order:5",
+     "kind": "app",
+     "title": "is announced",
+     "sub": "Placing an order · a worker, o",
+     "rows": [],
+     "cite": {
+      "rel": "apps/api/src/main/kotlin/com/acme/orders/adapter/out/OrderEvents.kt",
+      "line": 1
+     },
+     "journey": "Placing an order",
+     "unsourced": false,
+     "x": 788,
+     "w": 158,
+     "h": 56,
+     "y": 176
+    },
+    {
+     "id": "step:Placing an order:6",
+     "kind": "app",
+     "title": "is charged for",
+     "sub": "Placing an order · billing, th",
+     "rows": [],
+     "cite": {
+      "rel": "apps/api/src/main/kotlin/com/acme/billing/application/RaiseInvoice.kt",
+      "line": 1
+     },
+     "journey": "Placing an order",
+     "unsourced": false,
+     "x": 962,
+     "w": 158,
+     "h": 56,
+     "y": 176
+    },
+    {
+     "id": "step:Cancelling an order:1",
+     "kind": "app",
+     "title": "changes their mind",
+     "sub": "Cancelling an order · the cust",
+     "rows": [],
+     "cite": {
+      "rel": "apps/api/src/main/kotlin/com/acme/orders/application/CancelOrder.kt",
+      "line": 1
+     },
+     "journey": "Cancelling an order",
+     "unsourced": false,
+     "x": 1136,
+     "w": 158,
+     "h": 56,
+     "y": 176
+    },
+    {
+     "id": "step:Cancelling an order:2",
+     "kind": "app",
+     "title": "is refunded",
+     "sub": "Cancelling an order · billing,",
+     "rows": [],
+     "cite": {
+      "rel": "apps/api/src/main/kotlin/com/acme/billing/adapter/out/RefundOnCancel.kt",
+      "line": 1
+     },
+     "journey": "Cancelling an order",
+     "unsourced": false,
+     "x": 1310,
+     "w": 158,
+     "h": 56,
+     "y": 176
+    }
+   ],
+   "edges": [
+    {
+     "from": "step:Placing an order:1",
+     "to": "step:Placing an order:2",
+     "kind": "call",
+     "label": "",
+     "d": "M 250 204 H 258 V 132 H 259",
+     "lx": 258,
+     "ly": 168
+    },
+    {
+     "from": "step:Placing an order:2",
+     "to": "step:Placing an order:3",
+     "kind": "call",
+     "label": "",
+     "d": "M 424 132 H 432 V 204 H 433",
+     "lx": 432,
+     "ly": 168
+    },
+    {
+     "from": "step:Placing an order:3",
+     "to": "step:Placing an order:4",
+     "kind": "call",
+     "label": "",
+     "d": "M 598 204 H 606 V 276 H 607",
+     "lx": 606,
+     "ly": 240
+    },
+    {
+     "from": "step:Placing an order:4",
+     "to": "step:Placing an order:5",
+     "kind": "call",
+     "label": "",
+     "d": "M 772 276 H 780 V 204 H 781",
+     "lx": 780,
+     "ly": 240
+    },
+    {
+     "from": "step:Placing an order:5",
+     "to": "step:Placing an order:6",
+     "kind": "call",
+     "label": "",
+     "d": "M 946 204 H 954 V 204 H 955",
+     "lx": 954,
+     "ly": 197
+    },
+    {
+     "from": "step:Cancelling an order:1",
+     "to": "step:Cancelling an order:2",
+     "kind": "call",
+     "label": "",
+     "d": "M 1294 204 H 1302 V 204 H 1303",
+     "lx": 1302,
+     "ly": 197
+    }
+   ],
+   "bands": [
+    {
+     "id": "actor",
+     "label": "a person",
+     "x": 8,
+     "y": 24,
+     "w": 1468,
+     "h": 64
+    },
+    {
+     "id": "web",
+     "label": "web",
+     "x": 8,
+     "y": 96,
+     "w": 1468,
+     "h": 64
+    },
+    {
+     "id": "api",
+     "label": "api",
+     "x": 8,
+     "y": 168,
+     "w": 1468,
+     "h": 64
+    },
+    {
+     "id": "data",
+     "label": "database",
+     "x": 8,
+     "y": 240,
+     "w": 1468,
+     "h": 64
+    },
+    {
+     "id": "queue",
+     "label": "queue",
+     "x": 8,
+     "y": 312,
+     "w": 1468,
+     "h": 64
+    },
+    {
+     "id": "ext",
+     "label": "external",
+     "x": 8,
+     "y": 384,
+     "w": 1468,
+     "h": 64
+    }
+   ],
+   "source": "docs/knowledge/journeys.md",
+   "width": 1484,
+   "height": 468
   },
   "modules": {
    "nodes": [
@@ -942,28 +1199,36 @@
      "to": "tbl:order_lines",
      "kind": "sql",
      "label": "",
-     "d": "M 320 433 H 428.8 V 155 H 633"
+     "d": "M 320 433 H 428.8 V 155 H 633",
+     "lx": 428.8,
+     "ly": 294
     },
     {
      "from": "mod:orders",
      "to": "tbl:orders",
      "kind": "sql",
      "label": "",
-     "d": "M 320 433 H 457.6 V 243 H 633"
+     "d": "M 320 433 H 457.6 V 243 H 633",
+     "lx": 457.6,
+     "ly": 338
     },
     {
      "from": "mod:orders",
      "to": "q:q.order.cancelled",
      "kind": "queue",
      "label": "publish",
-     "d": "M 320 433 H 486.4 V 498 H 633"
+     "d": "M 320 433 H 486.4 V 498 H 633",
+     "lx": 486.4,
+     "ly": 465.5
     },
     {
      "from": "mod:orders",
      "to": "q:q.order.created",
      "kind": "queue",
      "label": "publish",
-     "d": "M 320 433 H 486.4 V 568 H 633"
+     "d": "M 320 433 H 486.4 V 568 H 633",
+     "lx": 486.4,
+     "ly": 500.5
     }
    ],
    "width": 900,
@@ -1065,14 +1330,18 @@
        "to": "cls:RaiseInvoice",
        "kind": "call",
        "label": "imports",
-       "d": "M 224 58 H 238 V 58 H 245"
+       "d": "M 224 58 H 238 V 58 H 245",
+       "lx": 238,
+       "ly": 51
       },
       {
        "from": "cls:RaiseInvoice",
        "to": "cls:Invoice",
        "kind": "call",
        "label": "imports",
-       "d": "M 452 58 H 466 V 58 H 473"
+       "d": "M 452 58 H 466 V 58 H 473",
+       "lx": 466,
+       "ly": 51
       }
      ],
      "overflow": 0,
@@ -1122,7 +1391,9 @@
        "to": "cls:Product",
        "kind": "call",
        "label": "imports",
-       "d": "M 224 58 H 238 V 58 H 245"
+       "d": "M 224 58 H 238 V 58 H 245",
+       "lx": 238,
+       "ly": 51
       }
      ],
      "overflow": 0,
@@ -1189,7 +1460,9 @@
        "to": "cls:OpenSession",
        "kind": "call",
        "label": "imports",
-       "d": "M 224 58 H 238 V 58 H 245"
+       "d": "M 224 58 H 238 V 58 H 245",
+       "lx": 238,
+       "ly": 51
       }
      ],
      "overflow": 0,
@@ -1341,28 +1614,36 @@
        "to": "cls:Order",
        "kind": "call",
        "label": "imports",
-       "d": "M 452 58 H 466 V 58 H 473"
+       "d": "M 452 58 H 466 V 58 H 473",
+       "lx": 466,
+       "ly": 51
       },
       {
        "from": "cls:JpaOrderRepository",
        "to": "cls:OrderRepository",
        "kind": "call",
        "label": "imports",
-       "d": "M 808 86 V 94 H 352 V 95"
+       "d": "M 808 86 V 94 H 352 V 95",
+       "lx": 580,
+       "ly": 89
       },
       {
        "from": "cls:OrderController",
        "to": "cls:PlaceOrder",
        "kind": "call",
        "label": "imports",
-       "d": "M 224 58 H 238 V 202 H 245"
+       "d": "M 224 58 H 238 V 202 H 245",
+       "lx": 238,
+       "ly": 130
       },
       {
        "from": "cls:PlaceOrder",
        "to": "cls:Order",
        "kind": "call",
        "label": "imports",
-       "d": "M 452 202 H 466 V 58 H 473"
+       "d": "M 452 202 H 466 V 58 H 473",
+       "lx": 466,
+       "ly": 130
       }
      ],
      "overflow": 0,
@@ -1680,14 +1961,18 @@
      "to": "tbl:invoices",
      "kind": "fk",
      "label": "1 : n",
-     "d": "M 580 103 H 602 V 202 H 302 V 110"
+     "d": "M 580 103 H 602 V 202 H 302 V 110",
+     "lx": 452,
+     "ly": 197
     },
     {
      "from": "tbl:orders",
      "to": "tbl:order_lines",
      "kind": "fk",
      "label": "1 : n",
-     "d": "M 455 176 V 188 H 155 V 193"
+     "d": "M 455 176 V 188 H 155 V 193",
+     "lx": 305,
+     "ly": 183
     }
    ],
    "width": 900,
