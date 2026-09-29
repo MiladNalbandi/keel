@@ -1,0 +1,11 @@
+{
+  "name": "keel-stacks",
+  "displayName": "keel stacks",
+  "version": "0.1.0",
+  "description": "Stack packs for keel: Symfony (PHP) and plain-JavaScript React. Test and implementation skills, placement references and starters for languages keel does not ship itself.",
+  "author": {
+    "name": "Milad Nalbandi"
+  },
+  "license": "MIT",
+  "keywords": ["keel", "symfony", "php", "react", "javascript", "tdd", "workflow"]
+}

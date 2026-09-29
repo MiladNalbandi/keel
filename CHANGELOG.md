@@ -11,8 +11,10 @@ own repo and wait for a keel release. Packs now come from three roots, most spec
 `.keel/stacks/` (this project), `~/.keel/stacks/` (this machine), and keel's own `stacks/`.
 `keel packs list|add|remove` installs and inspects them — `add` takes a git URL or a local path,
 `--project` vendors it into the repo. `kotlin-spring` and `ts-react` stay built in, so keel still
-works with nothing installed; **Symfony and plain-JS React moved out** to
-[keel-stacks](https://github.com/MiladNalbandi/keel-stacks), which keel's marketplace now lists.
+works with nothing installed; **Symfony and plain-JS React moved out of the loaded set** into
+`packs/`, which ships in the repo but is inert until `keel packs add packs` installs it. The
+marketplace lists that directory as a second plugin via `git-subdir`, for native skills in
+Claude Code.
 
 Everything a pack needs travels with it. `loadPack` returns the pack's own directory alongside
 its YAML, so `skill_files:`, `arch_refs:` and `starter:` all resolve inside the pack: an installed

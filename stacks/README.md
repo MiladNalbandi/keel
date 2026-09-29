@@ -6,7 +6,7 @@ is written in terms of Gradle, Composer or Vitest.
 
 **Built in here:** `kotlin-spring` (lane `api`) and `ts-react` (lane `web`), so keel works with
 nothing installed. **Everything else installs**, with `keel packs add` — Symfony and plain-JS
-React live in [keel-stacks](https://github.com/MiladNalbandi/keel-stacks).
+React ship in [`../packs/`](../packs/README.md) and are not loaded until you install one.
 
 A pack declares:
 
@@ -107,4 +107,4 @@ they actually mean.
 Copy a built-in and follow it, then either drop it in `.keel/stacks/` for one project or publish
 it and `keel packs add` it. A pack that ships its own skills should declare `skill_files:`
 (and `arch_refs:` / `starter:` if it has them) so it works without its plugin half installed;
-see keel-stacks for the shape.
+see `../packs/stacks/symfony.yml` for the shape.

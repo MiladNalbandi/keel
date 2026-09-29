@@ -3,7 +3,7 @@
   "owner": {
     "name": "Milad Nalbandi"
   },
-  "description": "keel: an enforced spec and acceptance-criteria workflow where hooks and a CLI decide the rules rather than the model remembering them. Kotlin/Spring and TypeScript React are built in; other stacks install from keel-stacks.",
+  "description": "keel: an enforced spec and acceptance-criteria workflow where hooks and a CLI decide the rules rather than the model remembering them. Kotlin/Spring and TypeScript React are built in; other stacks ship in packs/ and install on demand.",
   "plugins": [
     {
       "name": "keel",
@@ -13,10 +13,11 @@
     {
       "name": "keel-stacks",
       "source": {
-        "source": "github",
-        "repo": "MiladNalbandi/keel-stacks"
+        "source": "git-subdir",
+        "url": "https://github.com/MiladNalbandi/keel.git",
+        "path": "packs"
       },
-      "description": "Stack packs for keel: Symfony (PHP) and plain-JavaScript React. Install with `keel packs add` as well, so keel itself can read them."
+      "description": "Optional stack packs: Symfony (PHP) and plain-JavaScript React. Install with `keel packs add packs` as well, so keel itself can read them."
     }
   ]
 }
