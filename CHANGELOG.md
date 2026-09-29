@@ -4,6 +4,26 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.63.1
+
+**The map drew every edge grey.** `mcp/ui-map.js` is interpolated into the page ahead of the flow
+graph's CSS, and the flow graph sets `.g-edge { stroke: var(--rail) }` — the same specificity as a
+bare `.m-sql`. Later wins at equal specificity, so every colour the map chose was overridden the
+moment it shipped: an http call, a SQL write and a queue publish all drew in the same grey. Each
+kind now names two classes, which wins on specificity rather than on order, and a scenario reads the
+assembled stylesheet and refuses a single-class rule.
+
+Three things went with it. **Third-party edges had no styling at all** — no `.m-ext` rule and no
+`mah-ext` marker — so they drew grey *and* with no arrowhead. **The legend was the flow graph's**:
+the map never passed one, so `renderGraph` fell back to its default and a schema was labelled "you
+are here · where you may go next". And **the colour key was a bare checkbox row under the figure**
+with no swatches, so nothing said what a colour meant.
+
+**Hovering a box lights what it touches again.** Select or hover, and the edges that reach that box
+come forward in the accent colour while everything else goes quiet. Selection is rendered, so it
+survives a redraw; hover toggles classes directly on the SVG, because redrawing the figure on every
+mousemove would rebuild it under the pointer.
+
 ## 0.63.0
 
 **Stack packs install, instead of shipping inside keel.** Every new language used to grow keel's
