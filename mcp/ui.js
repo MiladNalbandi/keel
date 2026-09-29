@@ -338,8 +338,9 @@ a.pc.wait{border-color:var(--bad)}
         '<path d="M0 0 L8 4 L0 8 z" fill="var(--accent)"/></marker>' +
       '</defs>';
 
+    var edgeAttrs = o.edgeAttrs || function(){ return ''; };
     var edges = g.edges.map(function(e){
-      var s = '<path class="' + edgeClass(e) + '" d="' + e.d + '" marker-end="url(#' + edgeMarker(e) + ')"></path>';
+      var s = '<path class="' + edgeClass(e) + '"' + edgeAttrs(e) + ' d="' + e.d + '" marker-end="url(#' + edgeMarker(e) + ')"></path>';
       var label = o.edgeLabel ? o.edgeLabel(e) : '';
       if (label && isFinite(e.lx) && isFinite(e.ly)){
         s += '<text class="mlabel" x="' + e.lx + '" y="' + e.ly + '" text-anchor="middle">' + esc(label) + '</text>';
@@ -717,6 +718,37 @@ ${uiMap.SCRIPT}
     }
     mapSel = id;
     draw();
+  });
+
+  function mapHover(id){
+    var svg = app.querySelector('.graph svg');
+    if (!svg) return;
+    var edges = svg.querySelectorAll('.g-edge[data-a]');
+    var nodes = svg.querySelectorAll('.mnode[data-node]');
+    var near = {};
+    for (var i = 0; i < edges.length; i++){
+      var a = edges[i].getAttribute('data-a');
+      var b = edges[i].getAttribute('data-b');
+      var on = id && (a === id || b === id);
+      if (on){ near[a] = 1; near[b] = 1; }
+      edges[i].classList.toggle('mhot', !!on);
+      edges[i].classList.toggle('mdim', !!id && !on);
+    }
+    for (var j = 0; j < nodes.length; j++){
+      var nid = nodes[j].getAttribute('data-node');
+      nodes[j].classList.toggle('mhot', !!id && nid !== id && !!near[nid]);
+      nodes[j].classList.toggle('mfade', !!id && nid !== id && !near[nid]);
+    }
+  }
+
+  app.addEventListener('mouseover', function(e){
+    var n = e.target.closest ? e.target.closest('.mnode[data-node]') : null;
+    if (n) mapHover(n.getAttribute('data-node'));
+  });
+  app.addEventListener('mouseout', function(e){
+    var n = e.target.closest ? e.target.closest('.mnode[data-node]') : null;
+    // Falling off a node returns to whatever is selected, which render() already drew.
+    if (n) draw();
   });
 
   app.addEventListener('change', function(e){

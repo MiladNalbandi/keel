@@ -53,14 +53,35 @@ const CSS = `
 .mnode .mz{font-size:9.5px;fill:var(--faint)}
 .k-app{fill:var(--accent)} .k-data{fill:var(--ok)} .k-queue{fill:var(--warn)}
 .k-ext{fill:var(--faint)} .k-class{fill:var(--dim)} .k-port{fill:var(--rail)}
-.m-http{stroke:var(--run)} .m-sql{stroke:var(--ok)}
-.m-queue{stroke:var(--warn);stroke-dasharray:5 3}
-.m-call{stroke:var(--rail)} .m-fk{stroke:var(--ok)}
 .mhttp{fill:var(--run)} .msql{fill:var(--ok)} .mqueue{fill:var(--warn)}
-.mcall{fill:var(--rail)} .mfk{fill:var(--ok)}
+.mcall{fill:var(--rail)} .mfk{fill:var(--ok)} .mext{fill:var(--faint)}
+
+/* Every one of these names TWO classes on purpose. This block is emitted before the flow graph's
+   CSS, where .g-edge sets stroke to the rail colour with the same specificity a bare .m-sql has,
+   so a single-class rule here loses to it and every edge on the map draws grey. It did. */
+.g-edge.m-http{stroke:var(--run)}
+.g-edge.m-sql{stroke:var(--ok)}
+.g-edge.m-queue{stroke:var(--warn);stroke-dasharray:5 3}
+.g-edge.m-ext{stroke:var(--faint);stroke-dasharray:2 3}
+.g-edge.m-call{stroke:var(--rail)}
+.g-edge.m-fk{stroke:var(--ok)}
+
+/* Selection and hover. The whole point of the picture is seeing what one box touches, so the
+   edges that touch it come forward and the rest go quiet. */
+.g-edge{transition:opacity .13s ease,stroke-width .13s ease}
+.g-edge.mdim{opacity:.09}
+.g-edge.mhot{stroke:var(--accent);stroke-width:2.3;opacity:1}
+.mnode .mbox{transition:stroke .13s ease,fill .13s ease}
+.mnode.mfade{opacity:.35}
+.mnode.mhot .mbox{stroke:var(--accent);stroke-width:2}
 .mlabel{font-size:9.5px;fill:var(--faint);paint-order:stroke;stroke:var(--panel);stroke-width:3;
   stroke-linejoin:round}
-.hide-http .m-http,.hide-sql .m-sql,.hide-queue .m-queue,.hide-call .m-call{display:none}
+.hide-http .m-http,.hide-sql .m-sql,.hide-queue .m-queue,.hide-call .m-call,
+.hide-ext .m-ext,.hide-fk .m-fk{display:none}
+.mkey{display:flex;flex-wrap:wrap;gap:7px 15px;align-items:center;font-size:11.5px;color:var(--faint)}
+.mkey label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.mkey input{accent-color:var(--accent);margin:0}
+.mkey i{width:17px;height:0;border-top-width:2px;border-top-style:solid;display:inline-block}
 
 .mfilters{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}
 .mfilters label{display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
@@ -168,10 +189,16 @@ const SCRIPT = `
             '<path class="mcall" d="M0 0 L8 4 L0 8 z"></path></marker>' +
             '<marker id="mah-fk" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">' +
             '<path class="mfk" d="M0 0 L8 4 L0 8 z"></path></marker>' +
+            '<marker id="mah-ext" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">' +
+            '<path class="mext" d="M0 0 L8 4 L0 8 z"></path></marker>' +
             (demo ? '<pattern id="mhatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
                     '<rect width="9" height="9" fill="none"></rect>' +
                     '<line x1="0" y1="0" x2="0" y2="9" stroke="var(--accent)" stroke-width="1.2" opacity="0.13"></line>' +
                     '</pattern>' : ''),
+      legend: mapKey(MKINDS.filter(function(k){
+        return g.edges.some(function(e){ return e.kind === k[0]; });
+      })),
+      edgeAttrs: function(e){ return ' data-a="' + esc(e.from) + '" data-b="' + esc(e.to) + '"'; },
       // Swimlanes sit under everything: they are the background a step is placed on, not a node.
       under: (g.bands || []).map(function(b){
         return '<rect class="mband" x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="6"></rect>' +
@@ -179,10 +206,21 @@ const SCRIPT = `
       }).join(''),
       // A hatch over the whole figure, so a cropped screenshot of the demo still says it is one.
       after: demo ? '<rect x="0" y="0" width="' + g.width + '" height="' + g.height + '" fill="url(#mhatch)" pointer-events="none"></rect>' : '',
-      edgeClass: function(e){ return 'g-edge m-' + e.kind; },
+      edgeClass: function(e){
+        var cls = 'g-edge m-' + e.kind;
+        if (!mapSel) return cls;
+        return cls + (e.from === mapSel || e.to === mapSel ? ' mhot' : ' mdim');
+      },
       edgeMarker: function(e){ return 'mah-' + e.kind; },
       edgeLabel: function(e){ return e.label || ''; },
-      nodeClass: function(n){ return 'mnode' + (mapSel === n.id ? ' sel' : '') + (n.unsourced ? ' munsourced' : ''); },
+      nodeClass: function(n){
+        var touches = mapSel && g.edges.some(function(e){
+          return (e.from === mapSel && e.to === n.id) || (e.to === mapSel && e.from === n.id);
+        });
+        return 'mnode' + (mapSel === n.id ? ' sel' : '') + (n.unsourced ? ' munsourced' : '') +
+          (mapSel && mapSel !== n.id && !touches ? ' mfade' : '') +
+          (touches ? ' mhot' : '');
+      },
       nodeAttrs: function(n){
         return ' data-node="' + esc(n.id) + '"' +
           (n.drill ? ' data-drill="' + esc(n.drill) + '"' : '') +
@@ -231,11 +269,20 @@ const SCRIPT = `
     return card('what is this box?', esc(n.label), '<dl class="mdl">' + rows + '</dl>');
   }
 
-  function mapFilterBar(){
-    var kinds = [['http', 'web requests'], ['sql', 'database'], ['queue', 'queues'], ['call', 'calls']];
-    return '<div class="mfilters">' + kinds.map(function(k){
-      return '<label><input type="checkbox" data-mhide="' + k[0] + '"' + (mapHide[k[0]] ? '' : ' checked') + '>' + k[1] + '</label>';
-    }).join('') + '</div>';
+  var MKINDS = [
+    ['http', 'a web request', 'var(--run)', 'solid'],
+    ['sql', 'reads or writes the database', 'var(--ok)', 'solid'],
+    ['queue', 'a queue message', 'var(--warn)', 'dashed'],
+    ['ext', 'another company', 'var(--faint)', 'dotted'],
+    ['call', 'a call or an import', 'var(--rail)', 'solid'],
+    ['fk', 'a foreign key', 'var(--ok)', 'solid']
+  ];
+
+  function mapKey(kinds){
+    return '<div class="mkey">' + kinds.map(function(k){
+      return '<label><input type="checkbox" data-mhide="' + k[0] + '"' + (mapHide[k[0]] ? '' : ' checked') + '>' +
+        '<i style="border-color:' + k[2] + ';border-top-style:' + k[3] + '"></i>' + esc(k[1]) + '</label>';
+    }).join('') + '<span>purple = what you picked, and everything it touches</span></div>';
   }
 
   // The console. Everything it can do is refused by default and refused again by the server, so
@@ -365,7 +412,7 @@ const SCRIPT = `
 
     return mapBanner(v) +
       '<div class="mbar">' + levelNav + crumbs + '<span class="mtip">' + esc(MTIP[level] || '') + '</span></div>' +
-      card('map', tag, body + mapFilterBar() + limits) +
+      card('map', tag, body + limits) +
       mapDetail() +
       renderConsole();
   }
