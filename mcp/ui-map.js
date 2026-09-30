@@ -51,6 +51,8 @@ const CSS = `
 .mnode .mr.pk{fill:var(--fg);font-weight:700}
 .mnode .mr.fk{fill:var(--run)}
 .mnode .mz{font-size:9.5px;fill:var(--faint)}
+.mnode .mopen{cursor:pointer}
+.mnode:hover .mopen{fill:var(--accent);font-weight:700}
 .k-app{fill:var(--accent)} .k-data{fill:var(--ok)} .k-queue{fill:var(--warn)}
 .k-ext{fill:var(--faint)} .k-class{fill:var(--dim)} .k-port{fill:var(--rail)}
 .mhttp{fill:var(--run)} .msql{fill:var(--ok)} .mqueue{fill:var(--warn)}
@@ -169,7 +171,12 @@ const SCRIPT = `
     var out = '';
     var y = n.y + 20;
     out += '<text class="mt" x="' + (n.x + 11) + '" y="' + y + '">' + esc(n.title) + '</text>';
-    if (n.drill) out += '<text class="mz" x="' + (n.x + n.w - 11) + '" y="' + y + '" text-anchor="end">open</text>';
+    // Marked, so a press on the word itself opens straight away. Without this it fell through to
+    // the select-then-open rule on the box, and the first press on a button labelled "open"
+    // visibly did nothing.
+    if (n.drill) out += '<text class="mz mopen" data-open="' + esc(n.drill) +
+      (n.module ? '" data-open-mod="' + esc(n.module) : '') +
+      '" x="' + (n.x + n.w - 11) + '" y="' + y + '" text-anchor="end">open \u203a</text>';
     y += 15;
     if (n.sub){ out += '<text class="ms" x="' + (n.x + 11) + '" y="' + y + '">' + esc(n.sub) + '</text>'; y += 15; }
     var rows = n.rows || [];
