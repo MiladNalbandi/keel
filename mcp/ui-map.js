@@ -78,6 +78,11 @@ const CSS = `
   stroke-linejoin:round}
 .hide-http .m-http,.hide-sql .m-sql,.hide-queue .m-queue,.hide-call .m-call,
 .hide-ext .m-ext,.hide-fk .m-fk{display:none}
+.mpicks{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 11px}
+.mpicks a{font-size:11.5px;background:var(--bg);border:1px solid var(--border);border-radius:99px;
+  color:var(--dim);padding:4px 12px;text-decoration:none;white-space:nowrap}
+.mpicks a[aria-current="page"]{background:var(--accent);border-color:var(--accent);
+  color:var(--on-accent);font-weight:700}
 .mkey{display:flex;flex-wrap:wrap;gap:7px 15px;align-items:center;font-size:11.5px;color:var(--faint)}
 .mkey label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
 .mkey input{accent-color:var(--accent);margin:0}
@@ -374,11 +379,18 @@ const SCRIPT = `
     var lv = mapData.levels[level];
     var g = null;
     var overflow = 0;
+    var picks = null;
     if (level === 'classes'){
-      var mods = Object.keys((lv && lv.byModule) || {});
-      if (!mod) mod = mods[0];
+      picks = Object.keys((lv && lv.byModule) || {});
+      if (!mod) mod = picks[0];
       var one = lv && lv.byModule && lv.byModule[mod];
       if (one){ g = one; overflow = one.overflow || 0; }
+    } else if (level === 'flow' && lv && lv.byJourney){
+      // One journey at a time. Three of them on one axis read as one twelve-step story, which is
+      // what they are not: authoring a wave and submitting a score share no sequence.
+      picks = Object.keys(lv.byJourney);
+      if (!mod) mod = picks[0];
+      g = lv.byJourney[mod] || null;
     } else {
       g = lv;
     }
@@ -393,7 +405,12 @@ const SCRIPT = `
     else {
       crumbs += '<span class="sep">\\u25b8</span>' + (level === 'system' ? '<span class="here">system</span>'
         : '<a href="' + mapUrl('map', 'modules') + '">modules</a>');
-      if (level === 'classes') crumbs += '<span class="sep">\\u25b8</span><span class="here">' + esc(mod || '') + '</span>';
+      if (level === 'classes' || level === 'flow') {
+        if (level === 'flow') crumbs = '<div class="mcrumb"><a href="' + mapUrl('map', 'system') + '">' +
+          esc(mapData.demo ? 'example' : (v.name || 'project')) + '</a><span class="sep">\\u25b8</span>' +
+          '<span class="here">business flow</span>';
+        if (mod) crumbs += '<span class="sep">\\u25b8</span><span class="here">' + esc(mod) + '</span>';
+      }
     }
     crumbs += '</div>';
 
@@ -401,6 +418,13 @@ const SCRIPT = `
       ? mapData.counts.endpoints + ' endpoints \\u00b7 ' + mapData.counts.tables + ' tables \\u00b7 ' +
         mapData.counts.queues + ' queues \\u00b7 ' + mapData.counts.classes + ' declarations'
       : '';
+
+    var picker = '';
+    if (picks && picks.length > 1){
+      picker = '<div class="mpicks">' + picks.map(function(k){
+        return '<a href="' + mapUrl('map', level, k) + '"' + (k === mod ? ' aria-current="page"' : '') + '>' + esc(k) + '</a>';
+      }).join('') + '</div>';
+    }
 
     var body;
     if (!g || !g.nodes || !g.nodes.length){
@@ -417,7 +441,7 @@ const SCRIPT = `
 
     return mapBanner(v) +
       '<div class="mbar">' + levelNav + crumbs + '<span class="mtip">' + esc(MTIP[level] || '') + '</span></div>' +
-      card('map', tag, body + limits) +
+      card('map', tag, picker + body + limits) +
       mapDetail() +
       renderConsole();
   }
