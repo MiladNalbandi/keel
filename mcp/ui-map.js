@@ -141,11 +141,15 @@ const SCRIPT = `
     er: 'Every box is a table. \\u25aa is a key, \\u2197 points at another table.'
   };
 
+  // A crumb is a name somebody wrote, not a slug. Journeys are called "Authoring a wave and
+  // shipping it" and "A player's session"; the browser percent-encodes the spaces into the hash,
+  // parseHash never decoded them, and the name that came back matched no journey — so switching
+  // to another tab and back drew an empty figure. Encode going out, decode coming in.
   function mapUrl(view, level, mod){
     var p = ['#' + (selected || '')];
     p.push(view);
     if (level) p.push(level);
-    if (mod) p.push(mod);
+    if (mod) p.push(encodeURIComponent(mod));
     return p.join('/');
   }
 
@@ -382,14 +386,14 @@ const SCRIPT = `
     var picks = null;
     if (level === 'classes'){
       picks = Object.keys((lv && lv.byModule) || {});
-      if (!mod) mod = picks[0];
+      if (!mod || picks.indexOf(mod) < 0) mod = picks[0];
       var one = lv && lv.byModule && lv.byModule[mod];
       if (one){ g = one; overflow = one.overflow || 0; }
     } else if (level === 'flow' && lv && lv.byJourney){
       // One journey at a time. Three of them on one axis read as one twelve-step story, which is
       // what they are not: authoring a wave and submitting a score share no sequence.
       picks = Object.keys(lv.byJourney);
-      if (!mod) mod = picks[0];
+      if (!mod || picks.indexOf(mod) < 0) mod = picks[0];
       g = lv.byJourney[mod] || null;
     } else {
       g = lv;
