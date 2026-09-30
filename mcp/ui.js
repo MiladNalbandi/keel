@@ -369,6 +369,22 @@ a.pc.wait{border-color:var(--bad)}
     try { localStorage.setItem(layoutKey(view), JSON.stringify(pos)); } catch (e) { /* private mode */ }
   }
 
+  // Where the figure was zoomed and panned to, kept beside where its boxes were dragged to.
+  // Without this the page threw the view away roughly every time anything changed: the frame
+  // arrives over SSE, draw() rebuilds app.innerHTML, the SVG is new, and the transform started
+  // again from fit. You zoom in to read a box and a moment later it jumps back out.
+  function viewKey(view){ return 'keel.view.' + (selected || 'all') + '.' + (view || 'graph'); }
+  function loadView(view){
+    try {
+      var v = JSON.parse(localStorage.getItem(viewKey(view)) || 'null');
+      if (v && isFinite(v.k) && isFinite(v.x) && isFinite(v.y) && v.k > 0) return v;
+    } catch (e) { /* private mode */ }
+    return null;
+  }
+  function saveView(view, v){
+    try { localStorage.setItem(viewKey(view), JSON.stringify({ k: v.k, x: v.x, y: v.y })); } catch (e) { /* private mode */ }
+  }
+
   function enhanceGraph(wrap, view){
     if (!wrap || wrap.__pan) return;
     var svg = wrap.querySelector('svg');
@@ -385,11 +401,13 @@ a.pc.wait{border-color:var(--bad)}
     // A viewport tall enough to be worth panning, but never taller than the screen.
     wrap.style.height = Math.min(Math.max(H + 40, 300), Math.round(window.innerHeight * 0.62)) + 'px';
 
-    var view0 = { k: 1, x: 0, y: 0 };
+    var saved = loadView(view);
+    var view0 = saved || { k: 1, x: 0, y: 0 };
     function apply(){
       pz.setAttribute('transform', 'translate(' + rnd(view0.x) + ' ' + rnd(view0.y) + ') scale(' + (Math.round(view0.k * 1000) / 1000) + ')');
       var z = wrap.parentNode && wrap.parentNode.querySelector('.gtools .z');
       if (z) z.textContent = Math.round(view0.k * 100) + '%';
+      saveView(view, view0);
     }
     function fit(){
       var r = wrap.getBoundingClientRect();
@@ -520,10 +538,19 @@ a.pc.wait{border-color:var(--bad)}
     // Fit after the browser has laid the container out, not before: measured in the same tick
     // the height is set, getBoundingClientRect still reports the pre-layout box and the drawing
     // lands off-screen. Two frames, because the first only guarantees the style is applied.
-    requestAnimationFrame(function(){ requestAnimationFrame(fit); });
-    // And re-fit while nothing has been dragged, so resizing the window does not strand it.
+    //
+    // Only when this browser has no view of its own for this figure. Fitting unconditionally is
+    // what threw the zoom away: every frame that arrives over SSE rebuilds app.innerHTML, every
+    // rebuild re-enhances, and two frames later the fit overwrote whatever you had zoomed to. You
+    // could watch it snap back a second after you stopped scrolling.
+    if (!saved) requestAnimationFrame(function(){ requestAnimationFrame(fit); });
+    else apply();
+    // Re-fit on a resize only while nothing has been dragged AND nothing has been zoomed, so
+    // widening the window does not strand an untouched drawing — and does not undo a touched one.
     if (window.ResizeObserver){
-      var ro = new ResizeObserver(function(){ if (!Object.keys(moved).length) fit(); });
+      var ro = new ResizeObserver(function(){
+        if (!Object.keys(moved).length && !loadView(view)) fit();
+      });
       ro.observe(wrap);
     }
     repaint();
