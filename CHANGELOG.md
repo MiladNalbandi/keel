@@ -4,6 +4,48 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.64.0
+
+**keel runs on OpenCode, and Claude Code is untouched.** `keel hook pre-tool` always read a JSON
+object on stdin and answered with an exit code — `0` allows, `2` refuses with the reason on stderr —
+and everything in `lib/` is plain CommonJS with no harness import. So the port is an adapter, not a
+second keel: `opencode/plugin/keel.js` renames OpenCode's tool and argument names to the ones the
+hook already branches on, and turns exit `2` into the thrown error OpenCode uses to refuse a call.
+No rule lives in it. A rule that lived in two harnesses would drift, and the copy the user is being
+judged by would be the wrong one. Nothing under `opencode/` is read by Claude Code; it ships in the
+repo and is inert until installed.
+
+`node opencode/install.mjs` writes the plugin and one command per flow into `.opencode/`. The
+commands are **generated from keel's own `skills/` tree**, one per skill marked
+`disable-model-invocation: true` — the eleven a person starts — each pointing at its `SKILL.md` by
+absolute path. That is Phase A's trick again: a file path needs no plugin system to resolve. Eleven
+copied command files would drift from the skills they mirror. The reference skills are deliberately
+not installed as commands; offering a reference sheet as a slash command invites running it like a
+flow.
+
+**The hole, and what closes it.** OpenCode does not fire `tool.execute.before` for tool calls made
+inside a subagent spawned through the `task` tool — open upstream against 1.0.182. Seven of keel's
+eighteen agents can write, so on OpenCode their writes would reach disk unchecked, which is the one
+guarantee keel exists to make. The `task` call itself is made by the *primary* agent, so the hook
+does see it: spawning a write-capable keel agent while a flow is running is refused, which keeps
+every write where the guards still reach. Read-only agents spawn freely. A scenario holds the
+plugin's `WRITERS` list against the `tools:` line of every agent file, so a new write-capable agent
+cannot be added and left silently unguarded.
+
+Two cases fail closed rather than guess, for the same reason a phase with no row in the guard matrix
+fails closed: **keel cannot be run** (a flow that looks enforced and is not is worse than one that
+stops), and **an `apply_patch` whose body names no file** (nothing to check, so it is refused with a
+pointer to `edit` or `write`). `KEEL_BIN` may carry arguments — `bun run keel` and
+`node /path/to/bin/keel` are as likely as a bare executable, and `spawnSync` takes the whole string
+as one filename, which failed ENOENT and then refused every call.
+
+**Phase C is parked**: keel has two lanes, backend and frontend, with one stack in each. Anything
+wanting a second backend is a second project. Phase B stays parked — `resolvePackForLane` already
+re-probes `detect:` on every run, so a project that changes shape is re-detected without being told;
+the unbuilt part is migrating the old stack's commands and boundaries, and nothing has asked.
+
+292 scenarios, up from 287 — five for the adapter, zero regressions.
+
 ## 0.63.1
 
 **The map drew every edge grey.** `mcp/ui-map.js` is interpolated into the page ahead of the flow

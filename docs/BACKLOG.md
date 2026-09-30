@@ -71,13 +71,16 @@ block on each run, so a project that changes its own shape is re-detected withou
 The unhandled part is the *migration* — the commands, skills and boundaries of the old stack
 outliving the switch. Unpark it when a real project switches, not before.
 
-**Phase C — two stacks in one lane as distinct services. Blocked on a question, not on code.**
-"Two stacks in one lane" reads at least three ways: two backends in one repository; one backend
-calling another as a service; or one lane whose tests span both. `lib/skills.js:packCommands` keys
-everything off one dir per lane (`pack.lane === 'web' ? frontend.dir : backend.dir`), and all three
-readings break that differently. No design until the shape is named.
+**Phase C — two stacks in one lane. Parked by decision: one stack per lane is the model.**
+It read at least three ways — two backends in one repository, one backend calling another as a
+service, or one lane whose tests span both — and `lib/skills.js:packCommands` keys everything off
+one dir per lane (`pack.lane === 'web' ? frontend.dir : backend.dir`), so each reading breaks it
+differently. The decision is that keel has two lanes, backend and frontend, and one stack in each.
+Anything wanting a second backend is a second project. Unpark only if that turns out to be wrong in
+practice, not because the idea is appealing.
 
-**Phase D — OpenCode support. Feasible, with one hole that changes the shape of it.**
+**Phase D — OpenCode support. Shipped in 0.64.0 as `opencode/`; the research below is why it
+looks the way it does.**
 
 OpenCode plugins are JavaScript or TypeScript, loaded from `.opencode/plugins/` (project) or
 `~/.config/opencode/plugins/`, or resolved from npm through `opencode.json`. Everything in `lib/`
