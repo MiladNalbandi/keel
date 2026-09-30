@@ -281,7 +281,10 @@ a.pc.wait{border-color:var(--bad)}
   // with anything after that a breadcrumb the view reads. Every existing bookmark still resolves.
   function parseHash(){
     var p = location.hash.slice(1).split('/').filter(Boolean);
-    return { id: p[0] || null, view: p[1] || 'flow', crumb: p.slice(2) };
+    var crumb = p.slice(2).map(function(x){
+      try { return decodeURIComponent(x); } catch (e) { return x; }
+    });
+    return { id: p[0] || null, view: p[1] || 'flow', crumb: crumb };
   }
   var route = parseHash();
   var selected = route.id;
