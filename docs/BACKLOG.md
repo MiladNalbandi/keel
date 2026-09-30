@@ -59,6 +59,63 @@ lever is an allowlist checked after it, so there is no way to say "never this to
 
 ## Designed, not built
 
+### Phases B, C and D of the stack-pack plan — one is parked, two need a decision
+
+Named in the body of `e74d8cc` as "scoped but not started". They were never designed: a grep for
+`Phase (B|C|D)` across every plan file returns that one commit message and nothing else. What
+follows is the research that was missing, so the naming stops standing in for a design.
+
+**Phase B — a project switching stacks mid-life. Parked, deliberately.** Not because it is hard,
+but because nothing has asked for it: `resolvePackForLane` already re-probes every pack's `detect:`
+block on each run, so a project that changes its own shape is re-detected without keel being told.
+The unhandled part is the *migration* — the commands, skills and boundaries of the old stack
+outliving the switch. Unpark it when a real project switches, not before.
+
+**Phase C — two stacks in one lane as distinct services. Blocked on a question, not on code.**
+"Two stacks in one lane" reads at least three ways: two backends in one repository; one backend
+calling another as a service; or one lane whose tests span both. `lib/skills.js:packCommands` keys
+everything off one dir per lane (`pack.lane === 'web' ? frontend.dir : backend.dir`), and all three
+readings break that differently. No design until the shape is named.
+
+**Phase D — OpenCode support. Feasible, with one hole that changes the shape of it.**
+
+OpenCode plugins are JavaScript or TypeScript, loaded from `.opencode/plugins/` (project) or
+`~/.config/opencode/plugins/`, or resolved from npm through `opencode.json`. Everything in `lib/`
+is already plain CommonJS with no Claude Code import, so the enforcement core ports as-is; what
+has to be written is the adapter, not the rules.
+
+Its commands are markdown with YAML frontmatter in `.opencode/commands/`, taking `$ARGUMENTS` and
+positional `$1`, with `agent:` and `model:` per command. That is close enough to a keel skill that
+the eleven user-invoked ones translate mechanically — and Phase A already helps here, because a
+pack emits **file paths** rather than `keel:` skill names, so stack skills need no plugin system at
+all.
+
+The hook exists and it can refuse: `tool.execute.before` blocks a tool call by throwing, which is
+exactly what `guards.checkEdit` needs to be reachable from.
+
+**The hole**: `tool.execute.before` does not fire for tool calls made by subagents spawned through
+the `task` tool — reported against 1.0.182, still open, no maintainer response. Seven of keel's
+eighteen agents can write: `e2e-author`, `implementer`, `lane-runner`, `librarian`, `prover`,
+`reproducer`, `test-author`. On OpenCode every one of those would write unguarded, which is the
+single guarantee keel exists to make.
+
+It is survivable, and the reason is worth stating because it was not designed for this. Enforcement
+is already two layers, and only the first is a hook:
+
+1. `keel hook pre-tool` refuses the edit — harness-dependent, and on OpenCode it would cover the
+   primary agent only.
+2. `keel commit <type>` refuses the *commit*, checking the staged set against `COMMIT_RULES` in
+   `lib/cli.js:444` — a CLI command, so it holds in any harness, subagent or not.
+
+So an OpenCode port is honest as long as it says which layer is doing the work. Two of the seven
+writers are already opt-in — `loops.red_author` and `loops.green_author` default to `main`
+(`lib/config.js:50`), so `implementer` and `test-author` do not run unless a project asks for them.
+The remaining five are load-bearing and would need either the upstream fix, or a mode that keeps
+their writes on the primary agent.
+
+**What Phase D should not do**: ship as though the guards are intact. The gap belongs in
+`keel doctor` on OpenCode, named, the way a blank required command is named today.
+
 ### `keel hunt regress`
 
 Replay the stored recipes of every finding closed as `fixed`. Those recipes are already runnable,
