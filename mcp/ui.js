@@ -605,9 +605,13 @@ a.pc.wait{border-color:var(--bad)}
     return isNaN(t) ? '' : dur(Math.max(0, Math.round((Date.now() - t) / 1000))) + ' ago';
   }
 
-  // One project needs no switcher; the chrome appears once there is something to switch to.
+  // The switcher is hidden in exactly one place: the overview of a single project, where it
+  // would only name the card already on screen. It is NOT hidden once a project is selected,
+  // however few there are — that was the old rule, and it left the single-project case with no
+  // way back to the overview at all. The way out of a view has to exist even when there is
+  // nowhere else to go yet, because "all projects" is also where the next project will appear.
   function tabs(){
-    if (projects.length < 2 && selected) return '';
+    if (projects.length < 2 && !selected) return '';
     return '<nav class="tabs"><a href="#"' + (selected ? '' : ' aria-current="page"') + '>all projects</a>' +
       projects.map(function(p){
         return '<a href="#' + esc(p.id) + '" title="' + esc(p.root) + '"' +
