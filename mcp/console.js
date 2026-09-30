@@ -38,7 +38,14 @@ const READ_ONLY_SQL = /^\s*(select|explain|show|with)\b/i;
 const WRITE_METHOD = /^(POST|PUT|PATCH|DELETE)$/;
 // A command whose value carries a substitution is the one place page text could reach a shell
 // argument. Those keys are simply not runnable from here.
-const SUBSTITUTED = /\{(AC|PKG|PATHS|BUILD)\}/;
+const SUBSTITUTED = /\{(AC|PKG|PATHS|BUILD|DIR|FILES?)\}/;
+
+// A refusal used to leave no trace at all: log() is only reached on execution, so the one event
+// a person debugging "why will this not run" needs was the one never written down.
+function refuseLogged(cfg, tab, arg, why, fix) {
+  try { log(cfg, tab, arg, false, 0, why); } catch (e) { /* never change the verdict */ }
+  return refuse(why, fix);
+}
 
 function refuse(why, fix) {
   return { ok: false, status: 403, error: why, fix: fix || null };
@@ -148,14 +155,20 @@ function runCommand(cfg, body) {
   // The page sends a key. It has never sent, and must never send, a string.
   const key = String(body.command || '');
   if (!/^[a-z0-9_]+$/.test(key)) {
-    return Promise.resolve(refuse('a command is named by key, not written out',
+    return Promise.resolve(refuseLogged(cfg, 'command', events.short(key), 'a command is named by key, not written out',
       'The page sends a key from .keel/config.yml. There is no free-form shell here.'));
   }
   const proven = readJson(path.join(cfg.root, '.keel', 'proven.json'), { commands: {} }).commands || {};
-  const cmd = (cfg.commands || {})[key] || proven[key];
-  if (!cmd) return Promise.resolve(refuse(`no command "${key}" in .keel/config.yml`, 'Pick one the project defines.'));
+  // A declared tool is runnable here too, under exactly the same rules — the key shape above, the
+  // substitution refusal below, and the phase guard after it. A tool taking {FILE} or {FILES} is
+  // therefore unreachable from the page, which is the point: the files would have to come from
+  // somewhere, and the only candidate is the page.
+  let tool = null;
+  try { tool = require('../lib/tools').get(cfg, key); } catch (e) { tool = null; }
+  const cmd = (cfg.commands || {})[key] || proven[key] || (tool && !tool.problem ? tool.run : null);
+  if (!cmd) return Promise.resolve(refuseLogged(cfg, 'command', key, `no command or tool "${key}" in .keel/config.yml`, 'Pick one the project defines.'));
   if (SUBSTITUTED.test(String(cmd))) {
-    return Promise.resolve(refuse(`"${key}" takes a substitution, so it is not runnable from here`,
+    return Promise.resolve(refuseLogged(cfg, 'command', key, `"${key}" takes a substitution, so it is not runnable from here`,
       'Run it in a terminal, where the hook can see what it was given.'));
   }
 
@@ -197,8 +210,10 @@ function scrub(text) {
   } catch (e) { return '[redacted: the output could not be scanned for secrets]'; }
 }
 
-function log(cfg, tab, arg, ok, ms) {
-  try { events.append(cfg, { kind: 'tool', tool: `console:${tab}`, arg, ok, ms }); } catch (e) { /* the feed is not the point */ }
+function log(cfg, tab, arg, ok, ms, detail) {
+  const ev = { kind: 'tool', tool: `console:${tab}`, arg, ok, ms };
+  if (detail) ev.detail = events.short(String(detail), 160);
+  try { events.append(cfg, ev); } catch (e) { /* the feed is not the point */ }
 }
 
 function fetchLocal(url, method, body) {

@@ -40,6 +40,34 @@ commands:
   static_checks: 'vendor/bin/phpstan analyse && vendor/bin/php-cs-fixer fix --dry-run --diff'
   migrate: 'bin/console doctrine:migrations:migrate --no-interaction'
 
+# Programs keel runs for this stack. `static_checks` above still reports both in one string for
+# the `full` tier; these are the same programs addressable one at a time — so cs-fix can actually
+# fix, which a --dry-run folded into another command can never do.
+tools:
+  cs-fix:
+    run: 'vendor/bin/php-cs-fixer fix {FILES}'
+    on: pre-commit
+    match: '\.php$'
+    # It rewrites the file and exits 0. Blocking on it would refuse a commit it just repaired.
+    fail: fix
+    timeout: 90
+    description: 'Format the staged PHP to the project standard'
+  phpstan:
+    run: 'vendor/bin/phpstan analyse --no-progress'
+    on: manual
+    fail: block
+    timeout: 300
+    description: 'Static analysis over the whole project'
+  sonar:
+    run: 'vendor/bin/sonar-scanner'
+    on: manual
+    # On demand only: it needs a token and a server, and takes minutes. An automatic slow tool
+    # can wedge a commit or a RED/GREEN loop, which is a bad trade for a report nobody asked for.
+    fail: warn
+    kind: status
+    timeout: 900
+    description: 'SonarQube scan — needs SONAR_TOKEN and a reachable server'
+
 coverage_report: var/coverage/clover.xml
 
 # Which files declare a dependency for this stack — read by `lib/guards.js`'s manifest-diff

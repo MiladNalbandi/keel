@@ -72,6 +72,25 @@ commit:
   author_name: keelbot
   author_email: keel.dev.bot@gmail.com
 
+# Programs keel runs for you: formatters, linters, CI probes. `keel tools list` shows what is
+# declared and where it came from — a keel default, a stack pack, or this file. A tool declared
+# here wins over both, and `<name>: false` turns one off.
+#
+# `on:` is when it runs — manual (only `keel tools run`), edit (the file just edited), batch (once
+# per turn), or pre-commit. `fail:` is what a nonzero exit means — fix (it repaired something,
+# carry on), block (refuse the commit), warn (say so, carry on).
+#
+#tools:
+#  cs-fix:
+#    run: 'vendor/bin/php-cs-fixer fix {FILES}'
+#    on: pre-commit
+#    match: '\.php$'
+#    fail: fix
+#  ci:
+#    run: 'gh run list --limit 5'    # GitLab: glab ci list
+#    on: manual
+#    kind: status
+
 gates:
   mode: every-ac              # every-ac | end-of-lane | end
   ai_review_on_skip: false

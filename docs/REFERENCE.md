@@ -898,6 +898,7 @@ Project setup
   keel upgrade [--write]              add config keys and state fields a newer keel needs
   keel skills for <lane>|packs|show   which skills and stack pack a lane resolves to
   keel packs list|add <url|path> [--project]|remove <name>   stack packs, and installing more
+  keel tools list|show <name>|run <name> [--files a,b]   the programs keel runs for you
   keel map build|show|check           the project map the dashboard draws
   keel dashboard [--demo] [--port N] [--view map|er]   open the dashboard
 

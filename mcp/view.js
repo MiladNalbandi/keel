@@ -366,6 +366,39 @@ function mapSummary(cfg, opts = {}) {
   }
 }
 
+// The declared tools, with the last verdict for each. On the frame rather than in the map: every
+// map level is a projection of nodes read out of the user's repo, each with a cite, and the map is
+// pinned to a sha — a tool has neither property, and putting it there would make the map read
+// stale for a reason that has nothing to do with the map.
+//
+// `runnable` is what the console's dropdown reads. It used to read mapData.commands, which the map
+// has never emitted, so the selector always said "no commands are configured" and the command tab
+// was unusable from the page even when it was turned on.
+function buildTools(cfg) {
+  try {
+    const tools = require('../lib/tools');
+    const runs = tools.runs(cfg);
+    const all = tools.list(cfg).map((t) => {
+      const r = runs[t.name] || null;
+      return {
+        name: t.name, on: t.on, source: t.source, kind: t.kind, fail: t.fail,
+        description: t.description, problem: t.problem,
+        last: r ? { at: r.at, ok: r.ok, code: r.code, ms: r.ms, files: r.files } : null,
+      };
+    });
+    // Only what the console will actually accept: a key it can resolve, carrying no substitution.
+    const SUB = /\{(AC|PKG|PATHS|BUILD|DIR|FILES?)\}/;
+    const runnable = []
+      .concat(Object.keys(cfg.commands || {}).filter((k) => {
+        const v = String((cfg.commands || {})[k] || '');
+        return v.trim() && !SUB.test(v);
+      }).map((k) => ({ key: k, kind: 'command' })))
+      .concat(all.filter((t) => !t.problem && !SUB.test(String((tools.get(cfg, t.name) || {}).run || '')))
+        .map((t) => ({ key: t.name, kind: 'tool' })));
+    return { tools: all, runnable };
+  } catch (e) { return { tools: [], runnable: [] }; }
+}
+
 function build(cwd, opts = {}) {
   const cfg = config.load(cwd || process.cwd());
   const state = st.read(cfg);
@@ -392,6 +425,9 @@ function build(cwd, opts = {}) {
     };
     // Setup rungs are the only progress worth showing outside a flow.
     try { view.todos = todos.build(state, cfg) || []; } catch (e) { view.todos = []; }
+    // Tools do not depend on a flow, so they are on the idle page too — that is where somebody
+    // setting a project up is looking.
+    Object.assign(view, buildTools(cfg));
     return view;
   }
 
@@ -410,6 +446,7 @@ function build(cwd, opts = {}) {
   view.current = buildCurrent(state);
   view.agents = buildAgents(cfg, state);
   view.checks = buildChecks(cfg, state, head);
+  Object.assign(view, buildTools(cfg));
   view.frozen = buildFrozen(state);
   view.hunt = state.flow === 'hunt' ? buildHunt(cfg) : null;
 
@@ -499,6 +536,12 @@ function lastArchived(cfg) {
 
 // What a watcher compares. board.fingerprint already hashes the four verdict files; questions and
 // the event log are the two things it does not know about.
+// A tool run writes .keel/tools.json and nothing else keel already hashes, so without this the
+// dashboard would not redraw until something unrelated changed.
+function toolsStamp(cfg) {
+  try { return String(fs.statSync(require('../lib/tools').file(cfg)).mtimeMs | 0); } catch (e) { return '0'; }
+}
+
 function fingerprint(cwd) {
   const cfg = config.load(cwd || process.cwd());
   let fp = '';
@@ -509,7 +552,7 @@ function fingerprint(cwd) {
   try { n = fs.statSync(events.file(cfg)).size; } catch (e) { n = 0; }
   let m = 0;
   try { m = fs.statSync(map.file(cfg)).mtimeMs; } catch (e) { m = 0; }
-  return `${fp}:${q}:${n}:${m}`;
+  return `${fp}:${q}:${n}:${m}:${toolsStamp(cfg)}`;
 }
 
 module.exports = { build, summary, projectsText, fingerprint, mapSummary, PHASE_BLURB, FLOW_BLURB };

@@ -4,6 +4,46 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.65.0
+
+**keel already ran other people's programs. Now it can be told which ones.** `prettier` and
+`ktlint` were named in `lib/hooks.js` and chosen by file extension, so a Kotlin project standing on
+spotless got ktlint anyway, and a PHP project got no formatter at all — `php-cs-fixer` existed only
+as a `--dry-run` folded inside `static_checks`, where it could report and never fix. Tools are
+declared now, under `tools:` in the config or in a stack pack, and the hardcoded pair became
+defaults that reproduce exactly what they did. A scenario holds them to it, because the failure
+mode of getting that wrong is a project quietly losing its formatter.
+
+A tool says what to run, when (`manual`, `edit`, `batch`, `pre-commit`), which files it wants
+(`match:`), and what a nonzero exit means (`fail: fix | block | warn`). That last one is declared
+per tool because `cs-fix` reformatting and carrying on, and `phpstan` refusing the commit, are both
+right and neither is a sensible default for the other. The pre-commit point sits after `git add -A`
+so a fixer can re-stage, and before the secrets scan so the scan reads the bytes that will actually
+be committed. `keel tools list|show|run` drives them; `<name>: false` turns one off.
+
+**The reason this is a tool and not a prompt is token cost.** An agent wanting CI status runs
+`gh run list`, pulls pages of output into its context and reasons over it — paid for twice, once in
+tokens and once in a window that now holds a wall of text nobody reads again. `keel tools run`
+prints the compact verdict, exit code and duration and a trimmed head, and the full output goes to
+the dashboard where a human reads it for free. Two forge tools ship as defaults for exactly this:
+`ci` and `pr-checks`. keel detected `gh` and used it once, to open a PR, and went blind afterwards —
+nothing read whether the pipeline that PR triggered passed. GitHub only because `gh` is what keel
+already detects; a GitLab project overrides one `run:` line and nothing else changes.
+
+**The dashboard grew a tools panel, and lost a bug it had been carrying.** The console's command
+dropdown read `mapData.commands`, and the map has never emitted a `commands` key — so it always
+said "no commands are configured" and that tab could not be used from the page even when it was
+turned on. The runnable list moved to the view frame, where the tools panel already lives: 10
+entries where there had been none. Console refusals are journalled too; `log()` was only reached on
+execution, so the one event somebody debugging "why will this not run" needs was the one never
+written down.
+
+The console's substitution refusal grew `DIR|FILES?`. A command carrying a substitution is the one
+place page text could reach a shell argument, which is why those keys are unreachable from the
+page — a file-scoped tool must be no different.
+
+297 scenarios, up from 292. Five new, zero regressions.
+
 ## 0.64.0
 
 **keel runs on OpenCode, and Claude Code is untouched.** `keel hook pre-tool` always read a JSON

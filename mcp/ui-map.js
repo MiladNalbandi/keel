@@ -293,11 +293,15 @@ const SCRIPT = `
   function conBody(){
     var m = mapData || {};
     if (conTab === 'command'){
-      var keys = Object.keys((m.commands || {}));
-      return '<p class="mchint">Runs a command this project already defines. The page sends its key, never a string.</p>' +
+      // From the view frame, not the map. This read mapData.commands for two releases, and the map
+      // has never emitted a commands key — so the selector always said "no commands are
+      // configured" and this tab could not be used from the page even when it was turned on.
+      var runnable = (last && last.runnable) || [];
+      return '<p class="mchint">Runs a command or tool this project already defines. The page sends its key, never a string.</p>' +
         '<div class="mcrow"><select data-con="key">' +
-        (keys.length ? keys.map(function(k){ return '<option>' + esc(k) + '</option>'; }).join('')
-                     : '<option value="">no commands are configured</option>') +
+        (runnable.length ? runnable.map(function(r){
+          return '<option value="' + esc(r.key) + '">' + esc(r.key) + (r.kind === 'tool' ? '  (tool)' : '') + '</option>';
+        }).join('') : '<option value="">no commands or tools are configured</option>') +
         '</select><button data-con-run="command">Run</button></div>';
     }
     if (conTab === 'endpoint'){

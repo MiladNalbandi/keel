@@ -41,6 +41,24 @@ commands:
   static_checks: '{BUILD} -q detekt ktlintCheck'
   migrate: '{BUILD} -q flywayMigrate'
 
+# The same programs `static_checks` runs as one string, addressable one at a time. ktlint itself
+# stays a keel default rather than living here: it is bound to the batch point and reproduces what
+# lib/hooks.js used to do by hand for every project, not only a Kotlin one.
+tools:
+  detekt:
+    run: '{BUILD} -q detekt'
+    on: manual
+    fail: block
+    timeout: 300
+    description: 'Kotlin static analysis'
+  sonar:
+    run: '{BUILD} -q sonar'
+    on: manual
+    fail: warn
+    kind: status
+    timeout: 900
+    description: 'SonarQube scan — needs SONAR_TOKEN and a reachable server'
+
 coverage_report: build/reports/kover/report.xml
 
 # What `keel init --new --stack kotlin-spring` writes. Paths in `from:` are relative to this

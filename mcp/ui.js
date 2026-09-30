@@ -504,6 +504,26 @@ a.pc.wait{border-color:var(--bad)}
       '<div class="row" style="margin-top:8px"><span class="v faint">' + esc(extra.join('   ')) + '</span></div>');
   }
 
+  function renderTools(v){
+    var t = v.tools || [];
+    if (!t.length) return '';
+    var rows = t.map(function(x){
+      var l = x.last;
+      var cl = x.problem ? 'bad' : !l ? 'faint' : l.ok ? 'ok' : 'bad';
+      var g = x.problem ? '\\u00d7' : !l ? '\\u00b7' : l.ok ? '\\u2714' : '\\u00d7';
+      var said = x.problem ? x.problem
+        : !l ? 'never run'
+        : (l.ok ? 'ok' : 'exit ' + l.code) + ' \\u00b7 ' + l.ms + 'ms' + (l.files ? ' \\u00b7 ' + l.files + ' file(s)' : '');
+      return '<div class="row"><i class="g ' + cl + '">' + g + '</i><span class="k">' + esc(x.name) +
+        '</span><span class="v dim">' + esc(x.on) + '</span>' +
+        '<span class="v faint">' + esc(said) + '</span></div>';
+    }).join('');
+    var from = {};
+    t.forEach(function(x){ from[x.source] = (from[x.source] || 0) + 1; });
+    var where = Object.keys(from).map(function(k){ return from[k] + ' ' + k; }).join(', ');
+    return card('tools', String(t.length), rows + note('declared in ' + where + ' \\u00b7 run one with keel tools run <name>'));
+  }
+
   function renderBlockers(v){
     var b = v.blockers || [];
     var body = b.length ? b.map(function(x){
@@ -675,7 +695,7 @@ ${uiMap.SCRIPT}
       return;
     }
     if (!v.active){
-      app.innerHTML = header(v) + tabs() + views(v) + renderQuestions(v) + renderIdle(v);
+      app.innerHTML = header(v) + tabs() + views(v) + renderQuestions(v) + renderIdle(v) + renderTools(v);
       bind();
       return;
     }
@@ -688,6 +708,7 @@ ${uiMap.SCRIPT}
       renderFeed(v) +
       (v.acs && v.acs.total && v.current ? '<div class="grid">' + renderChecks(v) + renderBlockers(v) + '</div>'
                                          : renderBlockers(v)) +
+      renderTools(v) +
       renderNext(v);
     bind();
   }
