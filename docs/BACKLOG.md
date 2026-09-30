@@ -45,6 +45,33 @@ committing someone's whole untracked project unasked is not a thing this tool do
 **This must land before the init commit above**: `git add -A` in a repository whose project is
 untracked would sweep the entire codebase into a `docs(…)` commit.
 
+### A running keel reports the version on disk, not the one it is running
+
+`keelVersion()` (`lib/projects.js:140`) reads `.claude-plugin/plugin.json` **at call time**, and
+`hello()` (`mcp/http.js:70`) returns it. That is deliberate and right for what it was written for —
+the comment at `bin/keel:29` records that a hardcoded version string sat at `0.13.0` across five
+releases — but node loads a module once and keeps it. So a process started a week ago answers
+`/api/hello` with today's version, confidently, while serving week-old code.
+
+Seen in the field: ten keel processes, two of them **seven days old**, every one of them behind the
+files on disk. The dashboard on port 7403 answered `{"keel":true,"version":"0.67.0"}` and was asked
+to prove it; it was running code from before the map's edge colours were fixed, so the page kept
+drawing every edge grey after the fix had shipped, been installed, and been verified on disk. The
+check that should have caught it is the one that said everything was fine.
+
+The same hole is wider than the dashboard: `keel projects` records a `keel` version per project
+(`~/.keel/projects.json`), written by whichever long-lived process last touched it, and the MCP
+server has no version surface at all.
+
+**The fix**: `hello()` also reports the mtime of the newest module actually loaded —
+`Object.keys(require.cache)` filtered to this install, `statSync`, take the max — next to the
+version it read. The page compares the two and says "this page is serving code from 7 days ago"
+rather than nothing. It is a few lines, it needs no new dependency, and it turns a silent wrong
+answer into a visible one.
+
+Worth doing at the same time: `keel doctor` should list keel processes older than the newest keel
+file, because the reflex when a fix does not appear is to doubt the fix.
+
 ### keel's MCP heuristic lets an orchestrator through
 
 `guards.checkMcp` decides from a name heuristic. Measured against a real flow: it refuses
