@@ -411,10 +411,18 @@ a.pc.wait{border-color:var(--bad)}
     }
     function fit(){
       var r = wrap.getBoundingClientRect();
-      var k = Math.min(r.width / (W + 24), r.height / (H + 24));
+      var kw = r.width / (W + 24);
+      var kh = r.height / (H + 24);
+      // Fit to whichever axis the drawing actually needs, not to both. A modules figure is a tall
+      // ribbon — 900 wide by 1800 tall — and fitting its height into a 600px viewport scaled it to
+      // 27%: too small to read, and using a fifth of the width that was sitting there empty. Below
+      // this floor the labels stop being words, and a tall figure is meant to be panned.
+      var k = Math.min(kw, kh);
+      if (k < 0.55 && kw > k) k = Math.min(kw, 1);
       view0.k = Math.max(0.15, Math.min(k, 1));
       view0.x = (r.width - W * view0.k) / 2;
-      view0.y = (r.height - H * view0.k) / 2;
+      // Top-align anything taller than the viewport: centring it hides the beginning off-screen.
+      view0.y = H * view0.k > r.height ? 12 : (r.height - H * view0.k) / 2;
       apply();
     }
     wrap.__fit = fit;
