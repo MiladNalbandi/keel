@@ -175,8 +175,9 @@ const SCRIPT = `
     return out;
   }
 
-  function mapFigure(g, demo){
+  function mapFigure(g, demo, viewId){
     return renderGraph(g, {
+      view: 'map:' + (viewId || 'system'),
       label: 'project map',
       wrapClass: 'graph' + Object.keys(mapHide).map(function(k){ return mapHide[k] ? ' hide-' + k : ''; }).join(''),
       defs: '<marker id="mah-http" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">' +
@@ -405,7 +406,7 @@ const SCRIPT = `
     if (!g || !g.nodes || !g.nodes.length){
       body = '<div class="mempty">' + esc((g && g.empty) || ('Nothing to draw at this level' + (mod ? ' for ' + mod : '') + '.')) + '</div>';
     } else {
-      body = mapFigure(g, Boolean(mapData.demo));
+      body = mapFigure(g, Boolean(mapData.demo), level + (mod ? ':' + mod : ''));
       if (g.source) body += '<div class="msource">Steps read from ' + esc(g.source) + '. A dashed box is a step with no citation behind it.</div>';
       if (overflow) body += note(overflow + ' more declaration(s) in this module are not drawn.');
     }

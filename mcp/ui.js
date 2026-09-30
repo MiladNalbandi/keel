@@ -101,6 +101,21 @@ ${uiMap.CSS}
 /* flow graph */
 .graph{width:100%;overflow-x:auto}
 .graph svg{display:block;margin:0 auto;max-width:100%;height:auto}
+/* Once the graph is interactive it owns a fixed viewport instead of growing to fit: panning
+   needs somewhere to pan within, and a drawing taller than the screen cannot be dragged if the
+   page scrolls under it instead. */
+.graph.pan{overflow:hidden;position:relative;border-radius:10px;cursor:grab;touch-action:none;
+  user-select:none;-webkit-user-select:none}
+.graph.pan.grabbing{cursor:grabbing}
+.graph.pan svg{width:100%;height:100%;max-width:none}
+.graph.pan .g-node{cursor:grab}
+.graph.pan .g-node.dragging{cursor:grabbing}
+.gtools{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin:0 0 6px;font-size:11.5px}
+.gtools button{font:inherit;font-size:11.5px;color:var(--dim);background:var(--card);
+  border:1px solid var(--line);border-radius:99px;padding:2px 10px;cursor:pointer;line-height:1.5}
+.gtools button:hover{color:var(--fg);border-color:var(--rail)}
+.gtools .z{min-width:52px;text-align:center;color:var(--faint);font-variant-numeric:tabular-nums}
+.gtools .moved{color:var(--accent)}
 /* Below this the diagram would have to shrink past legibility — a 740px figure in a 368px
    column puts the labels at 5px. Keep it at its own size and let the container scroll. */
 @media (max-width:620px){ .graph svg{max-width:none} }
@@ -314,6 +329,244 @@ a.pc.wait{border-color:var(--bad)}
   // by mcp/view.js for the flow, by lib/map.js for the map — and this only turns it into elements.
   // Everything that differs between the two is a callback with the flow's behaviour as its default,
   // so the flow graph reads exactly as it did and there is no second emitter to keep in step.
+  // ------------------------------------------------- pan, zoom and moving boxes
+  //
+  // The drawing stays exactly what the server drew — this adds a transform on top of it and
+  // lets a box be dragged. No library: the SVG already carries every node's geometry and every
+  // edge's endpoints as data attributes, which is all that re-routing needs.
+
+  // The server's elbow router, ported. It has to be the same shape, or a dragged edge would
+  // kink differently from the ones beside it. Keep in step with elbow() in lib/map.js.
+  function rnd(n){ return Math.round(Number(n) * 10) / 10; }
+  function elbow(a, b, bend){
+    if (b.x > a.x + a.w){
+      var x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
+      var mx = rnd(x1 + (x2 - x1) * bend);
+      var flat = Math.abs(y1 - y2) < 2;
+      return { d: 'M ' + rnd(x1) + ' ' + rnd(y1) + ' H ' + mx + ' V ' + rnd(y2) + ' H ' + rnd(x2 - 7),
+        lx: flat ? rnd((x1 + x2) / 2) : mx, ly: flat ? rnd(y1 - 7) : rnd((y1 + y2) / 2) };
+    }
+    if (b.y > a.y + a.h){
+      var xa = rnd(a.x + a.w / 2), ya = a.y + a.h, xb = rnd(b.x + b.w / 2);
+      var my = rnd(ya + (b.y - ya) * bend);
+      return { d: 'M ' + xa + ' ' + rnd(ya) + ' V ' + my + ' H ' + xb + ' V ' + rnd(b.y - 7),
+        lx: rnd((xa + xb) / 2), ly: rnd(my - 5) };
+    }
+    var rx = a.x + a.w, ry = a.y + a.h / 2, tx = b.x + b.w, ty = b.y + b.h / 2;
+    var my2 = rnd(Math.max(a.y + a.h, b.y + b.h) + 26);
+    return { d: 'M ' + rnd(rx) + ' ' + rnd(ry) + ' H ' + rnd(rx + 22) + ' V ' + my2 +
+      ' H ' + rnd(tx + 22) + ' V ' + rnd(ty + 7),
+      lx: rnd((rx + tx) / 2 + 22), ly: rnd(my2 - 5) };
+  }
+
+  // Where boxes were dragged to, per project and per view, in this browser — the same place the
+  // theme choice already lives.
+  function layoutKey(view){ return 'keel.layout.' + (selected || 'all') + '.' + (view || 'graph'); }
+  function loadLayout(view){
+    try { return JSON.parse(localStorage.getItem(layoutKey(view)) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function saveLayout(view, pos){
+    try { localStorage.setItem(layoutKey(view), JSON.stringify(pos)); } catch (e) { /* private mode */ }
+  }
+
+  function enhanceGraph(wrap, view){
+    if (!wrap || wrap.__pan) return;
+    var svg = wrap.querySelector('svg');
+    var pz = svg && svg.querySelector('g.pz');
+    if (!svg || !pz) return;
+    wrap.__pan = true;
+    wrap.classList.add('pan');
+
+    // Split on literal spaces, not \\s: this whole page is inside a template literal, which
+    // eats the backslash and turns the class into the letter "s" — the viewBox then never
+    // parsed and every graph fitted itself to a 100x100 box that did not exist.
+    var vb = (svg.getAttribute('viewBox') || '0 0 100 100').trim().split(' ').map(Number);
+    var W = vb[2] || 100, H = vb[3] || 100;
+    // A viewport tall enough to be worth panning, but never taller than the screen.
+    wrap.style.height = Math.min(Math.max(H + 40, 300), Math.round(window.innerHeight * 0.62)) + 'px';
+
+    var view0 = { k: 1, x: 0, y: 0 };
+    function apply(){
+      pz.setAttribute('transform', 'translate(' + rnd(view0.x) + ' ' + rnd(view0.y) + ') scale(' + (Math.round(view0.k * 1000) / 1000) + ')');
+      var z = wrap.parentNode && wrap.parentNode.querySelector('.gtools .z');
+      if (z) z.textContent = Math.round(view0.k * 100) + '%';
+    }
+    function fit(){
+      var r = wrap.getBoundingClientRect();
+      var k = Math.min(r.width / (W + 24), r.height / (H + 24));
+      view0.k = Math.max(0.15, Math.min(k, 1));
+      view0.x = (r.width - W * view0.k) / 2;
+      view0.y = (r.height - H * view0.k) / 2;
+      apply();
+    }
+    wrap.__fit = fit;
+
+    // Zoom about the cursor, so the thing under the pointer stays under it.
+    wrap.addEventListener('wheel', function(ev){
+      ev.preventDefault();
+      var r = wrap.getBoundingClientRect();
+      var px = ev.clientX - r.left, py = ev.clientY - r.top;
+      var k2 = Math.max(0.15, Math.min(4, view0.k * (ev.deltaY < 0 ? 1.12 : 1 / 1.12)));
+      view0.x = px - (px - view0.x) * (k2 / view0.k);
+      view0.y = py - (py - view0.y) * (k2 / view0.k);
+      view0.k = k2;
+      apply();
+    }, { passive: false });
+
+    // Dragging: a box if the pointer went down on one, otherwise the canvas.
+    var drag = null;
+    var moved = loadLayout(view);
+
+    function nodeEls(){ return svg.querySelectorAll('[data-node]'); }
+    function geom(el){
+      return { x: Number(el.getAttribute('data-x')), y: Number(el.getAttribute('data-y')),
+        w: Number(el.getAttribute('data-w')), h: Number(el.getAttribute('data-h')) };
+    }
+    function at(el){
+      var g = geom(el), d = moved[el.getAttribute('data-node')];
+      return { x: g.x + (d ? d.dx : 0), y: g.y + (d ? d.dy : 0), w: g.w, h: g.h };
+    }
+    function place(el){
+      var d = moved[el.getAttribute('data-node')];
+      if (d) el.setAttribute('transform', 'translate(' + rnd(d.dx) + ' ' + rnd(d.dy) + ')');
+      else el.removeAttribute('transform');
+    }
+    // Re-route only what touches a box that has moved; everything else keeps the path the
+    // server drew, so an untouched diagram stays byte-for-byte what it was.
+    function reroute(){
+      var byId = {};
+      var els = nodeEls();
+      for (var i = 0; i < els.length; i++) byId[els[i].getAttribute('data-node')] = at(els[i]);
+      var paths = svg.querySelectorAll('path[data-from]');
+      for (var j = 0; j < paths.length; j++){
+        var pth = paths[j];
+        var f = pth.getAttribute('data-from'), tt = pth.getAttribute('data-to');
+        var lab0 = svg.querySelector('text[data-edge="' + pth.getAttribute('data-edge') + '"]');
+        // The path the server drew, kept so "reset layout" can put it back. Without this the
+        // box returned to its place and its edge stayed where the drag had left it.
+        if (pth.__d0 == null){
+          pth.__d0 = pth.getAttribute('d');
+          if (lab0){ pth.__lx0 = lab0.getAttribute('x'); pth.__ly0 = lab0.getAttribute('y'); }
+        }
+        if (!moved[f] && !moved[tt]){
+          if (pth.getAttribute('d') !== pth.__d0){
+            pth.setAttribute('d', pth.__d0);
+            if (lab0 && pth.__lx0 != null){ lab0.setAttribute('x', pth.__lx0); lab0.setAttribute('y', pth.__ly0); }
+          }
+          continue;
+        }
+        var a = byId[f], b = byId[tt];
+        if (!a || !b) continue;
+        var e = elbow(a, b, Number(pth.getAttribute('data-bend')) || 0.5);
+        pth.setAttribute('d', e.d);
+        var lab = svg.querySelector('text[data-edge="' + pth.getAttribute('data-edge') + '"]');
+        if (lab){ lab.setAttribute('x', e.lx); lab.setAttribute('y', e.ly); }
+      }
+    }
+    function repaint(){
+      var els = nodeEls();
+      for (var i = 0; i < els.length; i++) place(els[i]);
+      reroute();
+      var badge = wrap.parentNode && wrap.parentNode.querySelector('.gtools .moved');
+      if (badge) badge.style.display = Object.keys(moved).length ? '' : 'none';
+    }
+    wrap.__repaint = repaint;
+    wrap.__reset = function(){ moved = {}; saveLayout(view, moved); repaint(); };
+
+    wrap.addEventListener('pointerdown', function(ev){
+      if (ev.button !== 0) return;
+      ev.preventDefault();
+      var node = ev.target.closest ? ev.target.closest('[data-node]') : null;
+      var r = wrap.getBoundingClientRect();
+      drag = { node: node, id: node && node.getAttribute('data-node'),
+        sx: ev.clientX, sy: ev.clientY, ox: view0.x, oy: view0.y };
+      if (node){
+        var d = moved[drag.id];
+        drag.bx = d ? d.dx : 0; drag.by = d ? d.dy : 0;
+        node.classList.add('dragging');
+      } else {
+        wrap.classList.add('grabbing');
+      }
+      wrap.setPointerCapture(ev.pointerId);
+    });
+    wrap.addEventListener('pointermove', function(ev){
+      if (!drag) return;
+      var dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
+      if (drag.node){
+        // Screen pixels to drawing units: the transform is what the pointer is fighting.
+        moved[drag.id] = { dx: drag.bx + dx / view0.k, dy: drag.by + dy / view0.k };
+        place(drag.node);
+        reroute();
+      } else {
+        view0.x = drag.ox + dx; view0.y = drag.oy + dy;
+        apply();
+      }
+    });
+    function endDrag(){
+      if (!drag) return;
+      if (drag.node){
+        drag.node.classList.remove('dragging');
+        moved[drag.id].dx = Math.round(moved[drag.id].dx);
+        moved[drag.id].dy = Math.round(moved[drag.id].dy);
+        saveLayout(view, moved);
+        repaint();
+      }
+      wrap.classList.remove('grabbing');
+      drag = null;
+    }
+    wrap.addEventListener('pointerup', endDrag);
+    wrap.addEventListener('pointercancel', endDrag);
+
+    // Fit after the browser has laid the container out, not before: measured in the same tick
+    // the height is set, getBoundingClientRect still reports the pre-layout box and the drawing
+    // lands off-screen. Two frames, because the first only guarantees the style is applied.
+    requestAnimationFrame(function(){ requestAnimationFrame(fit); });
+    // And re-fit while nothing has been dragged, so resizing the window does not strand it.
+    if (window.ResizeObserver){
+      var ro = new ResizeObserver(function(){ if (!Object.keys(moved).length) fit(); });
+      ro.observe(wrap);
+    }
+    repaint();
+  }
+
+  // The toolbar above a graph. Rendered as markup so it survives the innerHTML rewrite, and
+  // wired in enhanceGraphs like everything else.
+  function graphTools(){
+    return '<div class="gtools">' +
+      '<span class="moved" style="display:none">moved</span>' +
+      '<button data-g="reset">reset layout</button>' +
+      '<button data-g="out">\\u2212</button><span class="z">100%</span><button data-g="in">+</button>' +
+      '<button data-g="fit">fit</button></div>';
+  }
+
+  // Called from bind(), after every re-render: the app replaces innerHTML wholesale, so each
+  // pass finds fresh, unenhanced containers.
+  function enhanceGraphs(){
+    var wraps = app.querySelectorAll('.graph');
+    for (var i = 0; i < wraps.length; i++){
+      var wrap = wraps[i];
+      var view = wrap.getAttribute('data-view') || 'graph';
+      enhanceGraph(wrap, view);
+    }
+    var btns = app.querySelectorAll('.gtools button');
+    for (var j = 0; j < btns.length; j++){
+      btns[j].addEventListener('click', function(ev){
+        var bar = ev.currentTarget.parentNode;
+        var wrap = bar.parentNode.querySelector('.graph');
+        if (!wrap || !wrap.__fit) return;
+        var what = ev.currentTarget.getAttribute('data-g');
+        if (what === 'fit') wrap.__fit();
+        else if (what === 'reset') wrap.__reset();
+        else {
+          // Zoom from the middle when it comes from a button rather than the wheel.
+          var r = wrap.getBoundingClientRect();
+          var ev2 = new WheelEvent('wheel', { deltaY: what === 'in' ? -1 : 1, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, bubbles: false });
+          wrap.dispatchEvent(ev2);
+        }
+      });
+    }
+  }
+
   function renderGraph(g, opts){
     var o = opts || {};
     var edgeClass = o.edgeClass || function(e){ return 'g-edge ' + e.kind + (e.live ? ' live' : ''); };
@@ -339,23 +592,35 @@ a.pc.wait{border-color:var(--bad)}
       '</defs>';
 
     var edgeAttrs = o.edgeAttrs || function(){ return ''; };
-    var edges = g.edges.map(function(e){
-      var s = '<path class="' + edgeClass(e) + '"' + edgeAttrs(e) + ' d="' + e.d + '" marker-end="url(#' + edgeMarker(e) + ')"></path>';
+    var edges = g.edges.map(function(e, i){
+      var ends = e.from != null && e.to != null
+        ? ' data-from="' + esc(String(e.from)) + '" data-to="' + esc(String(e.to)) + '"' +
+          ' data-bend="' + (e.bend == null ? 0.5 : e.bend) + '" data-edge="' + i + '"'
+        : '';
+      var s = '<path class="' + edgeClass(e) + '"' + edgeAttrs(e) + ends +
+        ' d="' + e.d + '" marker-end="url(#' + edgeMarker(e) + ')"></path>';
       var label = o.edgeLabel ? o.edgeLabel(e) : '';
       if (label && isFinite(e.lx) && isFinite(e.ly)){
-        s += '<text class="mlabel" x="' + e.lx + '" y="' + e.ly + '" text-anchor="middle">' + esc(label) + '</text>';
+        s += '<text class="mlabel"' + ends + ' x="' + e.lx + '" y="' + e.ly + '" text-anchor="middle">' + esc(label) + '</text>';
       }
       return s;
     }).join('');
 
     var nodes = g.nodes.map(function(n){
-      return '<g class="' + nodeClass(n) + '"' + nodeAttrs(n) + '>' + nodeBox(n) + nodeBody(n) + '</g>';
+      var id = n.id != null ? n.id : n.phase != null ? n.phase : n.label;
+      return '<g class="' + nodeClass(n) + '"' + nodeAttrs(n) +
+        ' data-node="' + esc(String(id)) + '"' +
+        ' data-x="' + n.x + '" data-y="' + n.y + '"' +
+        ' data-w="' + (n.w || g.box.w) + '" data-h="' + (n.h || g.box.h) + '">' +
+        nodeBox(n) + nodeBody(n) + '</g>';
     }).join('');
 
-    return '<div class="' + (o.wrapClass || 'graph') + '"><svg viewBox="0 0 ' + g.width + ' ' + g.height + '" ' +
+    return graphTools() +
+      '<div class="' + (o.wrapClass || 'graph') + '" data-view="' + esc(o.view || 'graph') + '">' +
+      '<svg viewBox="0 0 ' + g.width + ' ' + g.height + '" ' +
       'width="' + g.width + '" height="' + g.height + '" role="img" ' +
       'aria-label="' + esc(o.label || 'diagram') + '">' +
-      defs + (o.under || '') + edges + nodes + (o.after || '') + '</svg></div>' +
+      defs + '<g class="pz">' + (o.under || '') + edges + nodes + (o.after || '') + '</g></svg></div>' +
       '<div class="glegend">' + (o.legend == null ? FLOW_LEGEND : o.legend) + '</div>';
   }
 
@@ -364,7 +629,8 @@ a.pc.wait{border-color:var(--bad)}
     var tag = f.onRail ? ('phase ' + (f.index+1) + ' of ' + f.total)
                        : (esc(f.phase) + ' \\u2014 off the rail');
     var body;
-    if (v.graph) body = renderGraph(v.graph, { label: 'flow graph, current phase ' + f.phase });
+    if (v.graph) body = renderGraph(v.graph,
+      { label: 'flow graph, current phase ' + f.phase, view: 'flow' });
     else body = '<div class="rail">' + f.steps.map(function(s){
       return '<span class="rs ' + s.state + '"><i class="g">' + GLYPH[s.state] + '</i>' + esc(s.label) + '</span>';
     }).join('') + '</div>';
@@ -718,6 +984,7 @@ ${uiMap.SCRIPT}
   }
 
   function bind(){
+    enhanceGraphs();
     var btns = app.querySelectorAll('.filters button');
     for (var i = 0; i < btns.length; i++){
       btns[i].addEventListener('click', function(e){
