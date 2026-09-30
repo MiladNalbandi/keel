@@ -53,6 +53,27 @@ like any other; it used to draw zero classes and say nothing about why.
 Stacks whose migrations are not SQL dump a snapshot instead, and keel parses that. See
 [Stacks](Stacks) for `keel tools run schema-dump`.
 
+### What runs, and how many of it
+
+Half of a system lives outside the code. A RabbitMQ pulled in as a Helm dependency, the queues its
+values declare, and how many replicas actually run are all in a chart, and a map drawn without them
+shows one of everything — not a gap, a wrong picture.
+
+keel reads `Chart.yaml`, `values.yaml` and the manifests beside them, under the directories a
+deployment goes in (`deploy/`, `charts/`, `helm/`, `k8s/` and a few more), and puts what runs on the
+system level. A queue declared in a chart and one named at a publish site are merged by name; a
+chart that names a broker beats a compose image, because a chart is what ships.
+
+Three limits it states rather than works around:
+
+- **A Helm template is not YAML.** `replicas: {{ .Values.replicaCount }}` is resolved one level
+  against the chart's own `values.yaml`. A value from a parent chart, `--set` or an `if` is reported
+  as unresolved and drawn as `?`, never guessed at 1.
+- **Only the default values file is read.** `values-prod.yaml` and kustomize patches are
+  deployment-time inputs keel cannot know it should prefer.
+- **A queue is a name in the chart's values.** One a broker creates at runtime, or one named by an
+  operator CRD, is not there.
+
 ## Tools
 
 The panel lists every program keel runs for this project — formatter, analyser, CI probe — where

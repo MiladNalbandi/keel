@@ -4,6 +4,32 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.67.0
+
+**The map reads what actually runs.** Half of a system lives outside the code: a RabbitMQ pulled in
+as a Helm dependency, the queues its values declare, and how many replicas run. `lib/symbols.js`
+found a queue only where a string literal sat beside a publish or listen call, and a broker only
+where a compose file named an image — so a system running four API replicas behind a charted broker
+was drawn as one of everything. That is not a gap in the picture; it is the wrong picture.
+
+`lib/infra.js` reads `Chart.yaml`, `values.yaml` and the manifests beside them, under the
+directories a deployment actually goes in, and the system level gained a node for what runs. A queue
+declared in a chart and one named at a publish site are merged by name rather than drawn twice, and
+a chart that names a broker now beats a compose image — a chart is what ships. The broker node also
+stopped captioning a chart dependency as "from the compose file", which is exactly the confident
+wrong caption the map's citation discipline exists to prevent.
+
+Three limits are stated and carried onto the map rather than worked around. **A Helm template is not
+YAML**: `replicas: {{ .Values.replicaCount }}` is resolved one level against the chart's own values,
+and a value from a parent chart, `--set` or an `if` is reported unresolved and drawn as `?` rather
+than guessed at 1 — a wrong number is worse than a missing one. **Only the default values file is
+read**, because `values-prod.yaml` and kustomize patches are deployment-time inputs keel cannot know
+it should prefer. **A queue is a name in the chart's values**, so one a broker creates at runtime is
+not there. `{{ .Release.Name }}-api` resolves to `<chart>-api` rather than collapsing to the chart
+name, because the suffix is what tells one workload in a chart from another.
+
+298 scenarios, up from 297. One new, zero regressions.
+
 ## 0.66.0
 
 **A single-module project got no stack pack, and drew no classes.** A blank `backend.dir` means
