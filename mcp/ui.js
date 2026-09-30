@@ -1035,6 +1035,15 @@ ${uiMap.SCRIPT}
   // The map's controls are delegated on #app, like the theme toggle, so a redraw never drops them
   // and nothing has to be re-bound per node.
   app.addEventListener('click', function(e){
+    // The word "open" is a button and behaves like one: one press, straight through. Everything
+    // else on the box keeps select-then-open.
+    var opener = e.target.closest ? e.target.closest('[data-open]') : null;
+    if (opener){
+      var to = opener.getAttribute('data-open');
+      if (to === 'er') location.hash = mapUrl('er');
+      else location.hash = mapUrl('map', to, opener.getAttribute('data-open-mod') || null);
+      return;
+    }
     var node = e.target.closest ? e.target.closest('[data-node]') : null;
     if (!node) return;
     var id = node.getAttribute('data-node');
