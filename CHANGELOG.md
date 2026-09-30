@@ -4,6 +4,47 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.66.0
+
+**A single-module project got no stack pack, and drew no classes.** A blank `backend.dir` means
+*the module is the repository root* — which is what a Django project, a Symfony one that is not in
+a subdirectory, and a one-module Gradle build all look like. Three readers took it to mean "there is
+no directory": `packsForLane` returned no packs, so every such project silently fell back to
+`kotlin-spring` and got none of its own commands, tools or references; `symbols.sources` returned no
+files, so the map drew **zero classes** and nothing in `skipped` said why; and `packBoundaries`
+dropped the architecture rules. The same reading was fixed in `verify.js` in 0.62.1 and had spread.
+
+Fixing it surfaced a fourth: `lib/map.js` walked the frontend tree as well, and once a blank dir
+meant the root, every class was counted **twice**. The web lane keeps the opposite reading —
+a blank `frontend.dir` means there is no frontend, as `verify.js`, `guards.js` and `skills.js`
+already had it — so the two are now written down in one place, `laneDir`, rather than four.
+
+**The map reads Python.** `SOURCE` was `kt|java|ts|tsx|js|jsx|php` — a Python project's classes
+were invisible, and reported as zero rather than as unread. Python declares its roles in filenames
+rather than directories, so `models.py` is domain and `views.py`/`urls.py` are adapter · in;
+pytest's `test_*.py` and `*_test.py` are recognised as tests and matched to what they cover.
+Migration files are no longer read as code in any language — a Django migration declares a class
+called `Migration` in every app, which put one identical node on the map per app and said nothing.
+
+**Stacks whose migrations are not SQL can now draw a database.** Doctrine writes PHP wrapping
+`$this->addSql(...)`; Django writes Python that declares models and never mentions SQL at all.
+Parsing either means interpreting a framework, and interpreting Django's means reimplementing its
+ORM — so keel does neither. The stack's own tooling dumps the schema once into
+`backend.schema_snapshot`, and the map parses it with the same parser it uses for real migrations.
+`keel tools run schema-dump` writes it, declared by the pack; commit the result and the map works on
+a clean checkout with no PHP, no Python and no database anywhere. keel notices when the snapshot
+falls behind the migrations that produced it, and a project with no snapshot is told which framework
+it has and what to run — instead of "no .sql migrations", which named no fix.
+
+**A Django pack.** `packs/stacks/django.yml` — detection, five test layers, pytest/ruff/mypy
+commands, and four tools: `schema-dump`, `cs-fix`, `mypy`, `sonar`. Symfony gained `schema-dump` and
+its `cs-fix` became a real fixer rather than the `--dry-run` folded inside `static_checks`.
+
+The wiki, the README and both pack READMEs were rewritten against what the code does rather than
+what it did.
+
+297 scenarios, unchanged, all passing.
+
 ## 0.65.0
 
 **keel already ran other people's programs. Now it can be told which ones.** `prettier` and

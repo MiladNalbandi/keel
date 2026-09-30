@@ -5,8 +5,12 @@ skills, the hooks, the guard matrix and the AC loop never change. Nothing in the
 is written in terms of Gradle, Composer or Vitest.
 
 **Built in here:** `kotlin-spring` (lane `api`) and `ts-react` (lane `web`), so keel works with
-nothing installed. **Everything else installs**, with `keel packs add` — Symfony and plain-JS
-React ship in [`../packs/`](../packs/README.md) and are not loaded until you install one.
+nothing installed. **Everything else installs**, with `keel packs add` — Symfony, Django and
+plain-JS React ship in [`../packs/`](../packs/README.md) and are not loaded until you install one.
+
+A single-module project — a Django project, a Symfony one that is not in a subdirectory, a
+one-module Gradle build — sets `backend.dir: ''`, which means *the module is the repository root*.
+Packs resolve there like anywhere else.
 
 A pack declares:
 
@@ -20,6 +24,8 @@ A pack declares:
 | `starter` | What `keel init --new --stack <name>` writes, as `from:` (inside the pack) and `to:` (`{BACKEND}`, `{FRONTEND}`, `{CONTRACT}`) |
 | `layers` | Test layers, lowest first. The AC loop picks the lowest layer that can express the acceptance criterion |
 | `commands` | Command defaults, with `{BUILD}`, `{DIR}`, `{AC}`, `{PKG}` and `{PATHS}` substituted |
+| `tools` | Programs keel runs for this stack — formatters, analysers, probes. Each says `run:`, `on:` (`manual`, `edit`, `batch`, `pre-commit`), `match:`, and `fail:` (`fix`, `block`, `warn`). `{BUILD}` and `{DIR}` substitute here; `{FILE}`/`{FILES}` are filled at run time with the paths keel matched |
+| `schema_snapshot` | Where this stack dumps its schema as SQL, for stacks whose migrations are not SQL. Doctrine writes PHP and Django writes Python; keel reads SQL, so the pack ships a `schema-dump` tool and the map parses what it writes |
 | `coverage_report` | Where the coverage report lands, relative to the module directory |
 | `dependency_files` | Which manifest(s) declare a dependency for this stack — read by the dependency guard alongside `build.gradle.kts`/`package.json` |
 | `skills` | Which skill teaches tests for this stack, and which teaches placement |

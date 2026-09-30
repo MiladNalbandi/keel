@@ -58,6 +58,18 @@ tools:
     fail: block
     timeout: 300
     description: 'Static analysis over the whole project'
+  # Doctrine migrations are PHP wrapping $this->addSql(...), which keel does not read — it reads
+  # SQL. This dumps the schema Doctrine's own metadata describes, into a file the map parses with
+  # the same parser it uses for real migrations. --dump-sql prints and applies nothing.
+  #
+  # Commit the result: the map then works on a clean checkout with no PHP installed and no database
+  # anywhere, which is the point of a snapshot rather than a live connection.
+  schema-dump:
+    run: 'mkdir -p docs && bin/console doctrine:schema:create --dump-sql > docs/schema.sql'
+    on: manual
+    fail: block
+    timeout: 120
+    description: 'Write docs/schema.sql so `keel map` can draw the database'
   sonar:
     run: 'vendor/bin/sonar-scanner'
     on: manual
@@ -72,6 +84,10 @@ coverage_report: var/coverage/clover.xml
 
 # Which files declare a dependency for this stack — read by `lib/guards.js`'s manifest-diff
 # check, the same way `build.gradle.kts` and `package.json` already are.
+# Doctrine's migrations are not SQL, so the map reads this snapshot instead. `keel tools run
+# schema-dump` writes it.
+schema_snapshot: docs/schema.sql
+
 dependency_files: [composer.json]
 
 # What this stack needs inside a dev container. Same keys as every other pack's block — see

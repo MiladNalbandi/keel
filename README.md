@@ -12,9 +12,9 @@
 A Claude Code plugin that keeps an AI coding agent on a strict, test-first workflow.
 **Hooks and a small CLI enforce the rules, so the model does not have to remember them.**
 
-Kotlin + Spring Boot and TypeScript React are built in; Symfony and plain-JS React ship in
+Kotlin + Spring Boot and TypeScript React are built in; Symfony, Django and plain-JS React ship in
 [`packs/`](packs/README.md), and a new stack is one YAML file plus a testing skill — nothing in the
-workflow is written in terms of Gradle, Composer or Vitest.
+workflow is written in terms of Gradle, Composer, pytest or Vitest.
 
 ## What it enforces
 
@@ -31,13 +31,28 @@ workflow is written in terms of Gradle, Composer or Vitest.
 opt-in, so a stack you do not use costs you nothing.
 
 ```
-keel packs add packs              # Symfony and plain-JS React, this machine
+keel packs add packs              # Symfony, Django and plain-JS React, this machine
 keel packs add packs --project    # or just this project, which wins over the machine copy
 ```
 
-An installed pack brings its own testing and implementation skills, its own placement references
-and its own `keel init --new` starter — keel carries nothing for a language it does not ship.
-[`stacks/README.md`](stacks/README.md) documents every key.
+An installed pack brings its own testing and implementation skills, its own placement references,
+its own `keel init --new` starter and the **tools** its stack needs — keel carries nothing for a
+language it does not ship. [`stacks/README.md`](stacks/README.md) documents every key.
+
+## Tools
+
+The programs keel runs for you — formatters, analysers, CI probes — are declared, not hardcoded.
+
+```
+keel tools list                   # what is declared, and where each came from
+keel tools run ci                 # the last few pipeline runs, as one compact verdict
+keel tools run cs-fix
+```
+
+A tool can bind to a lifecycle point: `edit`, `batch`, or `pre-commit`, where `fail: fix` lets a
+formatter repair and re-stage while `fail: block` refuses the commit. And a tool exists so the agent
+does not pay for output twice — `keel tools run` hands back an exit code, a duration and a trimmed
+head, with the full text on the dashboard where a person reads it for free.
 
 ## Install
 

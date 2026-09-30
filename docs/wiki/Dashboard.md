@@ -46,6 +46,30 @@ as "this project has no such endpoint", which is a lie.
 `keel map check` re-resolves every citation and fails on one that no longer lands. A map older than
 HEAD is drawn dimmed and says what it knows is missing, rather than being quietly wrong.
 
+Languages the declaration reader knows: Kotlin, Java, TypeScript, JavaScript, PHP and Python. A
+single-module project — `backend.dir: ''`, meaning the module *is* the repository root — is read
+like any other; it used to draw zero classes and say nothing about why.
+
+Stacks whose migrations are not SQL dump a snapshot instead, and keel parses that. See
+[Stacks](Stacks) for `keel tools run schema-dump`.
+
+## Tools
+
+The panel lists every program keel runs for this project — formatter, analyser, CI probe — where
+each is declared, and how the last run went.
+
+```
+keel tools list                   keel tools run ci
+```
+
+A tool exists so the *agent* does not pay for output twice. Asking a model to run `gh run list` and
+read it pulls pages of text into a context window that then holds it all session; `keel tools run`
+prints the verdict — exit code, duration, a trimmed head — and the full output goes here, where a
+person reads it for free.
+
+`ci` and `pr-checks` ship as defaults. They use `gh` because that is what keel already detects; a
+GitLab project overrides one `run:` line (`glab ci list`) and nothing else changes.
+
 ## The console — off until you turn it on
 
 The dashboard can call an endpoint, query the database read-only, or run a command named by key from

@@ -9,6 +9,7 @@ reads as data.
 | `kotlin-spring` | api | built in |
 | `ts-react` | web | built in |
 | `symfony` | api | `packs/`, install on demand |
+| `django` | api | `packs/`, install on demand |
 | `react-js` | web | `packs/`, install on demand |
 
 The two built-ins need no install, so keel works out of the box. Everything else is opt-in — a stack
@@ -65,6 +66,45 @@ gives no stable way for one plugin to read another plugin's install directory, s
 always works — in any harness, with no plugin install at all. A pack may additionally ship a plugin
 manifest for native `/keel-stacks:<skill>` invocation in Claude Code; that is a convenience on top,
 not the mechanism keel depends on.
+
+## Tools a pack brings
+
+A pack ships the programs its stack needs, and `keel tools` runs them:
+
+```
+keel tools list                   # what is declared, and where each came from
+keel tools run cs-fix
+keel tools show schema-dump
+```
+
+| Stack | Tools |
+|---|---|
+| `kotlin-spring` | `detekt`, `sonar` |
+| `symfony` | `cs-fix`, `phpstan`, `sonar`, `schema-dump` |
+| `django` | `cs-fix`, `mypy`, `sonar`, `schema-dump` |
+
+`prettier` and `ktlint` are keel defaults rather than pack tools, because they format `.md` and
+`.json` in any project — including one with no frontend. A project overrides any of them under
+`tools:` in its own config, or turns one off with `<name>: false`.
+
+## When the migrations are not SQL
+
+`keel map` reads the database out of migration files, and it reads **SQL**. Doctrine writes PHP that
+wraps `$this->addSql(...)`; Django writes Python that declares models and never mentions SQL at all.
+Parsing either means interpreting a framework, and interpreting Django's means reimplementing its
+ORM — so keel does neither.
+
+Instead the stack's own tooling dumps the schema once, and keel parses that with the same parser it
+uses for real migrations:
+
+```
+keel tools run schema-dump        # writes docs/schema.sql
+keel map build                    # the database appears on the map
+```
+
+Commit the snapshot. The map then works on a clean checkout with no PHP, no Python and no database
+anywhere. keel notices when it falls behind — *"docs/schema.sql is older than 0001_initial.py"* —
+and a project with no snapshot yet is told which framework it has and what to run.
 
 ## Adding your own
 

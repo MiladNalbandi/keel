@@ -7,12 +7,18 @@ opt-in, so keel's default surface stays small and a stack you do not use costs y
 | Pack | Lane | Detects on |
 |---|---|---|
 | `symfony` | api | `composer.json`, `symfony.lock`, `bin/console`, `.php` files |
+| `django` | api | `manage.py`, `pyproject.toml`, `requirements.txt`, `django` dependency, `.py` files |
 | `react-js` | web | `react` in `package.json`, **and no `tsconfig.json`** |
+
+Both backend packs ship a `schema-dump` tool. Doctrine migrations are PHP and Django's are Python;
+`keel map` reads SQL, so the stack's own tooling writes a snapshot and the map parses that. Run
+`keel tools run schema-dump`, commit the result, and the database appears on the map — on a clean
+checkout, with no PHP, no Python and no database anywhere.
 
 ## Install
 
 ```
-keel packs add packs                    # this machine, both packs
+keel packs add packs                    # this machine, every pack here
 keel packs add packs --project          # just this project
 keel packs add packs/stacks/symfony.yml # or one pack on its own
 ```
@@ -44,7 +50,7 @@ reads by path.
 stacks/*.yml                 the pack definitions keel reads
 skills/*/SKILL.md            testing + implementation guidance
 references/*.md              hexagonal / ddd / layered placement, for PHP
-templates/starter/           what `keel init --new --stack symfony` writes
+templates/starter/           what `keel init --new --stack <name>` writes
 ```
 
 ## Adding a stack
