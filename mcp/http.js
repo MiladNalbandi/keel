@@ -223,7 +223,10 @@ function hostOk(req) {
 
 function handle(req, res) {
   if (!hostOk(req)) return send(res, 403, 'text/plain; charset=utf-8', 'forbidden host');
-  const u = new URL(String(req.url || '/'), 'http://x');
+  // A path like `//` is a protocol-relative URL with no host, and URL() throws on it. Uncaught,
+  // that one request took down `keel dashboard`.
+  let u;
+  try { u = new URL(String(req.url || '/'), 'http://x'); } catch (e) { return send(res, 400, 'text/plain; charset=utf-8', 'bad request'); }
   const route = u.pathname;
   const pick = u.searchParams.get('project') || homeId;
 
