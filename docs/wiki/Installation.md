@@ -1,65 +1,26 @@
 # Installation
 
-keel is a Claude Code plugin. The repository is its own marketplace.
-
-## From GitHub
-
 ```
 /plugin marketplace add MiladNalbandi/keel
 /plugin install keel@keel-marketplace
 ```
 
-## From a local clone (your edits apply straight away)
+From a local clone, add its absolute path instead and run `/reload-plugins`. For one session only:
+`claude --plugin-dir /path/to/keel`. Check it loaded with `/keel:status`.
 
-```
-/plugin marketplace add /absolute/path/to/keel
-/plugin install keel@keel-marketplace
-/reload-plugins
-```
-
-## For one session only
-
-```bash
-claude --plugin-dir /absolute/path/to/keel
-```
-
-## Check it loaded
-
-`/plugin` lists keel, and `/keel:status` answers.
-
-## Set up a project
-
-In your project, run:
+Then, in your project:
 
 ```
 /keel:init
 ```
 
-Init detects the layout, proves the machine can build, test and run the project (the "run ladder"),
-writes `.keel/config.yml`, and builds a small knowledge base under `docs/knowledge/`. It stops and
-asks when something is missing, rather than guessing.
+Init detects the layout, proves the project builds, tests and runs, and writes `.keel/config.yml`.
+It asks when something is missing rather than guessing.
 
-## Optional: another stack
+**Another stack?** Kotlin + Spring Boot and TypeScript React are built in. For Symfony, Django or
+plain-JS React: `keel packs add packs`. See [[Stacks]].
 
-Kotlin + Spring Boot and TypeScript React need no install. For Symfony or plain-JS React:
-
-```
-keel packs add packs              # this machine
-keel packs add packs --project    # or just this project
-keel packs list                   # what keel can see, and where each came from
-```
-
-See [[Stacks]] for how a pack is chosen, and how to add your own.
-
-## Try it without a project
-
-keel ships a simulator. It builds a throwaway repo with fake build tools and drives the real hooks
-and CLI through every scenario:
-
-```bash
-node bin/keel simulate            # every scenario
-node bin/keel simulate --sandbox  # keep a sandbox repo to poke at
-node bin/keel doctor --hooks      # the always-on guard rules only
-```
+**No project yet?** `node bin/keel simulate` drives the real hooks and CLI through every scenario,
+and `keel dashboard --demo` shows the dashboard with example data.
 
 Next: [[The Flows]]

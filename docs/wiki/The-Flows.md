@@ -1,58 +1,42 @@
 # The Flows
 
-Every piece of work runs inside a **flow**. A flow is a fixed sequence of **phases**, and each phase
-decides which files may be written. The pre-tool hook enforces that table on every edit.
+Every piece of work runs in a **flow**: a fixed order of **phases**. Each phase decides which files
+may be written, and a hook enforces it on every edit.
 
-| Command | Use it for |
+| Command | For |
 |---|---|
-| `/keel:feature` | a specced feature, with the full acceptance-criteria loop |
+| `/keel:feature` | a specced feature, with the acceptance-criteria loop |
 | `/keel:change` | a small change, no spec |
-| `/keel:fix` | a bug: reproduced before it is fixed |
+| `/keel:fix` | a bug, reproduced before it is fixed |
 | `/keel:diagnose` | a bug you cannot reproduce yet (read-only) |
-| `/keel:hunt` | a read-only sweep for bugs, producing a proven backlog |
+| `/keel:hunt` | a read-only sweep that produces a proven bug backlog |
 | `/keel:ship` | finishing any branch the same way every time |
 
-## The feature flow
+## Feature
 
 ```
 preflight → workspace → spec → contract
-                                  │
-             ┌────────────────────┘
-             ▼
-   ┌──► RED ──► GREEN ──► gate ──┐      one loop per acceptance criterion
-   └─────────────────────────────┘
-             │ all criteria done
-             ▼
- integration → gate → security → e2e → smoke → ship → final review → memory → close
+                                  ▼
+               ┌──► RED ──► GREEN ──► gate ──┐   once per acceptance criterion
+               └─────────────────────────────┘
+                                  ▼
+ integration → security → e2e → smoke → ship → final review → memory → close
 ```
 
-- **spec**: numbered, layer-tagged acceptance criteria (`AC-001 [API] …`), and the plan under them
-  — AC order, files per AC, test layer. One phase, one human approval, one commit.
-- **contract**: `openapi.yaml` changes first; both sides are generated from it.
-- **RED**: write the failing test. Production code is frozen.
-- **GREEN**: the minimum code to pass. Tests are frozen.
-- **gate**: a human decides whether the criterion is really met: `approve`, `review`, `reject` or `skip`.
-- **integration**: the frontend stops answering itself with a mock and calls the real API. Tests are
-  frozen here, then an optional gate offers a review of the wiring: `review`, `approve` or `skip`.
-- **ship**: verify, coverage, audit, trace, reviewers in parallel, then the final human review and the PR.
+- **spec**: numbered, layer-tagged criteria (`AC-001 [API] …`) and the plan, approved by a human.
+- **RED**: write the failing test; production code is frozen.
+- **GREEN**: the minimum code to pass; tests are frozen.
+- **gate**: a human approves, asks for a review, rejects or skips.
+- **ship**: verify, coverage, reviewers in parallel, final human review, PR.
 
-Off the main line there are repair phases: `refactor`, `review-fix` and `coverage-fix`. Each exists
-to fix one kind of thing and then hand back.
+Repair phases (`refactor`, `review-fix`, `coverage-fix`) fix one kind of thing and hand back.
 
-## The fix flow
+## Fix
 
 ```
-bug-report → workspace → bug-repro → Gate R → bug-investigate → Gate F → bug-fix → e2e → ship → close
+bug-report → workspace → bug-repro → Gate R → bug-investigate → Gate F → bug-fix → e2e → ship
 ```
 
-Gate R asks "is this reproduction the bug you meant?". Gate F approves the fix plan. Production code
-stays locked until Gate F.
+Gate R: "is this the bug you meant?" Gate F approves the fix plan; code stays locked until then.
 
-## Where am I?
-
-```
-keel status      # flow, phase, criteria, agents in flight, what blocks a push
-keel todos       # the same as a checklist
-```
-
-Or open the [[Dashboard]].
+**Where am I?** `keel status`, or the [[Dashboard]].
