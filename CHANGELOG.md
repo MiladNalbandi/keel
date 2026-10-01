@@ -4,6 +4,14 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.67.1
+
+**The dashboard no longer dies on a `//` request.** `URL()` throws on a protocol-relative path, and
+nothing caught it, so one such request stopped `keel dashboard`. It now gets a 400.
+
+**The README is short again** (107 → 56 lines) and opens with a video of the dashboard
+(`assets/demo/`). `CLAUDE.md` now asks for short commit messages.
+
 ## 0.67.0
 
 **The map reads what actually runs.** Half of a system lives outside the code: a RabbitMQ pulled in

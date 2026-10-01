@@ -1,5 +1,7 @@
 # Dashboard
 
+<a href="https://github.com/MiladNalbandi/keel/blob/main/assets/demo/dashboard.mp4"><img alt="The keel dashboard" src="https://raw.githubusercontent.com/MiladNalbandi/keel/main/assets/demo/dashboard.gif" width="800"></a>
+
 keel has a live dashboard: one local web page for **every keel project on your machine**.
 
 Run `keel dashboard`, ask Claude to open it (the `keel_dashboard` MCP tool), or open

@@ -1,7 +1,7 @@
 {
   "name": "keel",
   "displayName": "keel",
-  "version": "0.67.0",
+  "version": "0.67.1",
   "description": "Spec-and-AC driven workflow for a pluggable backend and frontend stack (Kotlin/Spring, Symfony, TypeScript or plain-JS React): enforced RED/GREEN loops, guarded commits, review and ship blueprint.",
   "author": {
     "name": "Milad Nalbandi"

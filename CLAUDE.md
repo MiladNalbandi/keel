@@ -1,3 +1,10 @@
+# Commit messages: keep them short
+
+- **Subject:** one line, at most 60 characters, imperative ("Fix the hub crash on `//`").
+- **Body:** optional, at most 3 short lines — what changed and why. No essays: the detail belongs
+  in `CHANGELOG.md`, code comments or the PR description.
+- Keep the attribution lines (`Co-Authored-By`, `Claude-Session`) when they are required.
+
 # How to explain things in this project
 
 This is a note for Claude (the AI assistant).
