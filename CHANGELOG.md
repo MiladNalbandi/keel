@@ -8,6 +8,14 @@ was to grep the source for a function name.
 
 **Cheaper to run, harder to break, and tested on every PR.**
 
+- **A normal commit no longer costs a docs update.** The knowledge verdict had to match HEAD
+  before any push, so every code commit meant a refresh — re-reading code and re-pointing shifted
+  `file:line` citations — and the `docs(memory)` commit that followed moved HEAD again, sending
+  coverage, release, lint and Sonar round a second time. Now a verdict still holds when only docs,
+  specs, markdown or `.keel/` changed since it (`gates.fresh`), an older knowledge verdict does not
+  block a push (only a missing or failing one does), and `keel memory show` calls it stale only
+  when a file the sections cite has changed. Ship refreshes only then, and asks first.
+
 - `skills/feature/SKILL.md` went from 31.8 KB to 9.5 KB. It stays loaded for the whole flow, so
   that is about 5.5k tokens saved on every turn. Nothing was dropped: the long phase 1 text moved
   into `references/phase-1.md`, and the lanes and amendment text into the new
