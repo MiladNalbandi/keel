@@ -32,6 +32,16 @@ commands:
 
 coverage_report: coverage/lcov.info
 
+# Bound to the push: `keel lint run` runs it, or the user skips it for this commit.
+tools:
+  lint-web:
+    run: 'npx eslint .'
+    on: pre-push
+    lane: web
+    fail: block
+    timeout: 300
+    description: 'Lint the frontend before a push'
+
 dependency_files: [package.json]
 
 # Same keys as ts-react's block; `primary: false` for the same reason — it only contributes

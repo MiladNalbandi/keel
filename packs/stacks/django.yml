@@ -46,6 +46,13 @@ coverage_report: coverage.xml
 
 # Programs keel runs for this stack.
 tools:
+  # Bound to the push: `keel lint run` runs it, or the user skips it for this commit.
+  lint-api:
+    run: 'python -m ruff check .'
+    on: pre-push
+    fail: block
+    timeout: 120
+    description: 'Lint the Python before a push'
   # Django migrations are Python declaring models — they never mention SQL at all, so reading them
   # would mean reimplementing the ORM. `sqlmigrate` asks Django itself what SQL a migration makes,
   # which is the one answer that cannot drift from what Django will actually do.

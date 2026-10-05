@@ -71,6 +71,7 @@ Project setup
   keel arch detect|show|set <style>   architecture style and its import boundaries
   keel packs list|add <url|path> [--project]|remove <name>   stack packs, and installing more
   keel tools list|show <name>|run <name> [--files a,b]   the programs keel runs for you
+  keel lint [status] | run | skip --reason "<why>"       the pre-push lint; the push waits for a choice
 
   keel memory sections [--confirm a,b|--all|--none]    which sections to build
   keel memory show|reload --section <n>|check|update   the project knowledge base
@@ -129,6 +130,7 @@ switch (cmd) {
   case 'skills': cli.skillsCmd(rest); break;
   case 'packs': cli.packsCmd(rest); break;
   case 'tools': cli.toolsCmd(rest); break;
+  case 'lint': cli.lintCmd(rest); break;
   case 'cover': cli.coverCmd(rest); break;
   case 'spec': cli.specCmd(rest); break;
   case 'memory': cli.memoryCmd(rest); break;

@@ -24,7 +24,7 @@ A pack declares:
 | `starter` | What `keel init --new --stack <name>` writes, as `from:` (inside the pack) and `to:` (`{BACKEND}`, `{FRONTEND}`, `{CONTRACT}`) |
 | `layers` | Test layers, lowest first. The AC loop picks the lowest layer that can express the acceptance criterion |
 | `commands` | Command defaults, with `{BUILD}`, `{DIR}`, `{AC}`, `{PKG}` and `{PATHS}` substituted |
-| `tools` | Programs keel runs for this stack — formatters, analysers, probes. Each says `run:`, `on:` (`manual`, `edit`, `batch`, `pre-commit`), `match:`, and `fail:` (`fix`, `block`, `warn`). `{BUILD}` and `{DIR}` substitute here; `{FILE}`/`{FILES}` are filled at run time with the paths keel matched |
+| `tools` | Programs keel runs for this stack — formatters, analysers, probes. Each says `run:`, `on:` (`manual`, `edit`, `batch`, `pre-commit`, `pre-push`), `match:`, and `fail:` (`fix`, `block`, `warn`). `{BUILD}` and `{DIR}` substitute here; `{FILE}`/`{FILES}` are filled at run time with the paths keel matched. A `pre-push` tool (by convention `lint-api` / `lint-web`) is not run automatically: the push waits until the user runs it (`keel lint run`) or skips it (`keel lint skip --reason`) for that commit |
 | `schema_snapshot` | Where this stack dumps its schema as SQL, for stacks whose migrations are not SQL. Doctrine writes PHP and Django writes Python; keel reads SQL, so the pack ships a `schema-dump` tool and the map parses what it writes |
 | `coverage_report` | Where the coverage report lands, relative to the module directory |
 | `dependency_files` | Which manifest(s) declare a dependency for this stack — read by the dependency guard alongside `build.gradle.kts`/`package.json` |

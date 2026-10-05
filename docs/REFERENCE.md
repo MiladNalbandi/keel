@@ -838,7 +838,7 @@ whose hooks are not wired is a plugin that enforces nothing while appearing to w
 
 ## 12. Every human gate, consolidated
 
-Ten gates plus one optional checkpoint. Everything not listed here runs without asking you.
+Eleven gates plus one optional checkpoint. Everything not listed here runs without asking you.
 
 | Gate | Flow | Command | Waivable? |
 |---|---|---|---|
@@ -855,6 +855,7 @@ Ten gates plus one optional checkpoint. Everything not listed here runs without 
 | Integration review | feature | `keel gate integration approve` | `skip`, recorded in the PR; automatic when the flow waived its gates |
 | Spec approval | feature | — | no — `contract` and `red` come after it |
 | Final review | all | `keel gate final approve` | **never** |
+| Pre-push lint — run it? | all, when the stack bundle declares one | `keel lint run` | `keel lint skip --reason`, recorded in the PR |
 | git repository | init | `keel ask git-repo --answer ...` | answerable either way |
 | Rung failed x3 | init | `keel ask rung-<id> --answer ...` | answerable either way |
 | Knowledge sections | init | `keel memory sections --confirm ...` | no — `memory update` refuses |
@@ -905,6 +906,7 @@ Project setup
   keel skills for <lane>|packs|show   which skills and stack pack a lane resolves to
   keel packs list|add <url|path> [--project]|remove <name>   stack packs, and installing more
   keel tools list|show <name>|run <name> [--files a,b]   the programs keel runs for you
+  keel lint [status] | run | skip --reason "<why>"       the pre-push lint; the push waits for a choice
   keel map build|show|check           the project map the dashboard draws
   keel dashboard [--demo] [--port N] [--view map|er]   open the dashboard
 
