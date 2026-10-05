@@ -28,6 +28,16 @@ commands:
 
 coverage_report: coverage/lcov.info
 
+# Bound to the push: `keel lint run` runs it, or the user skips it for this commit.
+tools:
+  lint-web:
+    run: 'npx eslint .'
+    on: pre-push
+    lane: web
+    fail: block
+    timeout: 300
+    description: 'Lint the frontend before a push'
+
 # See kotlin-spring.yml's starter block for how `from:` and `to:` are resolved.
 starter:
   - from: ../templates/starter/vitest.config.ts

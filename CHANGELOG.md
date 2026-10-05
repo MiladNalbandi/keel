@@ -4,6 +4,16 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.69.0
+
+**A lint before every push, and the user decides whether to run it.** A stack bundle can now bind a
+tool to a new point, `on: pre-push`. The built-in and pack stacks ship one each: `lint-api`
+(ktlint + detekt, Symfony's `lint:container`/`lint:yaml`/`lint:twig` + phpstan, ruff), Symfony also gets `cs-fixer-check` (php-cs-fixer `--dry-run`), and `lint-web` (eslint). It is not run on its own: a
+whole-project lint is slow, so the push stops and asks — `keel lint run`, or
+`keel lint skip --reason "<why>"`. Either answer is a verdict for that commit in `.keel/lint.json`;
+a failing lint keeps the push blocked. Ship asks the question right before `keel pr`, and the PR
+body reports what was chosen. Turn one off with `lint-web: false` under `tools:`.
+
 ## 0.68.0
 
 **The full-diff review runs right after the last AC, and security, smoke and E2E are optional.**

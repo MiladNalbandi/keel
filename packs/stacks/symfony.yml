@@ -44,6 +44,23 @@ commands:
 # the `full` tier; these are the same programs addressable one at a time — so cs-fix can actually
 # fix, which a --dry-run folded into another command can never do.
 tools:
+  # Bound to the push: `keel lint run` runs both, or the user skips them for this commit.
+  # The style check is --dry-run on purpose: at push time the commit is already made, so a fixer
+  # that rewrites files would leave them uncommitted. cs-fix (pre-commit) is what repairs them.
+  cs-fixer-check:
+    run: 'vendor/bin/php-cs-fixer fix --dry-run --diff'
+    on: pre-push
+    fail: block
+    timeout: 120
+    description: 'PHP-CS-Fixer style check before a push'
+  # Symfony's own linters — the container, the YAML config and the Twig templates when there are
+  # any — then PHPStan over the whole project.
+  lint-api:
+    run: 'bin/console lint:container && bin/console lint:yaml config --parse-tags && { [ ! -d templates ] || bin/console lint:twig templates; } && vendor/bin/phpstan analyse --no-progress'
+    on: pre-push
+    fail: block
+    timeout: 300
+    description: 'Symfony lint (container, YAML, Twig) and PHPStan before a push'
   cs-fix:
     run: 'vendor/bin/php-cs-fixer fix {FILES}'
     on: pre-commit

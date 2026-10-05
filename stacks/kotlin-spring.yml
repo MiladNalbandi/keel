@@ -45,6 +45,13 @@ commands:
 # stays a keel default rather than living here: it is bound to the batch point and reproduces what
 # lib/hooks.js used to do by hand for every project, not only a Kotlin one.
 tools:
+  # Bound to the push: `keel lint run` runs it, or the user skips it for this commit.
+  lint-api:
+    run: '{BUILD} -q ktlintCheck detekt'
+    on: pre-push
+    fail: block
+    timeout: 300
+    description: 'Lint and static analysis before a push'
   detekt:
     run: '{BUILD} -q detekt'
     on: manual

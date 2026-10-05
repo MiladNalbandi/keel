@@ -119,5 +119,6 @@ keel memory update
 keel commit memory SPEC-NNN "<what changed in the knowledge base>"
 ```
 
-9. `keel pr` — it pushes and opens the PR with the trace table, the coverage numbers, every unlock, every accepted coverage line and every skipped gate in the body. The push is refused until the coverage verdict, and the dependency verdict when a manifest changed, both match this commit.
+8b. **Lint — ask before the push.** If `keel lint` names a pre-push lint (`lint-api`, `lint-web` from the stack bundle), ask with `AskUserQuestion`: **Run it** → `keel lint run`; **Skip** → `keel lint skip --reason "<their reason>"`. Do not decide for them. Ask here, after step 8, because the memory commit moves HEAD and the verdict is per commit. A failing lint is a code change: `keel state phase review-fix`, one `keel commit fix … "lint — …"` per finding, then back to step 1.
+9. `keel pr` — it pushes and opens the PR with the trace table, the coverage numbers, every unlock, every accepted coverage line and every skipped gate in the body. The push is refused until the coverage verdict, the dependency verdict when a manifest changed, and the lint choice when a lint is declared all match this commit.
 9. After the merge, finish the flow: `/keel:feature` phase 9 — the ADR, then `keel state close`.
