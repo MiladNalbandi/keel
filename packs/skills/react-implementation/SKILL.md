@@ -6,6 +6,9 @@ user-invocable: false
 
 # Writing plain-JS React code
 
+**Sonar:** load `keel:sonar` with it (and its `references/typescript.md`) — the code you write here has
+to pass the quality gate at the push, and it is cheaper to write it clean than to fix it there.
+
 This is `keel:web-implementation` with TypeScript removed. **Read `keel:web-implementation`
 first** — component shape, state, forms, accessibility and style are identical for a plain-JS
 React project. Its reference files apply here too:

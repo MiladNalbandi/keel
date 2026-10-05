@@ -4,6 +4,20 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.70.0
+
+**The coding agents write for the Sonar quality gate, and Sonar is asked at the push.** A new
+skill, `keel:sonar`, carries the *Sonar way* gate on new code and the rules that fail it most —
+cognitive complexity, duplication across ACs, repeated literals, dead code, security hotspots and
+test smells — plus one short page per language (Kotlin, TypeScript, PHP, Python). It is loaded in
+RED, GREEN, refactor, review-fix and bug-fix, and the implementer, test-author and lane-runner read
+their diff against it before `red-done` / `green-done`. The implementation skills point to it.
+
+The `sonar` tool in the Kotlin, Symfony and Django bundles moved from `manual` to `pre-push`, and
+now waits for the quality gate (`-Dsonar.qualitygate.wait=true`), so a red gate blocks the push.
+Pre-push checks are now decided **per tool**: `keel lint run lint-api`, `keel lint skip sonar
+--reason "…"`. The push gate names each check still undecided, and the PR body lists every one.
+
 ## 0.69.0
 
 **A lint before every push, and the user decides whether to run it.** A stack bundle can now bind a

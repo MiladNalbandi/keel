@@ -59,12 +59,13 @@ tools:
     timeout: 300
     description: 'Kotlin static analysis'
   sonar:
-    run: '{BUILD} -q sonar'
-    on: manual
-    fail: warn
-    kind: status
+    run: '{BUILD} -q sonar -Dsonar.qualitygate.wait=true'
+    # Asked before every push with the lint (`keel lint run sonar` or skip). It waits for the
+    # quality gate, so a red gate fails the run and blocks the push. `sonar: false` turns it off.
+    on: pre-push
+    fail: block
     timeout: 900
-    description: 'SonarQube scan — needs SONAR_TOKEN and a reachable server'
+    description: 'SonarQube scan and quality gate — needs SONAR_TOKEN and a reachable server'
 
 coverage_report: build/reports/kover/report.xml
 

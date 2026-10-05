@@ -855,7 +855,7 @@ Eleven gates plus one optional checkpoint. Everything not listed here runs witho
 | Integration review | feature | `keel gate integration approve` | `skip`, recorded in the PR; automatic when the flow waived its gates |
 | Spec approval | feature | — | no — `contract` and `red` come after it |
 | Final review | all | `keel gate final approve` | **never** |
-| Pre-push lint — run it? | all, when the stack bundle declares one | `keel lint run` | `keel lint skip --reason`, recorded in the PR |
+| Pre-push checks — lint, Sonar: run each? | all, when the stack bundle declares them | `keel lint run [tool…]` | `keel lint skip [tool…] --reason`, recorded in the PR |
 | git repository | init | `keel ask git-repo --answer ...` | answerable either way |
 | Rung failed x3 | init | `keel ask rung-<id> --answer ...` | answerable either way |
 | Knowledge sections | init | `keel memory sections --confirm ...` | no — `memory update` refuses |
@@ -906,7 +906,7 @@ Project setup
   keel skills for <lane>|packs|show   which skills and stack pack a lane resolves to
   keel packs list|add <url|path> [--project]|remove <name>   stack packs, and installing more
   keel tools list|show <name>|run <name> [--files a,b]   the programs keel runs for you
-  keel lint [status] | run | skip --reason "<why>"       the pre-push lint; the push waits for a choice
+  keel lint [status] | run [tool…] | skip [tool…] --reason "<why>"   pre-push lint and Sonar; the push waits for a choice per tool
   keel map build|show|check           the project map the dashboard draws
   keel dashboard [--demo] [--port N] [--view map|er]   open the dashboard
 

@@ -28,8 +28,12 @@ You make one AC's failing test pass. The test is already written and committed; 
    - **a constraint older than the code it shapes** — the further a decision is from the code it
      produces, the more it needs restating. Ask once whether it still holds. Do not relitigate: no
      stays no, and this is flagged at the moment it bites rather than repeatedly.
-4. Run `keel state green-done`. Fix what it reports.
-5. If the same failure repeats three times, stop and report it instead of trying again.
+4. **Before green-done, read your diff against `keel:sonar`** (and its page for your language):
+   complexity, duplication across ACs, dead code, repeated literals, hotspots. Clean it while the
+   test is still green — the Sonar quality gate at the push will flag anything you leave. If the
+   AC needs a security hotspot, write it and name it (file:line, why) in your report.
+5. Run `keel state green-done`. Fix what it reports.
+6. If the same failure repeats three times, stop and report it instead of trying again.
 
 Report the files you changed and the test result in at most 20 lines.
 

@@ -71,7 +71,7 @@ Project setup
   keel arch detect|show|set <style>   architecture style and its import boundaries
   keel packs list|add <url|path> [--project]|remove <name>   stack packs, and installing more
   keel tools list|show <name>|run <name> [--files a,b]   the programs keel runs for you
-  keel lint [status] | run | skip --reason "<why>"       the pre-push lint; the push waits for a choice
+  keel lint [status] | run [tool…] | skip [tool…] --reason "<why>"   pre-push lint and Sonar; the push waits for a choice per tool
 
   keel memory sections [--confirm a,b|--all|--none]    which sections to build
   keel memory show|reload --section <n>|check|update   the project knowledge base

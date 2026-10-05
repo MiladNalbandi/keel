@@ -9,6 +9,9 @@ user-invocable: false
 `keel:architecture` says *where* a thing goes. This says what it should look like when it gets
 there. Load both in GREEN on an `[API]` criterion.
 
+**Sonar:** load `keel:sonar` with it (and its `references/kotlin.md`) — the code you write here has
+to pass the quality gate at the push, and it is cheaper to write it clean than to fix it there.
+
 | Also read | When |
 |---|---|
 | `references/design.md` | SOLID judged against the minimum-code rule, Kotlin-specific design (value classes, sealed results, data-class traps), and which patterns earn their keep. In `refactor`, or in GREEN when the criterion touches a shape that already exists |
