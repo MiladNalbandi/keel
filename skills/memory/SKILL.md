@@ -107,8 +107,10 @@ keel memory update
 
 Fills the template values keel knows, runs the check, and writes a verdict carrying both the commit
 and a hash of the sections — so a knowledge base nobody touched is reported as stale at a new
-commit rather than re-stamped as current. `keel pr` is refused while that verdict is missing or
-failing — **not** while it is merely older than HEAD. It is stale only when a file the sections
+commit rather than re-stamped as current. **Refreshing is optional**: ship asks the user, and
+`keel memory skip --reason "…"` records a no. The push is never blocked by the knowledge base
+unless the project sets `memory.gate: true` — then a missing or failing verdict blocks it, an
+older one still does not. It is stale only when a file the sections
 cite has changed since; `keel memory show` names those files. Do not refresh on every commit:
 refresh the sections that cite what changed, when the user wants it. It lands as its own `docs(memory)` commit, separate from the reviewed diff.
 
