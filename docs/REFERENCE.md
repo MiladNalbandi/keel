@@ -277,7 +277,7 @@ Measured on a real repo, the full init was 14m11s: ladder 4m55s, knowledge **8m4
 
 ## 2. `/keel:feature` — the spec flow
 
-Fourteen phases. A spec with numbered acceptance criteria, then one criterion at a time: failing test,
+Fifteen phases. A spec with numbered acceptance criteria, then one criterion at a time: failing test,
 then code, then a gate.
 
 ### Every phase, in order
@@ -291,11 +291,16 @@ then code, then a gate.
 | `red` | The failing test for one AC — **and nothing else** | `api-test`, `web-test`, `other` | `keel state red-done` |
 | `green` | Minimum code to pass it — **tests are frozen** | `api-main`, `web-src`, `migration`(new), `other` | `keel state green-done` |
 | `gate` | Present the AC and its evidence | `other` | `keel gate ac approve` |
-| `review-fix` | Address a reviewer's blocking finding | all code + tests | `keel state phase gate` |
-| `integration` | Wire the pieces together across ACs, then the optional review gate | `api-main`, `web-src`, `other` | `keel gate integration review\|approve\|skip` |
-| `security` | Two pipelines in parallel: auditor on the diff, triager on the deps | `other` | `keel state phase e2e` |
-| `e2e` | Playwright specs for the E2E-tagged criteria | `e2e`, `other` | `keel commit e2e <AC>` |
-| `smoke` | The always-on checks | `smoke`, `other` | `keel commit smoke` |
+| `full-review` | One `keel:code-reviewer` over the whole branch diff, right after the last AC | `other` | `keel state full-review pass\|findings` |
+| `review-fix` | Address a reviewer's blocking finding | all code + tests | back to the phase that found it |
+| `integration` | Wire the pieces together across ACs, then the optional gate | `api-main`, `web-src`, `other` | `keel gate integration approve\|skip` |
+| `security` | *Optional.* Two pipelines in parallel: auditor on the diff, triager on the deps | `other` | `keel state advance` |
+| `smoke` | *Optional.* The always-on checks, before E2E | `smoke`, `other` | `keel commit smoke`, `keel state advance` |
+| `e2e` | *Optional.* Playwright specs for the E2E-tagged criteria | `e2e`, `other` | `keel commit e2e <AC>` |
+
+The three optional phases are chosen once, at the start: `keel state start feature --skip security,smoke,e2e --skip-reason "<why>"`.
+The CLI steps over a skipped one, the board shows it as `(skip)`, and the PR body lists it. Ship still
+runs smoke and E2E in `keel verify release`.
 | `ship` | `/keel:ship` — see §6 | `other` | `keel gate final approve` |
 
 ### The AC loop
@@ -310,9 +315,10 @@ flowchart LR
   GA -->|"review"| RV["keel:ac-reviewer<br/>fresh context"]
   RV --> RF["review-fix"] --> GA
   GA -->|"reject"| R
-  GA -->|"last AC"| I["integration"] --> IG{{"gate integration<br/>review / approve / skip"}}
-  IG -->|"findings"| RF2["review-fix"] --> IG
-  IG --> SEC["security"] --> E["e2e"] --> SM["smoke"] --> SH["ship"]
+  GA -->|"last AC"| FR["full-review<br/>keel:code-reviewer"]
+  FR -->|"findings"| RF2["review-fix"] --> FR
+  FR -->|"pass"| I["integration"] --> IG{{"gate integration<br/>approve / skip"}}
+  IG --> SEC["security?"] --> SM["smoke?"] --> E["e2e?"] --> SH["ship"]
 ```
 
 The two locks that make the loop mean something: in `red` the production file is denied, so a test
@@ -596,7 +602,7 @@ go, not get a test. In `coverage-fix`, production buckets are **delete-only** so
 dead lines but never add a line to make a number look better, and `e2e` is **deny** so it cannot reach
 for a browser test to paper over a missing unit test.
 
-**`/keel:review` — a review agent on demand.** The flow reviews at fixed points: the AC gate, phase 6.6,
+**`/keel:review` — a review agent on demand.** The flow reviews at fixed points: the AC gate, the full-diff review after the last AC,
 ship and the final review. This runs the same agents in between. With no argument (or `code`) it runs
 `keel:code-reviewer` over the branch diff. A lens name (`correctness`, `security`, `performance`,
 `architecture`, `assertions`) runs one `keel:reviewer`, and `all` runs ship's whole lens set in parallel.

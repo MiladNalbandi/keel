@@ -4,6 +4,27 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.68.0
+
+**The full-diff review runs right after the last AC, and security, smoke and E2E are optional.**
+The review used to sit after integration and security, so a cross-criterion bug was found only once
+integration had been built on top of it. The last AC gate now moves to a new read-only phase,
+`full-review`: one `keel:code-reviewer` over the whole branch, recorded with
+`keel state full-review pass|findings`. Findings go through `review-fix` and get one more read, then
+the user is asked. The integration gate lost its `review` choice — the same diff had just been read.
+
+Security, smoke and E2E are chosen once, at phase 0: `keel state start feature --skip
+security,smoke,e2e --skip-reason "<why>"`. The integration gate, `keel state advance` and the hints
+step over a skipped phase; the board shows it as `(skip)` and the PR body lists it. Ship is
+unchanged: `keel verify release` still runs smoke and E2E before the push. Smoke now runs **before**
+E2E — it is the cheap check, and a broken stack should fail in seconds rather than inside a 40-turn
+E2E run. The `e2e-approved` and `smoke-approved` asks are gone; the choice was made at phase 0.
+
+Fewer tokens: `keel:code-reviewer` runs on Sonnet at medium effort with 15 turns, reads only the
+spec's criteria and the diff, and keeps its report under 40 lines. Ship drops its `correctness` lens
+when the full-diff review passed and no production code changed since its sha. The feature skill's
+late phases were cut to a few lines each, with the detail in the per-phase references.
+
 ## 0.67.1
 
 **The dashboard no longer dies on a `//` request.** `URL()` throws on a protocol-relative path, and

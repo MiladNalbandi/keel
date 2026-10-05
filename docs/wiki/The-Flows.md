@@ -20,14 +20,17 @@ preflight → workspace → spec → contract
                ┌──► RED ──► GREEN ──► gate ──┐   once per acceptance criterion
                └─────────────────────────────┘
                                   ▼
- integration → security → e2e → smoke → ship → final review → memory → close
+ full review → integration → security? → smoke? → e2e? → ship → final review → memory → close
+                              (? = optional, chosen once at the start)
 ```
 
 - **spec**: numbered, layer-tagged criteria (`AC-001 [API] …`) and the plan, approved by a human.
 - **RED**: write the failing test; production code is frozen.
 - **GREEN**: the minimum code to pass; tests are frozen.
 - **gate**: a human approves, asks for a review, rejects or skips.
-- **ship**: verify, coverage, reviewers in parallel, final human review, PR.
+- **full review**: one reviewer reads the whole branch, right after the last criterion.
+- **security, smoke, e2e**: optional. Smoke runs first because it is the quick check.
+- **ship**: verify, coverage, reviewers in parallel, final human review, PR. Smoke and E2E always run here.
 
 Repair phases (`refactor`, `review-fix`, `coverage-fix`) fix one kind of thing and hand back.
 

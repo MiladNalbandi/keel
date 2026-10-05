@@ -1,8 +1,8 @@
 ---
 name: feature
-description: The spec flow: interview, spec with numbered acceptance criteria and the plan under them, contract, one AC at a time with RED and GREEN commits, integration, E2E, smoke, then ship. Use for features touching the API contract, data or auth.
+description: The spec flow: interview, spec with numbered acceptance criteria and the plan under them, contract, one AC at a time with RED and GREEN commits, a full-diff review, integration, then optional security, smoke and E2E, then ship. Use for features touching the API contract, data or auth.
 disable-model-invocation: true
-argument-hint: "<idea> [--spike] [--gates every-ac|end-of-lane|end]"
+argument-hint: "<idea> [--spike] [--gates every-ac|end-of-lane|end] [--skip security,smoke,e2e]"
 ---
 
 # keel:feature — $ARGUMENTS
@@ -17,11 +17,13 @@ keel preflight <NNN-slug>
 
 It proves the ladder passed on this machine, the tree is clean, every required command is configured and Docker is up, then creates the branch. If it reports "not ready", fix what it names — do not work around it. If keel is not configured at all, stop and run `/keel:init`.
 
-Ask one picker: flow size (full or spike) and gate mode (every-ac, end-of-lane, end). Then:
+Ask one picker with `AskUserQuestion`: flow size (full or spike), gate mode (every-ac, end-of-lane, end), and **which optional phases run** — security, smoke, E2E (multi-select, all on by default). Then:
 
 ```
-keel state start feature --gates <mode>
+keel state start feature --gates <mode> [--skip security,smoke,e2e --skip-reason "<why>"]
 ```
+
+This is the only time those three are asked about. Later phases do not ask again; the CLI steps over a skipped phase and prints the next one. Ship still runs smoke and E2E inside `keel verify release`, and still has its security lens and dependency check — skipping here moves those checks to ship, it does not remove them.
 
 ## Phase 1 — interview, spec and plan
 
@@ -318,137 +320,42 @@ Two things to decide out loud rather than assume:
 
 If the change is large enough that the plan no longer holds, that is not an amendment; go back to phase 1 and rewrite the plan section under the criteria.
 
-## Phase 5 — integration
-
-If a web lane ran, `keel lane merge web` first. Then wire the real client to the real API: `keel verify module api` and `keel verify module web`.
-
-Both lanes passed against their own assumption of what the other does. This is the phase that finds out whether those two assumptions agree — the frontend stops answering itself with MSW and calls the generated client against the running API. Production code is writable and **tests are frozen**, so a mismatch cannot be settled by editing the test that caught it. New behaviour here is a missed AC, not a wiring problem: go back to the loop.
-
-### The integration gate — optional, but asked
+## After the loop
 
 ```
-keel gate integration review|approve|skip [--note "..."]
+last AC ──► lane merge ──► full review ──► integration ──► security? ──► smoke? ──► e2e? ──► ship
+                              │  ▲                          (? = chosen at phase 0)
+                              ▼  │
+                           review-fix
 ```
 
-**Ask before moving on.** This phase writes production code, and everything after it — security, the full-diff review, E2E, smoke — runs without stopping. Until this gate existed, the first question anyone was asked after the last AC gate arrived at ship, by which point the diff was old and the cheap moment to read it had passed.
+Read one reference per phase. Each is short; load it when you enter the phase, not before.
 
-Show the diff since the contract commit, then put it to them. The question is not whether it compiles — `keel verify full` already answered that. It is whether this wiring is worth a person's read *now*:
+## Phase 4.5 — full-diff review → `references/full-review.md`
 
-| Choice | What happens |
-|---|---|
-| **Review it** | one `keel:code-reviewer` over the branch diff, fresh context. Clean → `keel gate integration approve`. Findings → `keel state phase review-fix`, fix them, then approve |
-| **Approve** | reviewed, or small enough not to need one. Recorded, phase `security` |
-| **Skip** | recorded with its reason and listed at the final review and in the PR body. A skipped gate is a review nobody did, and it never disappears quietly |
+The last AC gate moves to `full-review`. If a web lane ran, `keel lane merge web` first — the review needs the whole branch. One `keel:code-reviewer` (Sonnet, read-only) over `git diff main...HEAD`, given only the spec's ACs and scope. Then `keel state full-review pass|findings`. Findings go through `review-fix` and get **one** re-read; still findings after that, stop and ask.
 
-It is skipped automatically, and says so, when the flow waived its gates.
+## Phase 5 — integration → `references/phase-5.md`
 
-**Why `review-fix` rather than fixing in place:** tests are frozen in `integration`, and a real finding usually wants a test. `review-fix` is the phase that allows both, which is the same route phase 5.6's findings take.
+Wire the real client to the real API: `keel verify module api` and `keel verify module web`. Tests are frozen; new behaviour here is a missed AC. Then show the diff since the contract commit and ask: `keel gate integration approve|skip [--note "..."]`. There is no review choice — the full-diff review just ran. The gate moves to the next phase the flow kept on.
 
-## Phase 5.5 — security
+## Phase 5.5 — security (optional) → `security` skill
 
-```
-keel state phase security
-```
+Only if kept on at phase 0. Two pipelines in parallel: `keel:security-auditor` over the diff, and `keel verify deps --force` then `keel:dependency-triager` over what it reports. Clean → say so in one line and `keel state advance`. Any finding → stop and let the user decide each one: fix (`review-fix`, one `keel commit fix` each), accept with a reason, not a finding (say why), or a spec amendment. A dismissed finding is invisible later, so never dismiss one on your own.
 
-**Before E2E, not at ship.** Security gets a lens at ship either way, but that is after E2E and smoke time has already been spent on the change, and a dependency finding there blocks the push instead of being fixed cheaply. A finding is worth most at the moment the code is fresh and nothing has been built on top of it.
+## Phase 6 — smoke (optional) → `references/phase-6.md`
 
-Two pipelines, **in parallel** — they need different inputs and neither waits on the other:
+Only if kept on. Before E2E because it is the cheap check: a broken stack shows up in seconds, not inside a long E2E run. `[SMOKE]` checks as a script plus one `@smoke` test, seeding their own data. `keel commit smoke SPEC-NNN "<checks>"`, then `keel state advance`.
 
-- **A — the diff.** One `keel:security-auditor` over the branch diff against the spec: authorization on every new endpoint, tenancy boundaries that are filters rather than rules, input reaching a query or the filesystem, data exposed in a response or a log, and the logic flaws that only show up against intent. Read-only.
-- **B — the dependencies.** `keel verify deps --force`, then one `keel:dependency-triager` over whatever it reports. It states its own precondition and stops if handed no scanner output, so run the scan first. Its job is reachability: a CVE with no call path into this codebase is not a finding here.
+## Phase 7 — E2E (optional) → `references/phase-7.md`
 
-**If either pipeline reports anything, stop and show it.** Not otherwise — a clean run says so in one line and moves on, because a gate that fires when there is nothing to decide is how gates stop being read.
-
-The decision that needs a person is not *how to fix it*, it is **which findings are real**. Dismissing one is invisible and permanent: nothing downstream re-checks a finding the model decided was fine, and the branch ships as though it was never raised. Show each with what it claims, where, and what you propose — fix, accept, or not real — and let them settle it:
-
-| Choice | What happens |
-|---|---|
-| **Fix these** | one commit each: `keel commit fix <AC> "security — …"` |
-| **Accept with a reason** | the reason is recorded and shown again at the final review, never dropped |
-| **Not a finding** | say why — an unreachable CVE, a path no caller can take. That reasoning is worth as much as the fix |
-| **The spec was wrong** | an authorization rule nobody specified, data never marked sensitive. That is an amendment, not a fix |
-
-If a finding means the spec was wrong rather than the code — an authorization rule nobody specified, data the spec never said was sensitive — that is an amendment, not a fix. Go back through the amendment path in phases 3/4.
-
-## Phase 5.6 — full-diff review
-
-One `keel:code-reviewer` over `git diff main...HEAD` — read-only, and deliberately the first point
-in the flow anything looks at every AC together rather than two commits at a time. It is scoped
-narrow on purpose: correctness across ACs, consistency with the codebase, duplication across ACs,
-and behaviour outside the spec's stated scope. Not security (6.5 just ran it), not architecture,
-performance or assertions — those are `keel:reviewer`'s lenses at ship, and running them twice is
-how a gate stops being read.
-
-```
-CODE-REVIEW: pass       → straight to the gate below
-CODE-REVIEW: findings   → keel state phase review-fix
-                           keel commit fix <AC> "review — …"
-                           keel state phase security   # back to code-reviewer
-```
-
-At most 2 rounds — the same cap ship uses for its own review step. A third round means the finding
-and the fix disagree about something neither will settle by repetition; stop and ask.
-
-**Gate before E2E.** E2E is the first phase that needs the app running, and the last cheap point to
-stop — everything from here spends wall-clock on a browser rather than a read. Put the state in
-front of them first: what code-reviewer found and how it was resolved, what security found.
-
-```
-keel ask e2e-approved --blocking --by feature \
-  --question "Code review clean, <n> ACs done. Proceed to E2E?"
-```
-
-| Choice | What happens |
-|---|---|
-| **Proceed** | `keel state phase e2e` |
-| **Show me the diff first** | walk the branch diff with them, then come back here |
-| **Stop here** | leave the branch as it is. State is on disk; `keel status` says where to resume |
-
-## Phase 6 — E2E
-
-**Before delegating, check the tool is actually configured** — `commands.e2e` and
-`commands.smoke_e2e` in `.keel/config.yml`. A blank command is not "run it and see": it fails
-inside `keel:e2e-author` with no signal beyond a shell error, and looks like a broken test rather
-than a missing tool.
-
-If either is blank:
-
-```
-keel ask e2e-tool-missing --blocking --by feature \
-  --question "No E2E command is configured (commands.e2e / commands.smoke_e2e). Set one up now?"
-```
-
-| Answer | What happens |
-|---|---|
-| **Yes** | help wire it — install the runner, fill in `commands.e2e` / `commands.smoke_e2e` and `e2e.web_url` / `e2e.api_url`, `keel doctor` to confirm — then delegate to `keel:e2e-author` as normal |
-| **No** | delegate to `keel:e2e-author` anyway, told not to run the specs — it still writes one test per `[E2E]` AC, with the AC id in the title and the `@e2e` tag, and they still get committed. Nothing here skips *writing* the criterion, only *proving* it now |
-
-Either way: `keel commit e2e AC-00n "<journey>"` per AC. When the tool was declined, say so plainly
-wherever E2E is reported from here on — the final review, the PR body — rather than letting an
-unrun `@e2e` test read as a passing one.
-
-**Gate before smoke.**
-
-```
-keel ask smoke-approved --blocking --by feature \
-  --question "E2E done<, tool declined — specs written but not run> if applicable. Proceed to smoke?"
-```
-
-| Choice | What happens |
-|---|---|
-| **Proceed** | `keel state phase smoke` |
-| **Show me the diff first** | walk the branch diff with them, then come back here |
-| **Stop here** | leave the branch as it is. State is on disk; `keel status` says where to resume |
-
-## Phase 7 — smoke
-
-Write the `[SMOKE]` checks as a script plus one `@smoke` test. `keel commit smoke SPEC-NNN "<checks>"`.
+Only if kept on. Check `commands.e2e` is configured first; if blank, ask `e2e-tool-missing --blocking`. Delegate to `keel:e2e-author` with only the `[E2E]` ACs and the URLs. `keel commit e2e AC-00n "<journey>"` per AC.
 
 ## Phase 8 — ship
 
-**Ask before you start it.** Everything from phase 5 to here runs without stopping — integration, security, E2E, smoke — so this is the first time since the last AC gate that anyone has been asked anything. `/keel:ship` is long and expensive: two verify rounds, coverage, an audit, a trace, four reviewers in parallel, up to two fix rounds. It is much cheaper to stop here than in the middle of it.
+**Ask before you start it.** Everything after the integration gate runs without stopping, so this is the first question since then. `/keel:ship` is long: verify, coverage, an audit, a trace, reviewers in parallel, up to two fix rounds. Stopping here is much cheaper than in the middle of it.
 
-Put it to them with `AskUserQuestion`, with the state in front of them first — ACs done, what security found, what E2E and smoke cover, and anything still open:
+Put it to them with `AskUserQuestion`, with the state in front of them first — ACs done, the full-diff review verdict, what security found (or that it was skipped), what smoke and E2E cover (or that they were skipped and will run at ship), and anything still open:
 
 | Choice | What happens |
 |---|---|
