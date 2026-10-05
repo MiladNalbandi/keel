@@ -4,6 +4,13 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.71.0
+
+**Updating the knowledge base is optional, and the user is asked.** Ship's step 8 now asks every
+time — update or skip — and says that an update re-reads the cited code. `keel memory skip --reason`
+records a no, and the PR body has a *Knowledge base* section with what was chosen. The push is no
+longer blocked by a missing or failing knowledge verdict; `memory.gate: true` turns that back on.
+
 ## 0.70.0
 
 **Cheaper to run, harder to break, and tested on every PR.**
