@@ -33,12 +33,7 @@ In the `coverage-fix` phase, test files are writable and production code is **de
 
 ## The reviewers
 
-**Skip the correctness lens when the full-diff review already covered it.** Read
-`full_review` from `keel state show`. If its verdict is `pass` and
-`git diff --stat <full_review.sha>..HEAD` shows no production-code file, drop `correctness` from
-this round and say so in one line. The full-diff review read the same code for the same thing;
-reading it again costs an Opus agent and finds nothing new. Any production change since that sha —
-an integration commit, a fix — and the lens runs as normal.
+**No `correctness` lens when the full-diff review passed and no production code changed since** — the rule is in `skills/ship/SKILL.md` step 5.
 
 The rest run at once on the same diff and spec, one lens each — from `review.lenses` (correctness, security, performance) plus architecture when `architecture.style` is set. Each must end `BLOCKING: yes|no`; the `SubagentStop` hook asks a reviewer that forgets the line to repeat its findings and add it. Apply blocking findings one commit each:
 

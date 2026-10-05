@@ -3,8 +3,8 @@
 Every flow, every phase, every gate, every command, and the exact table that decides which files you
 may write in which phase.
 
-> **35 phases · 5 flows · 11 slash commands · 17 subagents · 10 hook events · 12 commit types ·
-> 8 hunt lenses · 13 setup rungs · 10 human gates · 200 simulation scenarios.**
+> **35 phases · 5 flows · 11 slash commands · 18 subagents · 10 hook events · 12 commit types ·
+> 8 hunt lenses · 13 setup rungs · 11 human gates · 300+ simulation scenarios.**
 
 Companion documents: [`BACKLOG.md`](BACKLOG.md) is what is known to be missing and why.
 
@@ -772,7 +772,7 @@ decide they should — that is in the frontmatter, not the prompt.
 
 | Agent | Model | Writes? | Job, and why it is separate |
 |---|---|---|---|
-| `keel:explorer` | opus | no | Maps the code an AC touches and the patterns to follow. Several in parallel; one shared map feeds the librarians at init. |
+| `keel:explorer` | sonnet | no | Maps the code an AC touches and the patterns to follow. Several in parallel; one shared map feeds the librarians at init. |
 | `keel:librarian` | opus | yes | One knowledge section, every claim with a `file:line`. Five in parallel at init. |
 | `keel:test-author` | sonnet | yes | The failing tests for one AC — **without seeing the implementation plan**, so it tests the criterion rather than the intended code. |
 | `keel:implementer` | sonnet | yes | Minimum code to pass one AC's failing test, fresh context. |
@@ -781,7 +781,7 @@ decide they should — that is in the frontmatter, not the prompt.
 | `keel:reproducer` | sonnet | yes | The smallest failing test for a reported bug, **from the symptom alone**, never told the theory. |
 | `keel:investigator` | opus | no | Root cause from evidence. Read-only, so it cannot "just fix it" and skip Gate F. |
 | `keel:hunter` | sonnet | no | Candidate bugs through one named lens, as machine-readable JSON. 13 in parallel during a sweep. |
-| `keel:prover` | opus | recipes only | Tries to reproduce one candidate against the running stack. Returns proven / unproven / false with the exact commands. Read-only with respect to source. |
+| `keel:prover` | sonnet | recipes only | Tries to reproduce one candidate against the running stack. Returns proven / unproven / false with the exact commands. Read-only with respect to source. |
 | `keel:security-auditor` | opus | no | The branch diff against the spec for security bugs and logic flaws. Pipeline A of the security phase. |
 | `keel:dependency-triager` | sonnet | no | Whether a reported CVE is actually reachable from this codebase. Pipeline B — turns 40 advisories into the 2 that matter. |
 | `keel:e2e-author` | sonnet | yes | Playwright specs, exploring the running app with playwright-cli rather than guessing selectors. |

@@ -6,6 +6,22 @@ was to grep the source for a function name.
 
 ## 0.70.0
 
+**Cheaper to run, harder to break, and tested on every PR.**
+
+- `skills/feature/SKILL.md` went from 31.8 KB to 9.5 KB. It stays loaded for the whole flow, so
+  that is about 5.5k tokens saved on every turn. Nothing was dropped: the long phase 1 text moved
+  into `references/phase-1.md`, and the lanes and amendment text into the new
+  `references/lanes.md` and `references/amend.md`.
+- `keel:explorer` and `keel:prover` run on Sonnet. The prover runs at medium effort, and
+  `hunt.max_candidates_per_lens` dropped from 12 to 6, so a hunt starts at most half as many provers.
+- The pre-tool hook fails closed. A guard that throws used to exit 1, which Claude Code reads as
+  "go ahead", so one bad config value turned every guard off. It now blocks and names the error.
+- `.github/workflows/simulate.yml` runs `keel simulate` on every pull request. It calls no model.
+- Docs: a stale BACKLOG entry (init already commits through `keel commit setup`) is gone, and the
+  scenario, subagent and gate counts are corrected.
+
+
+
 **The coding agents write for the Sonar quality gate, and Sonar is asked at the push.** A new
 skill, `keel:sonar`, carries the *Sonar way* gate on new code and the rules that fail it most —
 cognitive complexity, duplication across ACs, repeated literals, dead code, security hotspots and
