@@ -208,6 +208,14 @@ ${uiMap.CSS}
 .q:last-child{margin-bottom:0}
 .q .qq{font-weight:600}
 .q .qb{color:var(--dim);font-size:11.5px;margin-top:2px}
+.rv{padding:6px 0;border-top:1px solid var(--line)} .rv:first-child{border-top:0}
+.rv summary{cursor:pointer;list-style:none} .rv summary::-webkit-details-marker{display:none}
+.rv .qb,.rv .qm{color:var(--dim);font-size:11.5px;margin-top:2px}
+.rv-h b{margin-right:4px} .rv-s{color:var(--dim);font-size:11px;text-transform:uppercase;margin:8px 0 2px}
+.rv-l{list-style:none;margin:6px 0 0;padding:0} .rv-l li{padding:2px 0;font-size:12.5px;overflow-wrap:anywhere}
+.rv-l .mk{display:inline-block;width:16px;font-weight:700} .rv-l .iid{color:var(--dim);margin-right:6px;font-size:11px}
+.pill{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid currentColor;margin-left:6px}
+.pill.run{color:var(--accent)}
 .q .qm{color:var(--faint);font-size:11.5px;margin-top:3px}
 .bl{border-left:3px solid var(--bad);padding:2px 0 2px 12px;margin-bottom:10px}
 .bl:last-child{margin-bottom:0}
@@ -689,6 +697,38 @@ a.pc.wait{border-color:var(--bad)}
       note('Blocking questions stop the flow until answered. keel records them in .keel/questions.json.'));
   }
 
+  function renderReviews(v){
+    if (!v.reviews || !v.reviews.length) return '';
+    var mark = { met: '\u2713', 'not-met': '\u2717', unclear: '?' };
+    var cls = { met: 'ok', 'not-met': 'bad', unclear: 'warn' };
+    var body = v.reviews.map(function(r, i){
+      var src = r.source && r.source.pr ? 'PR #' + r.source.pr + (r.source.author ? ' by ' + r.source.author : '')
+        : (r.source ? r.source.branch + ' vs ' + r.source.base : '');
+      var head = '<div class="rv-h"><b>' + esc(r.id) + '</b> ' + esc(r.title) +
+        ' <span class="pill ' + (r.verdict === 'done' ? 'ok' : r.verdict === 'not-done' ? 'bad' : r.verdict ? 'warn' : 'run') + '">' +
+        esc(r.verdict || 'reviewing\u2026') + '</span></div>' +
+        '<div class="qm">' + esc(src) + ' \u00b7 ' + r.files + ' file(s), +' + r.added + ' \u2212' + r.removed +
+        (r.chunks > 1 ? ' \u00b7 ' + r.chunks + ' chunks' : '') + '</div>';
+      if (r.status !== 'finished') return '<div class="rv">' + head + '</div>';
+      var items = (r.items || []).map(function(it){
+        return '<li class="' + cls[it.verdict] + '"><span class="mk">' + mark[it.verdict] + '</span>' +
+          '<span class="iid">' + esc(it.id) + '</span>' + esc(it.text) +
+          (it.evidence && it.verdict !== 'met' ? '<div class="qb">' + esc(it.evidence) + '</div>' : '') + '</li>';
+      }).join('');
+      var finds = (r.findings || []).map(function(x){
+        return '<li class="' + (x.severity === 'blocking' ? 'bad' : 'warn') + '"><span class="mk">' + (x.severity === 'blocking' ? '!' : '\u00b7') + '</span>' +
+          (x.file ? '<code>' + esc(x.file) + (x.line ? ':' + esc(x.line) : '') + '</code> ' : '') + esc(x.text) + '</li>';
+      }).join('');
+      // The newest review is open; older ones fold away.
+      return '<details class="rv"' + (i === 0 ? ' open' : '') + '><summary>' + head + '</summary>' +
+        (r.summary ? '<div class="qb">' + esc(r.summary) + '</div>' : '') +
+        '<ul class="rv-l">' + items + '</ul>' +
+        (finds ? '<div class="rv-s">findings</div><ul class="rv-l">' + finds + '</ul>' : '') + '</details>';
+    }).join('');
+    return card('ticket reviews', v.reviews.length + ' recent', body +
+      note('keel ticket start \u2192 keel:ticket-reviewer \u2192 keel ticket verdict. Checklist: the ticket plus .keel/dod.md.'));
+  }
+
   function renderAcs(v){
     var a = v.acs; if (!a || !a.total) return '';
     var items = a.items.map(function(x){
@@ -876,7 +916,7 @@ a.pc.wait{border-color:var(--bad)}
 
   function liveTag(){
     return '<span class="live' + (connected ? '' : ' off') + '"><i class="dot"></i>' +
-      (connected ? 'live' : 'offline') + '</span>' + themeButton();
+      (connected ? 'live' : 'offline') + '</span>' + soundButton() + themeButton();
   }
 
   // auto -> light -> dark. Browser storage can be missing or throw (private windows, blocked
@@ -901,6 +941,79 @@ a.pc.wait{border-color:var(--bad)}
     applyTheme();
     draw();
   });
+
+  // Sounds, made in the page with Web Audio — no files to load. Three cues: a review finished
+  // (rising chime), a review that is not done or has a blocking finding (low triple beep), and keel
+  // waiting on you (two soft pings). One button turns them all off; the choice is kept per browser.
+  var soundOn = true;
+  try { soundOn = localStorage.getItem('keel-sound') !== 'off'; } catch (e) { soundOn = true; }
+  var actx = null;
+  function audio(){
+    if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+    if (actx && actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  // Browsers only allow sound after a click on the page, so the first click anywhere unlocks it.
+  document.addEventListener('click', function(){ if (soundOn) audio(); }, { once: true });
+  function tones(list){
+    if (!soundOn) return;
+    var a = audio();
+    if (!a) return;
+    var t = a.currentTime + 0.02;
+    list.forEach(function(n){
+      var o = a.createOscillator(), g = a.createGain();
+      o.type = n.type || 'sine'; o.frequency.value = n.f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(n.v || 0.18, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + n.d);
+      o.connect(g); g.connect(a.destination);
+      o.start(t); o.stop(t + n.d + 0.02);
+      t += n.d + (n.gap || 0.04);
+    });
+  }
+  var SOUNDS = {
+    done: [{ f: 660, d: 0.14 }, { f: 880, d: 0.14 }, { f: 1320, d: 0.28 }],
+    blocking: [{ f: 220, d: 0.16, type: 'square', v: 0.12 }, { f: 220, d: 0.16, type: 'square', v: 0.12 }, { f: 165, d: 0.32, type: 'square', v: 0.12 }],
+    waiting: [{ f: 988, d: 0.12, v: 0.12 }, { f: 988, d: 0.12, v: 0.12, gap: 0.12 }],
+  };
+  function soundButton(){
+    return '<button class="theme" data-sound-toggle title="notification sounds (click to turn ' + (soundOn ? 'off' : 'on') + ')">' +
+      'sound: ' + (soundOn ? 'on' : 'off') + '</button>';
+  }
+  app.addEventListener('click', function(e){
+    if (!e.target.closest || !e.target.closest('[data-sound-toggle]')) return;
+    soundOn = !soundOn;
+    try { localStorage.setItem('keel-sound', soundOn ? 'on' : 'off'); } catch (err) { /* this browser only */ }
+    if (soundOn) tones(SOUNDS.done);
+    draw();
+  });
+  // Cues fire on a change between two updates, never on the first one — opening the page is not news.
+  var heard = null;
+  function listen(sig){
+    if (heard){
+      Object.keys(sig.reviews).forEach(function(id){
+        var now = sig.reviews[id], was = heard.reviews[id];
+        if (now.status === 'finished' && (!was || was.status !== 'finished')){
+          tones(now.verdict === 'done' ? SOUNDS.done : SOUNDS.blocking);
+        }
+      });
+      if (sig.waiting > heard.waiting) tones(SOUNDS.waiting);
+    }
+    heard = sig;
+  }
+  function signalOfView(v){
+    var reviews = {};
+    (v.reviews || []).forEach(function(r){ reviews[r.id] = { status: r.status, verdict: r.verdict }; });
+    return { reviews: reviews, waiting: (v.questions || []).filter(function(q){ return q.blocking; }).length };
+  }
+  function signalOfProjects(list){
+    var reviews = {}, waiting = 0;
+    (list || []).forEach(function(p){
+      waiting += p.blocking || 0;
+      if (p.review) reviews[p.id + '/' + p.review.id] = p.review;
+    });
+    return { reviews: reviews, waiting: waiting };
+  }
 
   function dotClass(p){ return p.blocking ? 'wait' : p.stalled ? 'stall' : p.active ? 'run' : ''; }
 
@@ -1003,12 +1116,13 @@ ${uiMap.SCRIPT}
       return;
     }
     if (!v.active){
-      app.innerHTML = header(v) + tabs() + views(v) + renderQuestions(v) + renderIdle(v) + renderTools(v);
+      app.innerHTML = header(v) + tabs() + views(v) + renderQuestions(v) + renderReviews(v) + renderIdle(v) + renderTools(v);
       bind();
       return;
     }
     app.innerHTML = header(v) + tabs() + views(v) +
       renderQuestions(v) +
+      renderReviews(v) +
       renderFlow(v) +
       '<div class="grid">' + (renderAcs(v) || renderHunt(v) || '') + (renderCurrent(v) || renderAgents(v)) + '</div>' +
       (v.acs && v.acs.total && v.current ? '<div class="grid">' + renderAgents(v) + renderFrozen(v) + '</div>'
@@ -1133,6 +1247,7 @@ ${uiMap.SCRIPT}
   // The overview stream carries only the project list; a project's stream carries its view too.
   function connect(){
     if (es) es.close();
+    heard = null;   // a different stream: its first update is a baseline, not news
     connected = false;
     es = new EventSource(selected ? '/events?project=' + encodeURIComponent(selected) : '/events?overview=1');
     es.onopen = function(){ connected = true; };
@@ -1148,6 +1263,7 @@ ${uiMap.SCRIPT}
       var d;
       try { d = JSON.parse(m.data); } catch (e) { return; }
       projects = d.projects || [];
+      if (!selected) listen(signalOfProjects(projects));
       if (selected && !projects.some(function(p){ return p.id === selected; })){ location.hash = ''; return; }
       draw();
     });
@@ -1156,6 +1272,7 @@ ${uiMap.SCRIPT}
       var v;
       try { v = JSON.parse(m.data); } catch (e) { return; }
       last = v;
+      listen(signalOfView(v));
       draw();
     };
   }

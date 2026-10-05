@@ -27,6 +27,7 @@ const TOOL = {
 // on the agent the guards can still reach.
 const WRITERS = new Set([
   'e2e-author', 'implementer', 'lane-runner', 'librarian', 'prover', 'reproducer', 'test-author',
+  'ticket-reviewer',
 ]);
 
 // Split on whitespace: KEEL_BIN is as likely to be `bun run keel` or `node /path/to/bin/keel` as a

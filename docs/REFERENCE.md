@@ -906,6 +906,7 @@ Project setup
   keel skills for <lane>|packs|show   which skills and stack pack a lane resolves to
   keel packs list|add <url|path> [--project]|remove <name>   stack packs, and installing more
   keel tools list|show <name>|run <name> [--files a,b]   the programs keel runs for you
+  keel ticket start --ticket <file> (--pr <n> | --branch <b>) | verdict <id> | show <id> | list   review code against a ticket and the DoD
   keel lint [status] | run [tool…] | skip [tool…] --reason "<why>"   pre-push lint and Sonar; the push waits for a choice per tool
   keel map build|show|check           the project map the dashboard draws
   keel dashboard [--demo] [--port N] [--view map|er]   open the dashboard

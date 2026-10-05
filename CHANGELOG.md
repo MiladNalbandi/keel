@@ -4,6 +4,20 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.72.0
+
+**Review someone's code against a ticket and the definition of done — `/keel:review-ticket`.**
+`keel ticket start --ticket <file> (--pr <n> | --branch <b>)` does everything that needs no model:
+it fetches the diff (a GitHub PR through `gh`, or a local branch), reads the ticket's own
+"Definition of done" / "Acceptance criteria" list and the team's `.keel/dod.md` (a starter is
+created on first use), and splits a large diff into chunks of about 1,500 lines. One Sonnet
+`keel:ticket-reviewer` per chunk then judges every item — met, not met or unclear, with `file:line`
+evidence — plus blocking findings, and `keel ticket verdict` merges them: done, not done or unclear.
+
+The dashboard has a *ticket reviews* card with the checklist and findings, and it now plays sounds:
+a chime when a review is done, a low beep when it is not done or has a blocking finding, and a ping
+when keel waits for your answer. `sound: on/off` in the header turns them off, per browser.
+
 ## 0.71.0
 
 **Updating the knowledge base is optional, and the user is asked.** Ship's step 8 now asks every

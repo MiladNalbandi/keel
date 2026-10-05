@@ -43,6 +43,7 @@ Then run `/keel:init` in your project.
 | `/keel:fix` / `/keel:diagnose` | a bug you can reproduce / one you cannot yet |
 | `/keel:hunt` | a read-only sweep for proven bugs |
 | `/keel:review` | a review agent on demand |
+| `/keel:review-ticket` | review someone's PR or branch against a ticket and your definition of done |
 | `/keel:ship` | verify, coverage, reviewers, final human review, PR |
 | `keel dashboard` | the live page above, for every project on your machine (`--demo` to try it) |
 

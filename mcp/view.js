@@ -400,6 +400,11 @@ function buildTools(cfg) {
   } catch (e) { return { tools: [], runnable: [] }; }
 }
 
+// Ticket reviews (keel ticket / /keel:review-ticket). Independent of any flow, so on both pages.
+function buildReviews(cfg) {
+  try { return require('../lib/ticket').list(cfg).slice(0, 5); } catch (e) { return []; }
+}
+
 function build(cwd, opts = {}) {
   const cfg = config.load(cwd || process.cwd());
   const state = st.read(cfg);
@@ -413,6 +418,7 @@ function build(cwd, opts = {}) {
     active,
     head: head ? String(head).slice(0, 7) : null,
     questions: buildQuestions(cfg),
+    reviews: buildReviews(cfg),
     timeline: events.read(cfg, { filter: opts.filter || 'all', limit: opts.limit || 40 }),
     timelineTotal: events.count(cfg),
     map: mapSummary(cfg, opts),
@@ -483,6 +489,8 @@ function summary(cwd) {
     lastAt: lastEvent ? lastEvent.at : null,
     lastFailure: state.last_failure || null,
     stalled: !!(state.stall && state.stall.count > 1),
+    // The newest ticket review, so the overview can chime when one finishes in any project.
+    review: (() => { const r = buildReviews(cfg)[0]; return r ? { id: r.id, status: r.status, verdict: r.verdict } : null; })(),
   };
   if (!active) return out;
   const sum = st.acSummary(state);
