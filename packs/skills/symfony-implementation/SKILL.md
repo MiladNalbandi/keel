@@ -9,6 +9,9 @@ user-invocable: false
 `keel:architecture` says *where* a thing goes. This says what it should look like when it gets
 there. Load both in GREEN on an `[API]` criterion.
 
+**Sonar:** load `keel:sonar` with it (and its `references/php.md`) — the code you write here has
+to pass the quality gate at the push, and it is cheaper to write it clean than to fix it there.
+
 Everything here is subordinate to GREEN's rule: **the minimum code the current test drives**. A
 pattern below that the test does not reach is not owed to you by this document.
 

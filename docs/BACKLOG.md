@@ -14,18 +14,6 @@ Every claim here names the file it came from, so it can be re-checked rather tha
 
 ## Defects found, not fixed
 
-### Init leaves a tree that blocks the flows it recommends
-
-There is no `commit` anywhere in `skills/init/SKILL.md`. So a successful `/keel:init` leaves
-`.keel/config.yml`, `.gitignore`, the `CLAUDE.md` block, `docs/RUNNING.md` and the knowledge sections
-uncommitted — and `keel preflight`, step 0 of every flow, refuses a tree that is not clean. Init closes
-by naming three flows to start and none of them can start.
-
-**The fix**: one `keel commit docs INIT-<date>` at step 7. One commit rather than two, because
-`keel commit` always stages `git add -A` and the `memoryOnly` rule refuses any staged file outside
-`docs/knowledge/` — so a separate `docs(memory)` commit is not expressible at init. Its rationale
-(keeping a knowledge refresh out of a reviewed *code* diff) does not apply where there is no code diff.
-
 ### The `git` rung passes on a repository with no commits
 
 `verify.hasGit` is `git rev-parse --git-dir`, which answers *"is there a `.git` directory"* — not the

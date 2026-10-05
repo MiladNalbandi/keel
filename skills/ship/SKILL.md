@@ -111,14 +111,22 @@ commit — and shipping is not resumed until they do.
    Then ask: approve, request changes, or stop.
 
    Mergeable means all of it, not most: the spec reflects intended behaviour and its ACs are numbered and testable; the contract matches real behaviour or the spec says it is unaffected; tests map to ACs and **failed before** the implementation; validation, authorization and ownership are explicit and tested; sensitive data is not exposed and error responses are intentional; formatting, static analysis, the suite and smoke all pass; every non-obvious decision has an ADR; and no behaviour outside the spec was added.
-8. On approval: `keel gate final approve`. Then refresh the knowledge base, which happens *after* the human has seen the code diff so it never rides inside a reviewed commit:
+8. On approval: `keel gate final approve`. Then `keel memory show` — **one line, no reading of
+   sections**. Refresh the knowledge base only when it says `stale: N cited file(s) changed`; a
+   branch that touched nothing the sections cite needs no docs work, and an out-of-date verdict does
+   not block the push. When it is stale, ask the user (refresh now, or later) — a refresh means
+   re-reading the cited code, so it is not free:
 
 ```
 keel state phase memory
+# update only the sections that cite the changed files, then:
 keel memory update
 keel commit memory SPEC-NNN "<what changed in the knowledge base>"
 ```
 
-8b. **Lint — ask before the push.** If `keel lint` names a pre-push lint (`lint-api`, `lint-web` from the stack bundle), ask with `AskUserQuestion`: **Run it** → `keel lint run`; **Skip** → `keel lint skip --reason "<their reason>"`. Do not decide for them. Ask here, after step 8, because the memory commit moves HEAD and the verdict is per commit. A failing lint is a code change: `keel state phase review-fix`, one `keel commit fix … "lint — …"` per finding, then back to step 1.
+   A docs-only commit like this one does not invalidate the coverage, release, lint or Sonar
+   verdicts — they still hold, because no code changed.
+
+8b. **Lint and Sonar — ask before the push.** `keel lint` lists the pre-push checks the stack bundle declares (`lint-api`, `lint-web`, `sonar`, `cs-fixer-check`). Ask with one `AskUserQuestion`, multi-select, one option per tool: the ones they pick → `keel lint run <tool…>`; the rest → `keel lint skip <tool…> --reason "<their reason>"`. Do not decide for them. Sonar takes minutes and needs `SONAR_TOKEN`; say so in its option. A failing lint is a code change: `keel state phase review-fix`, one `keel commit fix … "lint — …"` per finding, then back to step 1.
 9. `keel pr` — it pushes and opens the PR with the trace table, the coverage numbers, every unlock, every accepted coverage line and every skipped gate in the body. The push is refused until the coverage verdict, the dependency verdict when a manifest changed, and the lint choice when a lint is declared all match this commit.
 9. After the merge, finish the flow: `/keel:feature` phase 9 — the ADR, then `keel state close`.

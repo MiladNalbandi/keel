@@ -88,14 +88,13 @@ tools:
     timeout: 120
     description: 'Write docs/schema.sql so `keel map` can draw the database'
   sonar:
-    run: 'vendor/bin/sonar-scanner'
-    on: manual
-    # On demand only: it needs a token and a server, and takes minutes. An automatic slow tool
-    # can wedge a commit or a RED/GREEN loop, which is a bad trade for a report nobody asked for.
-    fail: warn
-    kind: status
+    run: 'vendor/bin/sonar-scanner -Dsonar.qualitygate.wait=true'
+    # Asked before every push with the lint (`keel lint run sonar` or skip). It waits for the
+    # quality gate, so a red gate fails the run and blocks the push. `sonar: false` turns it off.
+    on: pre-push
+    fail: block
     timeout: 900
-    description: 'SonarQube scan — needs SONAR_TOKEN and a reachable server'
+    description: 'SonarQube scan and quality gate — needs SONAR_TOKEN and a reachable server'
 
 coverage_report: var/coverage/clover.xml
 

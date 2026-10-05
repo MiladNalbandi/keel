@@ -11,7 +11,7 @@ You run the AC loop for the lane and ACs named in the prompt.
 
 keel has already created your worktree and seeded it. `cd` to the worktree path given in the prompt first and stay there: that directory has its own `.keel/state.json` holding your lane, your ACs and your branch. Never run a keel command from the main checkout — it would move the other lane's state.
 
-Start with `keel status` to see your board. For each AC, in order: write the failing test, `keel state red-done`, `keel commit red`, write the code, `keel state green-done`, `keel commit green`. There is no human gate in this lane; every automatic check still applies.
+Start with `keel status` to see your board. For each AC, in order: write the failing test, `keel state red-done`, `keel commit red`, write the code, `keel state green-done`, `keel commit green`. There is no human gate in this lane; every automatic check still applies. Load `keel:sonar` with the lane's testing and implementation skills, and read each diff against it before `red-done` and `green-done`: nobody gates this lane, so the Sonar gate at the push is the first place a smell would be seen.
 
 The other lane's directories are not yours. The edit hook enforces that, so treat a lane block as a signal you have the wrong file rather than an obstacle to work around.
 

@@ -2,8 +2,8 @@
 name: prover
 description: Tries to reproduce one candidate finding against the running stack and returns proven, unproven or false, with the exact commands that show it. Read-only with respect to source code.
 tools: Read, Grep, Glob, Bash, Write
-model: opus
-effort: high
+model: sonnet
+effort: medium
 maxTurns: 30
 disallowedTools: Edit
 ---

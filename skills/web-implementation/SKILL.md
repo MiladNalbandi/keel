@@ -6,6 +6,9 @@ user-invocable: false
 
 # Writing the frontend code
 
+**Sonar:** load `keel:sonar` with it (and its `references/typescript.md`) — the code you write here has
+to pass the quality gate at the push, and it is cheaper to write it clean than to fix it there.
+
 This answers **how to construct it**. Two neighbours answer the other questions, and this file does not repeat them:
 
 | Question | Skill |

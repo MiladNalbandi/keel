@@ -4,6 +4,44 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.70.0
+
+**Cheaper to run, harder to break, and tested on every PR.**
+
+- **A normal commit no longer costs a docs update.** The knowledge verdict had to match HEAD
+  before any push, so every code commit meant a refresh — re-reading code and re-pointing shifted
+  `file:line` citations — and the `docs(memory)` commit that followed moved HEAD again, sending
+  coverage, release, lint and Sonar round a second time. Now a verdict still holds when only docs,
+  specs, markdown or `.keel/` changed since it (`gates.fresh`), an older knowledge verdict does not
+  block a push (only a missing or failing one does), and `keel memory show` calls it stale only
+  when a file the sections cite has changed. Ship refreshes only then, and asks first.
+
+- `skills/feature/SKILL.md` went from 31.8 KB to 9.5 KB. It stays loaded for the whole flow, so
+  that is about 5.5k tokens saved on every turn. Nothing was dropped: the long phase 1 text moved
+  into `references/phase-1.md`, and the lanes and amendment text into the new
+  `references/lanes.md` and `references/amend.md`.
+- `keel:explorer` and `keel:prover` run on Sonnet. The prover runs at medium effort, and
+  `hunt.max_candidates_per_lens` dropped from 12 to 6, so a hunt starts at most half as many provers.
+- The pre-tool hook fails closed. A guard that throws used to exit 1, which Claude Code reads as
+  "go ahead", so one bad config value turned every guard off. It now blocks and names the error.
+- `.github/workflows/simulate.yml` runs `keel simulate` on every pull request. It calls no model.
+- Docs: a stale BACKLOG entry (init already commits through `keel commit setup`) is gone, and the
+  scenario, subagent and gate counts are corrected.
+
+
+
+**The coding agents write for the Sonar quality gate, and Sonar is asked at the push.** A new
+skill, `keel:sonar`, carries the *Sonar way* gate on new code and the rules that fail it most —
+cognitive complexity, duplication across ACs, repeated literals, dead code, security hotspots and
+test smells — plus one short page per language (Kotlin, TypeScript, PHP, Python). It is loaded in
+RED, GREEN, refactor, review-fix and bug-fix, and the implementer, test-author and lane-runner read
+their diff against it before `red-done` / `green-done`. The implementation skills point to it.
+
+The `sonar` tool in the Kotlin, Symfony and Django bundles moved from `manual` to `pre-push`, and
+now waits for the quality gate (`-Dsonar.qualitygate.wait=true`), so a red gate blocks the push.
+Pre-push checks are now decided **per tool**: `keel lint run lint-api`, `keel lint skip sonar
+--reason "…"`. The push gate names each check still undecided, and the PR body lists every one.
+
 ## 0.69.0
 
 **A lint before every push, and the user decides whether to run it.** A stack bundle can now bind a

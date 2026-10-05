@@ -1,0 +1,25 @@
+# Runs keel's own scenarios on every pull request and push to main. `keel simulate` is plain
+# Node with fake build tools — no model is called, so this costs CI minutes and no tokens.
+name: Simulate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Configure git for the throwaway repos
+        run: |
+          git config --global user.name "keel-ci"
+          git config --global user.email "keel-ci@users.noreply.github.com"
+          git config --global init.defaultBranch main
+      - name: keel simulate
+        run: node bin/keel simulate
