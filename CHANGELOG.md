@@ -4,6 +4,19 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.73.0
+
+**OpenCode: the flows start at once, and the reference skills exist.** Each OpenCode command used to
+say "Read /abs/path/to/keel/skills/…/SKILL.md". That file is outside the project, so OpenCode asked
+for external-directory permission before anything happened — or the model announced the read and
+never made it — and the reference skills (`keel-sonar`, `keel-architecture`, …) were not installed
+at all. `opencode/install.mjs` now installs every skill as a native OpenCode skill under
+`skills/keel-<name>/` with its references beside it, rewrites `keel:<skill>` to `keel-<skill>`
+and `AskUserQuestion` to the `question` tool, and gives each flow command the flow's text inline.
+`--global` also allows exactly `~/.config/opencode/skills/keel-*/**` under
+`permission.external_directory`. Re-run the installer after updating keel; it removes what keel no
+longer ships.
+
 ## 0.72.0
 
 **Review someone's code against a ticket and the definition of done — `/keel:review-ticket`.**

@@ -19,28 +19,32 @@ node opencode/install.mjs --global    # into ~/.config/opencode/
 node opencode/install.mjs --dry-run   # print what it would write
 ```
 
-That writes two things:
+That writes three things:
 
 | What | Where |
 |---|---|
 | the enforcement plugin | `.opencode/plugins/keel.js` |
-| one command per keel flow | `.opencode/command/keel-<flow>.md` |
+| every keel skill, as a native OpenCode skill | `.opencode/skills/keel-<name>/` (with its `references/`) |
+| one command per keel flow, carrying the flow inline | `.opencode/command/keel-<flow>.md` |
+
+The model loads a reference skill with OpenCode's `skill` tool — `skill({ name: "keel-sonar" })`;
+`keel:<name>` in the skill text is rewritten to `keel-<name>` at install. With `--global`, the
+skills live outside every project, so the installer also allows exactly
+`~/.config/opencode/skills/keel-*/**` under `permission.external_directory` in
+`~/.config/opencode/opencode.json` (it prints the line to add if that file is not plain JSON).
 
 Restart OpenCode afterwards — plugins load at start.
 
 `keel` must be on `PATH`. Set `KEEL_BIN` to an absolute path if it is not.
 
-### The commands are generated, not copied
+### Generated at install, so re-run it after updating keel
 
-`install.mjs` reads keel's own `skills/` tree and emits one command per skill marked
-`disable-model-invocation: true` — the eleven a person starts. Each command points at the
-`SKILL.md` by absolute path rather than inlining it, which is the same harness-agnostic trick
-Phase A used for stack packs: a file path needs no plugin system to resolve.
-
-Eleven copied command files would drift from the skills they mirror, and the copy the agent read
-would be the stale one. The reference skills (`architecture`, `web-testing`, and the rest) are
-deliberately **not** installed as commands — they are for the model to pull in mid-task, and
-offering a reference sheet as a slash command invites running it like a flow.
+`install.mjs` reads keel's own `skills/` tree. Commands used to point at each `SKILL.md` by absolute
+path; that file is outside the project, so OpenCode asked for external-directory permission before
+anything happened — or the model announced "reading the skill" and never made the call. Now the
+command carries the flow's text and the skills are copied next to the project, so nothing needs
+permission. The cost is that they are copies: run the installer again after updating keel. It also
+removes skills and commands keel no longer ships.
 
 ## What is enforced, and what is not
 
