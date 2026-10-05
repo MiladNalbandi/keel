@@ -1,57 +1,48 @@
-# Phase 6 — end to end
+# Phase 6 — smoke (optional)
 
-The `[E2E]` acceptance criteria, against a running stack. Delegated, because browser exploration produces a lot of output that does not belong in the main session.
+The `[SMOKE]` items, as checks that work locally **and** after a deploy. Under `smoke.max_seconds` (60) in total.
+Runs before E2E: it is the cheap check that the app is up and the critical path works, so a broken
+stack shows up here in seconds instead of inside a 40-turn E2E run.
+
+**Only if the flow kept it on at phase 0.** If smoke was skipped, the CLI never enters this phase —
+`keel gate integration` or `keel state advance` names the next one. Ship still runs smoke inside
+`keel verify release`, so skipping here moves the check, it does not remove it.
 
 ```
 keel stack up
-keel state phase e2e
-# delegate to keel:e2e-author
-keel verify e2e AC-00n
-keel commit e2e AC-00n "<journey>"
-```
-
-## Before starting — three things, in order
-
-**1. The gate right before this phase.** Phase 5.6's full-diff review (`keel:code-reviewer`) and
-its own `e2e-approved` question happen just before `keel state phase e2e` — see the feature
-`SKILL.md`. Do not re-ask it here; it has already been asked by the time this phase starts.
-
-**2. Is the tool even configured?** Check `commands.e2e` and `commands.smoke_e2e` in
-`.keel/config.yml` before delegating — a blank command fails inside `keel:e2e-author` as an
-unexplained shell error, which reads as a broken test rather than a missing tool. If either is
-blank, ask (`keel ask e2e-tool-missing --blocking`) whether to set one up now. **Either answer**
-still ends with `keel:e2e-author` writing and committing the `[E2E]` specs — "no" only means it is
-told not to run them. Say so plainly at the final review and in the PR body: an unrun `@e2e` test
-must never quietly read as a passing one.
-
-**3. Migration drift** — stale dev data is the most common cause of a confusing E2E failure:
-
-```
 keel stack migrate     # if keel reported pending migrations
+keel state phase smoke
+# write smoke/NNN-slug.sh and one @smoke test
+keel smoke
+keel commit smoke SPEC-NNN "<checks>"
+keel state advance     # e2e, or ship if E2E was skipped
 ```
 
-`keel verify e2e` prints a drift note itself when it finds one.
+## What goes in
 
-## The gate right after this phase
+Plain Bash against `BASE_URL` and `API_URL`, which `keel smoke` sets from `e2e.web_url` and `e2e.api_url`:
 
-Before `keel state phase smoke`, ask `smoke-approved --blocking` the same way — proceed, show the
-diff, or stop here. See the feature `SKILL.md` for the exact question.
+| Check | How | Passes when |
+|---|---|---|
+| API health | `curl /actuator/health` | `status` is `UP` |
+| A critical write | `curl -X POST` with a fixture body | `201`, and `jq` finds the expected fields |
+| A critical read | `curl GET` the resource just created | body matches what was written |
+| The app loads | the `@smoke` Playwright test | the shell renders and the critical route is reachable |
 
-## Delegating to `keel:e2e-author`
-
-It explores the running app with `playwright-cli` (not Playwright MCP — the CLI keeps snapshots on disk instead of in the conversation), writes the spec, runs it, and ends `E2E-RESULT: pass` or `fail`. Capped at 40 turns. Give it the AC text, the URLs, and the fact that only `e2e/` is writable this phase.
+`keel smoke` runs every `smoke/*.sh` then `commands.smoke_e2e`, and exits non-zero on the first failure with one line per check.
 
 ## Rules
 
-- Only the `e2e` bucket is writable. `api-main`, `web-src` and unit tests are all denied — if a component needs a test id, that is a `[WEB]` AC, not an edit here.
-- Locators are roles, labels and text.
-- Seed data **through the API** in fixtures, never by clicking through the UI.
-- One spec per feature, one test per E2E AC, the AC ID in the title, tagged `@e2e`.
-- The `line` reporter. On failure, report the failing step and the trace path — never paste a trace.
+- Only the `smoke` bucket is writable this phase.
+- Smoke is a **subset**, not a second E2E suite: one `@smoke` test covering the single most critical path.
+- Every check must be safe to run against a deployed environment. Nothing destructive, nothing that assumes an empty database.
+- **It seeds its own data.** E2E has not run yet, and after a deploy it never does — a check that
+  needs a row must create it first.
+- Portable shell — no GNU-only flags, since this may run on a different machine than yours.
 
 ## Failure modes
 
-- **Flaky on timing** — `verify` reruns a failure once and records a pass as flaky in state; it is reported at the gate and in the final review rather than hidden. Two failures is a real failure.
-- **The stack is not healthy** — `keel stack up` waits for health. If it times out, read the last log lines with `keel stack logs api` rather than retrying blindly.
-- **The turn cap is reached** — the agent returns a failure summary and the trace path. Read the summary; do not start again from scratch.
-- **A test needs a UI change to be testable** — stop, go back to a `[WEB]` AC. The guard will refuse the edit anyway.
+- **The check depends on data that is not there** — it will pass on a warm dev database and fail after a deploy. Seed what it needs, or assert something that is always true.
+- **It takes too long** — `smoke.max_seconds` exists because a slow smoke check stops being run. Trim it rather than raising the limit.
+- **`commands.smoke_e2e` is unset** — it is optional, so `keel smoke` runs the shell checks and reports the Playwright part as skipped rather than passing silently.
+- **Two fix rounds is the cap.** If it still fails, stop and report rather than grinding.

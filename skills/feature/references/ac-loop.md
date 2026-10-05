@@ -149,7 +149,7 @@ want the full check, or rely on the gate's own lane suite when `tests.module_sui
 
 | Decision | Effect |
 |---|---|
-| `approve` | AC marked done; moves to the next todo AC in `red`, or to `integration` when none remain |
+| `approve` | AC marked done; moves to the next todo AC in `red`, or to `full-review` when none remain |
 | `review` | Run `keel:ac-reviewer` on this AC's two commits, then return to the gate. Findings are acted on in `review-fix` — see below |
 | `reject --note "…"` | AC back to `todo`, phase back to `red` |
 | `skip [--scope lane\|flow]` | Records the skip; `flow` also sets gate mode to `end`. Automatic checks still run and the final review lists it |

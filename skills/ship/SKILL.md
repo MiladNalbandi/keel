@@ -18,10 +18,11 @@ removing its gate** and the difference has to be visible at the moment of choosi
 |---|---|---|
 | **Always runs** | 0 merge lane · 3 audit · 4 trace · 7 final review | not offered. Cheap, read-only, and the final review's table is built from 3 and 4 |
 | **Deferred, not avoided** | 1b release · 2 coverage · 2b deps | `keel pr` refuses without a fresh verdict for HEAD (`gates.pushBlockers`). Skip these and the push still stops — you have moved the work, not removed it |
-| **Genuinely optional** | 6.5 security · 5 reviewers · 6b reverse-trace | nothing downstream demands them. Skipping is a real choice with a real cost |
+| **Genuinely optional** | 5 reviewers · 6b reverse-trace | nothing downstream demands them. Skipping is a real choice with a real cost |
 
 For the reviewers, ask **which lenses** rather than all-or-nothing — a three-line change rarely
-needs four Opus agents on it.
+needs four Opus agents on it. Default to the rule in step 5: no `correctness` lens when the
+full-diff review passed and production code has not changed since.
 
 **Record every skip**, the same way a skipped gate and an unlock are recorded: with a reason, shown
 again at step 7, and printed in the PR body. A skip nobody sees at the end is indistinguishable
@@ -72,6 +73,13 @@ commit — and shipping is not resumed until they do.
 3. `keel audit` — commit composition, disabled tests, unlocks, branch type.
 4. `keel trace --strict` — every AC has a test and a commit.
 5. Reviewers in parallel with `keel:reviewer`, one lens each from `review.lenses` — correctness, security, performance, and architecture when `architecture.style` is set. Each must end with `BLOCKING: yes|no`.
+
+   **Skip the correctness lens when the full-diff review already covered it.** Read
+   `full_review` from `keel state show`. If its verdict is `pass` and
+   `git diff --stat <full_review.sha>..HEAD` shows no production-code file, drop `correctness` from
+   this round and say so in one line. The full-diff review read the same code for the same thing;
+   reading it again costs an Opus agent and finds nothing new. Any production change since that sha —
+   an integration commit, a fix — and the lens runs as normal.
 6. Fix blocking findings, one commit each (`keel commit fix <AC> "review — ..."`), then go back to step 1. At most 2 review rounds. A finding spanning several criteria — one N+1 across three ACs — takes the spec id rather than an arbitrary one of them: `keel commit fix SPEC-NNN "review — …"`.
 
    **Show what each reviewer said, and what you did not change.** The same rule the AC gate has: each finding in the reviewer's own words, what changed per finding, and — the part that gets dropped — **every blocking finding you judged not real, with why**. A dismissed blocking finding is a decision made on the user's behalf and it is invisible unless said. Carry those to step 7.
@@ -89,7 +97,9 @@ commit — and shipping is not resumed until they do.
    | Review findings | blocking ones fixed, the non-blocking ones nobody fixed, and **every blocking finding dismissed as not real, with the reason** |
    | Release | the `keel verify release` verdict for this sha, and the `--skip` reason if e2e was skipped |
    | **Ship steps skipped** | every step the opening question turned off, with its reason — and for anything in the deferred band, that its push gate is still outstanding |
-   | Security | what phase 5.5 found, and what was triaged as unreachable |
+   | Security | what phase 5.5 found, and what was triaged as unreachable — or that the flow skipped it at phase 0 |
+   | **Optional phases skipped** | security, smoke or E2E turned off at phase 0 (`late` in `keel state show`), with the reason. Smoke and E2E still ran inside step 1b |
+   | Full-diff review | its verdict and sha, and whether step 5 dropped the correctness lens because of it |
    | Step 6b | anything in the diff that implements no criterion |
    | Gates | **every skipped gate, and its scope** — including a background lane, where they were skipped by definition and no one chose it per AC |
    | Unlocks | every `keel unlock`, with the reason given at the time |

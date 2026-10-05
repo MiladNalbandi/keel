@@ -7,7 +7,7 @@ argument-hint: "[code | all | correctness|security|performance|architecture|asse
 
 # keel:review — $ARGUMENTS
 
-The flow already reviews at five fixed points: the AC gate, the integration gate, phase 5.6, ship and the final review.
+The flow already reviews at four fixed points: the AC gate, the full-diff review after the last AC, ship and the final review.
 This is for the moments in between — a second look before asking for a gate, a performance pass on
 one worrying change, a review on a branch that was never run through a flow. It starts the same
 agents with the same scope the flow would give them, so the answer means the same thing.

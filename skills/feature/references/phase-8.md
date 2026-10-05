@@ -9,7 +9,7 @@ keel verify coverage
 keel audit
 keel trace --strict
 keel verify release
-# three reviewer lenses in parallel
+# reviewer lenses in parallel (correctness dropped if the full-diff review covered it)
 keel gate final approve
 keel pr
 ```
@@ -23,7 +23,7 @@ keel pr
 | `keel audit` | none — stops | a red commit holds production code, a green commit holds tests, a disabled marker was added, an unlock has no reason, or the branch is `spike/` |
 | `keel trace --strict` | none — stops | an AC has no test, or no green commit |
 | `verify release` | none — stops | E2E or smoke fails. Requires `commands.e2e` |
-| 3 × `keel:reviewer` | 2 review rounds | any lens ends `BLOCKING: yes` after the second round |
+| 2–4 × `keel:reviewer` | 2 review rounds | any lens ends `BLOCKING: yes` after the second round |
 | Final human review | none — **cannot be skipped** | you request changes or stop |
 | `keel pr` | none | push or `gh` fails |
 
@@ -33,7 +33,14 @@ In the `coverage-fix` phase, test files are writable and production code is **de
 
 ## The reviewers
 
-Three at once on the same diff and spec, one lens each — correctness, security, performance (`review.lenses`). Each must end `BLOCKING: yes|no`; the `SubagentStop` hook asks a reviewer that forgets the line to repeat its findings and add it. Apply blocking findings one commit each:
+**Skip the correctness lens when the full-diff review already covered it.** Read
+`full_review` from `keel state show`. If its verdict is `pass` and
+`git diff --stat <full_review.sha>..HEAD` shows no production-code file, drop `correctness` from
+this round and say so in one line. The full-diff review read the same code for the same thing;
+reading it again costs an Opus agent and finds nothing new. Any production change since that sha —
+an integration commit, a fix — and the lens runs as normal.
+
+The rest run at once on the same diff and spec, one lens each — from `review.lenses` (correctness, security, performance) plus architecture when `architecture.style` is set. Each must end `BLOCKING: yes|no`; the `SubagentStop` hook asks a reviewer that forgets the line to repeat its findings and add it. Apply blocking findings one commit each:
 
 ```
 keel commit fix AC-00n "review — <what changed>"
