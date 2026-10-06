@@ -4,6 +4,12 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.79.1
+
+**A flow in progress follows its spec when the layout moves it.** `keel upgrade --layout keel`
+moved `specs/` to `.keel/specs/` but left `.keel/state.json` pointing at the old path, so a running
+flow's spec check, trace and PR body could no longer find the spec. The move now rewrites the path.
+
 ## 0.79.0
 
 **Keep keel's files out of the team's diff — `layout: repo | keel | external`.** keel wrote specs,
