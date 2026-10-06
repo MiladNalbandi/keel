@@ -216,6 +216,12 @@ ${uiMap.CSS}
 .rv-l .mk{display:inline-block;width:16px;font-weight:700} .rv-l .iid{color:var(--dim);margin-right:6px;font-size:11px}
 .pill{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid currentColor;margin-left:6px}
 .pill.run{color:var(--accent)}
+.mwrap{overflow-x:auto} .mtable{width:100%;border-collapse:collapse;font-size:12.5px}
+.mtable th{text-align:left;color:var(--dim);font-weight:500;padding:4px 6px;border-bottom:1px solid var(--line)}
+.mtable td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
+.mtable select{font:inherit;max-width:180px;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:6px;padding:2px 4px}
+.mtable button{white-space:nowrap} .mtable .faint{font-size:11px}
+.mrow-all td{background:color-mix(in srgb, var(--accent) 6%, transparent)}
 .rv .todo{font-size:12px;margin-top:2px} .rv-s.bad{color:var(--bad)} .rv-s.warn{color:var(--warn)}
 .rv-next{margin:4px 0 6px 18px;padding:0;font-size:12.5px} .rv-next li{padding:1px 0}
 .rv-done summary{cursor:pointer;color:var(--dim);font-size:11.5px;margin-top:8px}
@@ -240,6 +246,7 @@ code{background:var(--rail);padding:1px 6px;border-radius:4px;font:inherit;overf
 .next code{background:var(--fg);color:var(--bg);padding:6px 12px;display:inline-block;border-radius:6px}
 
 /* theme switch — auto follows the system; the choice is remembered in this browser only */
+a.theme{text-decoration:none;display:inline-block}
 .theme{font:inherit;font-size:11.5px;padding:2px 10px;border-radius:99px;cursor:pointer;
   background:transparent;color:var(--dim);border:1px solid var(--border)}
 .theme:hover{color:var(--fg);border-color:var(--accent)}
@@ -292,6 +299,8 @@ a.pc.wait{border-color:var(--bad)}
   // with anything after that a breadcrumb the view reads. Every existing bookmark still resolves.
   function parseHash(){
     var p = location.hash.slice(1).split('/').filter(Boolean);
+    // #agents: the machine-wide agent settings, reachable without picking a project.
+    if (p.length === 1 && p[0] === 'agents') return { id: null, view: 'agents', crumb: [] };
     var crumb = p.slice(2).map(function(x){
       try { return decodeURIComponent(x); } catch (e) { return x; }
     });
@@ -940,7 +949,9 @@ a.pc.wait{border-color:var(--bad)}
 
   function liveTag(){
     return '<span class="live' + (connected ? '' : ' off') + '"><i class="dot"></i>' +
-      (connected ? 'live' : 'offline') + '</span>' + soundButton() + themeButton();
+      (connected ? 'live' : 'offline') + '</span>' +
+      '<a class="theme" href="#' + (selected ? esc(selected) + '/' : '') + 'agents" title="model, effort and context per keel agent">agents</a>' +
+      soundButton() + themeButton();
   }
 
   // auto -> light -> dark. Browser storage can be missing or throw (private windows, blocked
@@ -1093,6 +1104,13 @@ a.pc.wait{border-color:var(--bad)}
       '<div class="meta"><span><b>' + running + '</b> running</span>' +
       (waiting ? '<span class="bad"><b class="bad">' + waiting + '</b> waiting on you</span>' : '') +
       liveTag() + '</div></header>';
+    if (route.view === 'agents'){
+      var fo = document.activeElement;
+      if (!modelsForce && fo && fo.closest && fo.closest('.mtable') && modelsData) return;
+      modelsForce = false;
+      app.innerHTML = head + '<nav class="tabs"><a href="#">\u2190 all projects</a></nav>' + renderModels();
+      return;
+    }
     var body = projects.length
       ? '<div class="projects">' + projects.map(projectCard).join('') + '</div>'
       : '<div class="center"><div class="big">No keel projects yet.</div>' +
@@ -1126,10 +1144,89 @@ ${uiMap.SCRIPT}
       '<a href="#' + esc(selected) + '/map"' + (route.view === 'map' ? ' aria-current="page"' : '') + '>map' +
         (n ? ' <span class="n">' + n + '</span>' : '') + '</a>' +
       '<a href="#' + esc(selected) + '/er"' + (route.view === 'er' ? ' aria-current="page"' : '') + '>database</a>' +
+      '<a href="#' + esc(selected) + '/agents"' + (route.view === 'agents' ? ' aria-current="page"' : '') + '>agents</a>' +
       '</nav>';
   }
 
+  // The agents tab: model, effort and context per keel agent, for this machine. Fetched when the
+  // tab opens and after each change — it is not part of the live view, because it is not about
+  // this project and does not change while a flow runs.
+  var modelsData = null, modelsMsg = null, modelsBusy = false, modelsForce = false;
+  function loadModels(){
+    modelsBusy = true;
+    fetch('/api/models' + (selected ? '?project=' + encodeURIComponent(selected) : ''), { headers: { accept: 'application/json' } })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ modelsData = d; modelsBusy = false; modelsForce = true; draw(); })
+      .catch(function(){ modelsBusy = false; modelsMsg = { bad: true, text: 'could not load the agent settings' }; draw(); });
+  }
+  function saveModel(body){
+    var meta = document.querySelector('meta[name="keel-console"]');
+    fetch('/api/models' + (selected ? '?project=' + encodeURIComponent(selected) : ''), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-keel-console': meta ? meta.content : '' },
+      body: JSON.stringify(body)
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d && d.ok){ modelsData = d.view; modelsMsg = { text: 'saved for ' + (body.agent === '*' ? 'every agent' : body.agent) + '. ' + d.note }; }
+      else modelsMsg = { bad: true, text: (d && d.error) || 'not saved' };
+      modelsForce = true;
+      draw();
+    }).catch(function(){ modelsMsg = { bad: true, text: 'not saved — is the dashboard still running?' }; draw(); });
+  }
+  function renderModels(){
+    if (!modelsData){ if (!modelsBusy) loadModels(); return card('agent models', null, '<div class="faint">loading\u2026</div>'); }
+    var d = modelsData;
+    var famOf = {}; d.catalog.forEach(function(c){ famOf[c.id] = c.family; });
+    var opt = function(list, cur, labelOf){
+      return list.map(function(x){ var id = typeof x === 'string' ? x : x.id;
+        return '<option value="' + esc(id) + '"' + (id === cur ? ' selected' : '') + '>' + esc(labelOf ? labelOf(x) : id) + '</option>'; }).join('');
+    };
+    var lab = function(c){ return c.label + (c.id.indexOf('claude-') === 0 ? '' : ''); };
+    var all = '<tr class="mrow-all"><td><b>every agent</b><div class="faint">sets all rows at once</div></td>' +
+      '<td><select aria-label="model for every agent" data-m-agent="*" data-m-field="model"><option value="">model\u2026</option>' + opt(d.catalog, null, lab) + '</select></td>' +
+      '<td><select aria-label="effort for every agent" data-m-agent="*" data-m-field="effort"><option value="">effort\u2026</option>' + opt(d.efforts, null) + '</select></td>' +
+      '<td></td><td><button class="theme" data-m-reset="*">reset all</button></td></tr>';
+    var rows = d.agents.map(function(a){
+      var canLong = d.long.indexOf(famOf[a.model]) >= 0;
+      return '<tr' + (a.custom ? ' class="mcustom"' : '') + '><td><b>' + esc(a.agent) + '</b>' + (a.custom ? ' <span class="pill run">custom</span>' : '') +
+        '<div class="faint">' + esc(a.description) + '</div><div class="faint">default: ' + esc(a.default.model) + ' / ' + esc(a.default.effort) + '</div></td>' +
+        '<td><select aria-label="model for ' + esc(a.agent) + '" data-m-agent="' + esc(a.agent) + '" data-m-field="model">' + opt(d.catalog, a.model, lab) + '</select></td>' +
+        '<td><select aria-label="effort for ' + esc(a.agent) + '" data-m-agent="' + esc(a.agent) + '" data-m-field="effort">' + opt(d.efforts, a.effort) + '</select></td>' +
+        '<td><label class="faint"><input type="checkbox" aria-label="1M context for ' + esc(a.agent) + '" data-m-agent="' + esc(a.agent) + '" data-m-field="context"' +
+          (a.context === '1m' ? ' checked' : '') + (canLong ? '' : ' disabled') + '> 1M</label></td>' +
+        '<td>' + (a.custom ? '<button class="theme" aria-label="reset ' + esc(a.agent) + ' to its default" data-m-reset="' + esc(a.agent) + '">reset</button>' : '') + '</td></tr>';
+    }).join('');
+    return card('agent models', 'this machine \u00b7 all projects',
+      (modelsMsg ? '<div class="' + (modelsMsg.bad ? 'bad' : 'ok') + '" style="margin-bottom:8px">' + esc(modelsMsg.text) + '</div>' : '') +
+      '<div class="mwrap"><table class="mtable"><thead><tr><th>agent</th><th>model</th><th>effort</th><th>context</th><th></th></tr></thead><tbody>' +
+      all + rows + '</tbody></table></div>' +
+      note('Saved in ' + d.file + ' and applied to Claude Code' + (d.opencode ? ' and OpenCode' : '') +
+        '. Takes effect for new agents after /reload-plugins (Claude Code) or a restart (OpenCode). ' +
+        'Aliases (opus, sonnet, haiku) follow the newest model; a version pins one. 1M = the 1M-token context variant (Opus, Sonnet, Fable). OpenCode has no effort setting.'));
+  }
+  app.addEventListener('change', function(e){
+    var el = e.target;
+    if (!el || !el.getAttribute || !el.getAttribute('data-m-agent')) return;
+    var body = { agent: el.getAttribute('data-m-agent') };
+    var f = el.getAttribute('data-m-field');
+    if (f === 'context') body.context = el.checked ? '1m' : 'default';
+    else { if (!el.value) return; body[f] = el.value; }
+    saveModel(body);
+  });
+  app.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-m-reset]') : null;
+    if (!b) return;
+    saveModel({ agent: b.getAttribute('data-m-reset'), reset: true });
+  });
+
   function render(v){
+    if (route.view === 'agents'){
+      // A live update must not close a dropdown the user has open.
+      var f = document.activeElement;
+      if (!modelsForce && f && f.closest && f.closest('.mtable') && modelsData) return;
+      modelsForce = false;
+      app.innerHTML = header(v) + tabs() + views(v) + renderModels();
+      return;
+    }
     if (route.view === 'map' || route.view === 'er'){
       app.innerHTML = header(v) + tabs() + views(v) + renderMap(v, route.view, route.crumb);
       bind();

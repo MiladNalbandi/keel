@@ -235,6 +235,10 @@ function handle(req, res) {
   }
   if (route.startsWith('/api/console/')) return console_(req, res, route.slice('/api/console/'.length), pick);
   if (route === '/api/hello') return json(res, 200, hello());
+  // Agent models, for this machine. Reading is a plain GET; changing goes through the same
+  // same-page token check as the console, because a write path on a local web server is reachable
+  // from any page the developer has open.
+  if (route === '/api/models') return models_(req, res, pick);
   if (route === '/api/projects') {
     return json(res, 200, { at: new Date().toISOString(), version: projects.keelVersion(), home: homeId, projects: projectList() });
   }
@@ -305,6 +309,28 @@ function console_(req, res, tab, pick) {
     return require('./console').run(e ? e.root : null, tab, body, { demo: demoMode })
       .then((r) => json(res, r.status || (r.ok ? 200 : 403), r))
       .catch((err) => json(res, 500, { ok: false, error: String((err && err.message) || err) }));
+  });
+  return undefined;
+}
+
+function models_(req, res, pick) {
+  const M = require('../lib/models');
+  const e = entries.get(pick);
+  const projectRoot = e ? e.root : null;
+  if (req.method === 'GET') return json(res, 200, M.view({ projectRoot }));
+  if (req.method !== 'POST') return json(res, 405, { error: 'GET or POST' });
+  if (demoMode) return json(res, 403, { error: 'the demo does not change models' });
+  if (!csrfOk(req)) return json(res, 403, { error: 'this request did not come from the dashboard page' });
+  let raw = '';
+  let over = false;
+  req.on('data', (d) => { raw += d; if (raw.length > 4096) { over = true; req.destroy(); } });
+  req.on('end', () => {
+    if (over) return json(res, 413, { error: 'too large' });
+    let body = {};
+    try { body = raw ? JSON.parse(raw) : {}; } catch (err) { return json(res, 400, { error: 'the body is not JSON' }); }
+    const r = M.update(body, { projectRoot });
+    if (!r.ok) return json(res, 400, r);
+    return json(res, 200, Object.assign(r, { view: M.view({ projectRoot }) }));
   });
   return undefined;
 }
