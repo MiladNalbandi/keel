@@ -40,15 +40,22 @@ An item is `met` only when you can point at the line that meets it. Cannot tell 
 
 ## Answer in lines, nothing else
 
+Every problem ends with **what to do** — the reader wants a to-do list, not only a verdict. Write
+it in plain, short words a junior developer understands; name the file and the change.
+
 ```
 T1 | met | src/Order.kt:42 | rejects a negative quantity
-D4 | unclear | - | no input path in this change
-F | blocking | src/Order.kt:57 | total ignores the discount
-F | minor | src/Order.kt:61 | the error message names the wrong field
-Q | src/Order.kt:30 | like OrderService.kt | validation is inline here; the codebase puts it in a Validator class
-Q | src/Order.kt:44 | !! operator | use requireNotNull with a message instead
+T2 | not-met | src/Order.kt:57 | the total can go below zero | keep it at 0 or more: max(0, total - discount)
+D4 | unclear | - | no input path in this change | ask the author whether input validation is needed here
+F | blocking | src/Order.kt:57 | total ignores the discount | subtract the discount before the tax
+F | minor | src/Order.kt:61 | the error message names the wrong field | say "quantity", not "amount"
+Q | src/Order.kt:30 | like OrderService.kt | validation is inline here | move it into an OrderValidator, like the others
+Q | src/Order.kt:44 | !! operator | can crash on null | use requireNotNull(x) { "…" }
 S | One sentence on what you saw.
 ```
+
+Columns: `id | verdict | where | what is wrong (or what meets it) | what to do`. A `met` line needs
+no "what to do".
 
 One line per item you were given; at most 8 `F` lines and 8 `Q` lines, most serious first. For `check`, answer
 `CHECK | confirmed | <why>` or `CHECK | rejected | <why>`. Then end with exactly one line:

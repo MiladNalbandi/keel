@@ -4,6 +4,15 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.77.0
+
+**A review you can act on.** `/keel:review-pr` used to end in verdicts — ✓, ✗, ? — and left the
+reader to work out what was missing and what to do. Every problem now carries a **to do**: the
+agents answer `id | verdict | where | what is wrong | what to do`, and the problems the script
+proves (a secret, a disabled test, debug output) come with their own. One report shape
+(`ticket.report`) feeds the terminal, the PR comment and the dashboard card alike: **next steps**
+first, in order, then *missing*, *must fix*, *check by hand*, *nice to have*, and *done*, folded.
+
 ## 0.76.0
 
 **`/keel:review-pr` checks code quality too — and the reviewer decides what the author sees.**
