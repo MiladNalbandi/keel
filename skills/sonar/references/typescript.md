@@ -13,6 +13,6 @@
 - **Functions nested more than 4 deep** are reported — extract them.
 - **Unused imports, variables and props** are reported — delete them.
 - **Accessibility**: a `<label>` for each form control, `alt` on images, buttons for actions —
-  Sonar's a11y rules overlap with `keel:web-implementation`'s accessibility page.
+  Sonar's a11y rules overlap with `keel:ts-react-implementation`'s accessibility page.
 - **Tests (Vitest)**: each `it` asserts; no `it.skip` / `xit`; no fixed `setTimeout` waits —
   `findBy*` / `waitFor`.

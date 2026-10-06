@@ -1,6 +1,6 @@
 ---
 name: feature
-description: The spec flow: interview, spec with numbered acceptance criteria and the plan under them, contract, one AC at a time with RED and GREEN commits, a full-diff review, integration, then optional security, smoke and E2E, then ship. Use for features touching the API contract, data or auth.
+description: Use for a feature that touches the API contract, data or auth: spec with numbered acceptance criteria, then one criterion at a time (failing test, then code), review, and ship.
 disable-model-invocation: true
 argument-hint: "<idea> [--spike] [--gates every-ac|end-of-lane|end] [--skip security,smoke,e2e]"
 ---

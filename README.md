@@ -36,16 +36,18 @@ Then run `/keel:init` in your project.
 
 ## Use it
 
-| Command | For |
+| I want to… | Type |
 |---|---|
-| `/keel:feature` | a specced feature, with the full acceptance-criteria loop |
-| `/keel:change` | a small change, no spec |
-| `/keel:fix` / `/keel:diagnose` | a bug you can reproduce / one you cannot yet |
-| `/keel:hunt` | a read-only sweep for proven bugs |
-| `/keel:review` | a review agent on demand |
-| `/keel:review-ticket` | review someone's PR or branch against a ticket and your definition of done |
-| `/keel:ship` | verify, coverage, reviewers, final human review, PR |
-| `keel dashboard` | the live page above, for every project on your machine (`--demo` to try it) |
+| set up a repo (once) | `/keel:init` |
+| build a feature that touches the API, data or auth | `/keel:feature <idea>` |
+| make a small change | `/keel:change <description>` |
+| fix a bug I can reproduce / cannot reproduce yet | `/keel:fix <symptom>` / `/keel:diagnose <symptom>` |
+| find bugs I do not know about, then take the next one | `/keel:hunt` · `/keel:hunt-next` |
+| review my own branch | `/keel:review [lens \| all \| ac AC-3]` |
+| review someone else's PR against a ticket | `/keel:review-pr <ticket> <PR# \| branch>` |
+| close coverage gaps, then finish and open the PR | `/keel:cover` · `/keel:ship` |
+| see where I am, or what keel knows about the project | `/keel:status` · `/keel:memory` |
+| watch every project live | `keel dashboard` (`--demo` to try it) |
 
 ## More
 

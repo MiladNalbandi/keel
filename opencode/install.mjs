@@ -129,7 +129,9 @@ if (!skills.length) {
   process.exit(1);
 }
 const names = new Set(skills.map((s) => s.name));
-const flows = skills.filter((s) => s.fm['disable-model-invocation'] === true);
+// Anything a human can type gets a command: the flows, and a skill that is both (memory sets
+// user-invocable and lets the model load it too) — keyed on one flag only, /keel-memory was missing.
+const flows = skills.filter((s) => s.fm['disable-model-invocation'] === true || s.fm['user-invocable'] === true);
 
 for (const s of skills) {
   const target = join(base, 'skills', `keel-${s.name}`);

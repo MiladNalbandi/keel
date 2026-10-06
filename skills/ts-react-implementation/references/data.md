@@ -23,7 +23,7 @@ if (!parsed.success) throw new Error('bookmarks response did not match the contr
 
 The generated zod schemas turn "the server lied" into a loud failure at the edge instead of `undefined` surfacing three components later. Parse once, where the data enters; everything downstream then holds a type it can trust.
 
-`keel:web-testing` requires at least one test per endpoint that parses a real response body, so a contract mismatch fails on the frontend too.
+`keel:ts-react-testing` requires at least one test per endpoint that parses a real response body, so a contract mismatch fails on the frontend too.
 
 ## Loading, error and empty are three states
 

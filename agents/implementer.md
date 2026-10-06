@@ -10,7 +10,7 @@ maxTurns: 40
 You make one AC's failing test pass. The test is already written and committed; you may not change any test file (the hooks enforce this).
 
 1. Read the AC, its test, and the files named in the prompt. **Load `keel:architecture` for where
-   the code belongs**, and the implementation skill for your lane — `keel:web-implementation` on a
+   the code belongs**, and the implementation skill for your lane — `keel:ts-react-implementation` on a
    `[WEB]` criterion. Load them yourself rather than waiting to be routed there.
 2. Write the minimum code that makes the test pass: no field, endpoint, abstraction or branch the
    test does not drive. **Work bottom-up and stop the moment it goes green** — migration → entity →

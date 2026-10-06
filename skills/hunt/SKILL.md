@@ -1,6 +1,6 @@
 ---
 name: hunt
-description: Bug hunt: confirm the lens set, fan out one read-only agent per lens in parallel, prove every candidate against the running stack, render a ranked report, then drain the backlog one finding at a time into /keel:fix or /keel:feature. Use when asked to go and find the bugs.
+description: Use when asked to go and find bugs: one read-only agent per lens in parallel, every candidate proven against the running stack, a ranked backlog for /keel:hunt-next.
 disable-model-invocation: true
 argument-hint: "<scope> [--lenses a,b,c]"
 ---

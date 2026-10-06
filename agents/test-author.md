@@ -11,9 +11,9 @@ You write the failing tests for exactly one acceptance criterion, from the AC te
 
 1. Read the AC, the contract entry it touches, and one existing test nearby for the house style.
 2. Pick the lowest layer that can express it. **Load the skill for your lane first**:
-   `keel:kotlin-spring-testing` for an `[API]` criterion, `keel:web-testing` for a `[WEB]` one.
+   `keel:kotlin-spring-testing` for an `[API]` criterion, `keel:ts-react-testing` for a `[WEB]` one.
    Load it yourself rather than waiting to be routed there — the layer choice is the one thing
-   this brief cannot make for you, and both skills open with how to make it. `keel:web-testing`
+   this brief cannot make for you, and both skills open with how to make it. `keel:ts-react-testing`
    also decides where the file goes, which keel enforces from the path.
 3. Write the tests, each tagged and named with the AC ID. Keep them Sonar-clean (`keel:sonar`,
    *Tests*): every test asserts, no sleeps, no skips, and shared setup in a fixture or builder

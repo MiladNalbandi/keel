@@ -1,19 +1,19 @@
 ---
 name: react-testing
-description: Test patterns for a plain-JavaScript React frontend (no TypeScript) — everything keel:web-testing teaches, minus the type-level pieces. Load when writing or fixing frontend tests in a react-js project.
+description: Test patterns for a plain-JavaScript React frontend (no TypeScript) — everything keel:ts-react-testing teaches, minus the type-level pieces. Load when writing or fixing frontend tests in a react-js project.
 user-invocable: false
 ---
 
 # Plain-JS React test patterns
 
-This is `keel:web-testing` with TypeScript removed. **Read `keel:web-testing` first** — the file
+This is `keel:ts-react-testing` with TypeScript removed. **Read `keel:ts-react-testing` first** — the file
 classification rules, the colocation layout, AC tagging, MSW-against-the-contract testing, and
 the assertion table are identical for a plain-JS React project. Everything below is only the
 delta.
 
 ## What's different
 
-| `keel:web-testing` says | Here, instead |
+| `keel:ts-react-testing` says | Here, instead |
 |---|---|
 | A test file ends `.test.ts` / `.test.tsx` / `.spec.ts` / `.spec.tsx` | `.test.js` / `.test.jsx` / `.spec.js` / `.spec.jsx` — same suffix rule, same `__tests__/` trap, just the JS extensions |
 | Parse responses with the generated zod schema | There is no generated type layer to validate against. Assert the response shape directly in the test — the fields the AC names, and nothing the AC does not |
@@ -29,5 +29,5 @@ contract change reached this component. Do not skip it because "the component ob
 
 ## Rules keel enforces
 
-Identical to `keel:web-testing`'s: RED locks source files, GREEN locks tests, and `.skip(`,
+Identical to `keel:ts-react-testing`'s: RED locks source files, GREEN locks tests, and `.skip(`,
 `.only(`, `xit(`, `test.fixme` are all rejected by the hooks regardless of file extension.

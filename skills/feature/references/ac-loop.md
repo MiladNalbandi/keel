@@ -123,7 +123,7 @@ keel state phase gate
 green-done to the gate, and an invented refactor is a diff a reviewer has to read for no reason.
 
 **Load the design reference for your lane before moving anything** — `references/design.md` under
-`keel:kotlin-spring-implementation` or `keel:web-implementation`. This is the phase those exist
+`keel:kotlin-spring-implementation` or `keel:ts-react-implementation`. This is the phase those exist
 for: SOLID, the language's own idioms, and which patterns are worth their cost. Applying them in
 GREEN would mean building an abstraction no test drives; applying them here means applying them to
 duplication that is already real, with the tests green and holding the behaviour still.

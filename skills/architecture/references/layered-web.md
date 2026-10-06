@@ -45,7 +45,7 @@ When it bites, it is usually one of two things, and neither wants an exception:
 ## Where tests go
 
 Beside the file, with the suffix — `useBookmarks.test.ts` next to `useBookmarks.ts`. See
-`keel:web-testing`: the suffix is what makes keel classify it as a test, and the layer decides what
+`keel:ts-react-testing`: the suffix is what makes keel classify it as a test, and the layer decides what
 kind of test is worth writing. A `pages/` test that asserts composition and a `lib/` test that
 asserts a pure function are both cheap; a `components/` test that re-asserts what the hook already
 proves is not.

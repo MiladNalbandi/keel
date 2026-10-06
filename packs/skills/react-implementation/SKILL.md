@@ -1,6 +1,6 @@
 ---
 name: react-implementation
-description: How to write plain-JavaScript React code (no TypeScript) — everything keel:web-implementation teaches, minus the type-level pieces. Load in GREEN for a [WEB] acceptance criterion in a react-js project, after keel:architecture has said where the file goes.
+description: How to write plain-JavaScript React code (no TypeScript) — everything keel:ts-react-implementation teaches, minus the type-level pieces. Load in GREEN for a [WEB] acceptance criterion in a react-js project, after keel:architecture has said where the file goes.
 user-invocable: false
 ---
 
@@ -9,18 +9,18 @@ user-invocable: false
 **Sonar:** load `keel:sonar` with it (and its `references/typescript.md`) — the code you write here has
 to pass the quality gate at the push, and it is cheaper to write it clean than to fix it there.
 
-This is `keel:web-implementation` with TypeScript removed. **Read `keel:web-implementation`
+This is `keel:ts-react-implementation` with TypeScript removed. **Read `keel:ts-react-implementation`
 first** — component shape, state, forms, accessibility and style are identical for a plain-JS
 React project. Its reference files apply here too:
 
-| The AC drives… | Read (same files `keel:web-implementation` points at) |
+| The AC drives… | Read (same files `keel:ts-react-implementation` points at) |
 |---|---|
-| A component | `skills/web-implementation/references/components.md` |
-| State | `skills/web-implementation/references/state.md` |
-| A call to the API | `skills/web-implementation/references/data.md` — skip its type-narrowing advice; the rest (one client, no hand-written `fetch`) applies unchanged |
-| A form | `skills/web-implementation/references/forms.md` |
-| Accessibility | `skills/web-implementation/references/accessibility.md` |
-| Naming, layout, imports | `skills/web-implementation/references/style.md` |
+| A component | `skills/ts-react-implementation/references/components.md` |
+| State | `skills/ts-react-implementation/references/state.md` |
+| A call to the API | `skills/ts-react-implementation/references/data.md` — skip its type-narrowing advice; the rest (one client, no hand-written `fetch`) applies unchanged |
+| A form | `skills/ts-react-implementation/references/forms.md` |
+| Accessibility | `skills/ts-react-implementation/references/accessibility.md` |
+| Naming, layout, imports | `skills/ts-react-implementation/references/style.md` |
 
 `references/design.md`'s SOLID guidance applies; its type-level advice ("types that make illegal
 states unrepresentable") does not — there is no type checker here to enforce it.
@@ -40,5 +40,5 @@ states unrepresentable") does not — there is no type checker here to enforce i
 
 ## Rules keel enforces
 
-Identical to `keel:web-implementation`'s: the generated directory is gitignored and hooks refuse
+Identical to `keel:ts-react-implementation`'s: the generated directory is gitignored and hooks refuse
 edits to it; the minimum-code rule governs every addition regardless of language.

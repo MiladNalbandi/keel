@@ -161,7 +161,7 @@ file writes.
 ### keel's agents on OpenCode
 
 `opencode/install.mjs` installs skills and commands, never `agents/*.md`, so a flow that starts a
-keel agent runs single-agent on OpenCode (`/keel:review-ticket` says so in its text). Generating
+keel agent runs single-agent on OpenCode (`/keel:review-pr` says so in its text). Generating
 `.opencode/agent/<name>.md` from each agent's frontmatter would give OpenCode the same parallel
 reviewers; the model tier (`sonnet`, `opus`) has no OpenCode equivalent and would need a mapping.
 

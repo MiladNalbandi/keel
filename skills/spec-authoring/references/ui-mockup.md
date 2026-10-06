@@ -13,7 +13,7 @@ A wireframe of the happy path tells you almost nothing you did not already know.
 | Loading | What is on screen while the request is in flight, and can they still act? |
 | Error | The save failed. What does it say, where, and what can they do next? |
 
-This is the same split `keel:web-implementation` (`references/data.md`) requires in the code: loading, error and empty are three branches, not one `isLoading` flag. Drawing them here is what makes those branches acceptance criteria rather than afterthoughts.
+This is the same split `keel:ts-react-implementation` (`references/data.md`) requires in the code: loading, error and empty are three branches, not one `isLoading` flag. Drawing them here is what makes those branches acceptance criteria rather than afterthoughts.
 
 If a state genuinely cannot happen, write one line saying why. "No empty state: the list always contains the user's own account" is a decision. Silence is an omission.
 

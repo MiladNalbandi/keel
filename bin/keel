@@ -71,7 +71,7 @@ Project setup
   keel arch detect|show|set <style>   architecture style and its import boundaries
   keel packs list|add <url|path> [--project]|remove <name>   stack packs, and installing more
   keel tools list|show <name>|run <name> [--files a,b]   the programs keel runs for you
-  keel ticket prep --ticket <file|-> (--pr <n> | --branch <b>) | record <id> | show <id> | list   review code against a ticket and the DoD
+  keel ticket prep --ticket <file|-> (--pr <n> | --branch <b>) | record <id> | show <id> | list   review a PR against a ticket and the DoD (alias: keel review-pr)
   keel lint [status] | run [tool…] | skip [tool…] --reason "<why>"   pre-push lint and Sonar; the push waits for a choice per tool
 
   keel memory sections [--confirm a,b|--all|--none]    which sections to build
@@ -93,7 +93,7 @@ Checks and commits
   keel env                            required variable names and whether they are set
   keel smoke                          run the smoke checks
   keel pr [--dry-run]                 checks, then push and open the PR
-  keel triage "<description>"         size proposal for /keel:change
+  keel triage "<description>"         size proposal for /keel:change (alias: keel change)
   keel check-size                     escalation triggers on the current branch
 
 Bug hunt
@@ -132,7 +132,7 @@ switch (cmd) {
   case 'packs': cli.packsCmd(rest); break;
   case 'tools': cli.toolsCmd(rest); break;
   case 'lint': cli.lintCmd(rest); break;
-  case 'ticket': cli.ticketCmd(rest); break;
+  case 'ticket': case 'review-pr': cli.ticketCmd(rest); break;
   case 'cover': cli.coverCmd(rest); break;
   case 'spec': cli.specCmd(rest); break;
   case 'memory': cli.memoryCmd(rest); break;
@@ -155,7 +155,7 @@ switch (cmd) {
   case 'lane': cli.laneCmd(rest); break;
   case 'smoke': cli.smokeCmd(); break;
   case 'pr': cli.prCmd(rest); break;
-  case 'triage': cli.triageCmd(rest); break;
+  case 'triage': case 'change': cli.triageCmd(rest); break;
   case 'hunt': cli.huntCmd(rest); break;
   case 'ask': cli.askCmd(rest); break;
   case 'check-size': cli.checkSizeCmd(rest); break;
