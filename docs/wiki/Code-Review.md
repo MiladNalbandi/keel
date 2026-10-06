@@ -21,9 +21,9 @@ Code is reviewed at fixed points, each looking at a bigger slice, each with a na
 `/keel:review ac AC-003` · add `--base develop` to compare with another branch.
 It only reports: it never edits code, moves the phase or passes a gate.
 
-## Someone else's PR: `/keel:review-ticket`
+## Someone else's PR: `/keel:review-pr`
 
-`/keel:review-ticket <ticket file or pasted text> <PR# | branch>` checks a change against the
+`/keel:review-pr <ticket file or pasted text> <PR# | branch>` checks a change against the
 ticket's acceptance criteria and your `.keel/dod.md`.
 
 ```

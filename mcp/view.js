@@ -400,7 +400,7 @@ function buildTools(cfg) {
   } catch (e) { return { tools: [], runnable: [] }; }
 }
 
-// Ticket reviews (keel ticket / /keel:review-ticket). Independent of any flow, so on both pages.
+// Ticket reviews (keel ticket / /keel:review-pr). Independent of any flow, so on both pages.
 function buildReviews(cfg) {
   try { return require('../lib/ticket').list(cfg).slice(0, 5); } catch (e) { return []; }
 }

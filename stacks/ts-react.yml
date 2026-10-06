@@ -67,8 +67,8 @@ devcontainer:
     VITE_HOST: 0.0.0.0
 
 skills:
-  testing: keel:web-testing
-  implementation: keel:web-implementation
+  testing: keel:ts-react-testing
+  implementation: keel:ts-react-implementation
   architecture: keel:architecture
 architecture_styles: [feature-sliced, layered]
 

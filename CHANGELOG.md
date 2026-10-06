@@ -4,6 +4,19 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.75.0
+
+**Clearer names.** `/keel:review-ticket` is now **`/keel:review-pr`**: it reviews a PR, and the
+ticket is only its input. `web-testing` / `web-implementation` are now **`ts-react-testing`** /
+**`ts-react-implementation`**, named after their stack like every other stack skill. The old names
+redirect until 0.77.0, and a pack that still names `keel:web-*` resolves to the new skill.
+
+- OpenCode now gets `/keel-memory` (the installer only looked at one of the two "a human can type
+  this" flags).
+- CLI aliases: `keel review-pr` = `keel ticket`, `keel change` = `keel triage`.
+- The README and wiki list all 13 commands, grouped by what you want to do; four long command
+  descriptions now start with when to use them.
+
 ## 0.74.0
 
 **`/keel:review-ticket` is lean.** One `keel ticket prep` call now does everything a script can:

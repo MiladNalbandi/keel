@@ -3,14 +3,18 @@
 Every piece of work runs in a **flow**: a fixed order of **phases**. Each phase decides which files
 may be written, and a hook enforces it on every edit.
 
-| Command | For |
+| Command | Use it when |
 |---|---|
-| `/keel:feature` | a specced feature, with the acceptance-criteria loop |
+| `/keel:init` | setting up a repo, once |
+| `/keel:feature` | a feature touches the API contract, data or auth |
 | `/keel:change` | a small change, no spec |
-| `/keel:fix` | a bug, reproduced before it is fixed |
+| `/keel:fix` | a bug you can reproduce |
 | `/keel:diagnose` | a bug you cannot reproduce yet (read-only) |
-| `/keel:hunt` | a read-only sweep that produces a proven bug backlog |
-| `/keel:ship` | finishing any branch the same way every time |
+| `/keel:hunt` · `/keel:hunt-next` | finding bugs you do not know about, then taking the next one |
+| `/keel:review` · `/keel:review-pr` | reviewing your own branch · someone else's PR (see [[Code Review]]) |
+| `/keel:cover` | closing coverage gaps on changed lines |
+| `/keel:ship` | a branch is done: checks, reviewers, final review, PR |
+| `/keel:status` · `/keel:memory` | where am I · what keel knows about the project |
 
 ## Feature
 

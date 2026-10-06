@@ -1,6 +1,6 @@
 ---
 name: ticket-reviewer
-description: Read-only reviewer for /keel:review-ticket. Judges the checklist items it is given against a change, or hunts bugs in its files, or confirms one claim — and answers in result lines, never files. Use from /keel:review-ticket only, with the job and the pack slice in the prompt.
+description: Read-only reviewer for /keel:review-pr. Judges the checklist items it is given against a change, or hunts bugs in its files, or confirms one claim — and answers in result lines, never files. Use from /keel:review-pr only, with the job and the pack slice in the prompt.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit
 model: sonnet

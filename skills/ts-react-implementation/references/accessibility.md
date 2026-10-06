@@ -2,7 +2,7 @@
 
 ## The test locators and the accessibility tree are the same thing
 
-`keel:web-testing` and `keel:playwright` both locate by **role, accessible name and text**:
+`keel:ts-react-testing` and `keel:playwright` both locate by **role, accessible name and text**:
 
 ```ts
 page.getByRole('textbox', { name: 'URL' })

@@ -638,7 +638,7 @@ takes `project: "<name>"` to look at a project other than the session's own.
 
 **Reference skills the flows load.** Ten skills that contain no commands, only patterns:
 `architecture`, `debugging`, `kotlin-spring-testing`, `playwright`, `security`, `spec-authoring`,
-`web-implementation`, `web-testing`. They are why generated tests look like the house style rather than
+`ts-react-implementation`, `ts-react-testing`. They are why generated tests look like the house style rather than
 like generic examples.
 
 ---

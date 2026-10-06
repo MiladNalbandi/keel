@@ -203,7 +203,7 @@ succeeding.
 **Look first at:** the frontend components with the most controls, then the error paths on both
 sides of the wire, then anything a double-click could hit twice.
 
-**Load:** `keel:web-implementation` if the project has a frontend.
+**Load:** `keel:ts-react-implementation` if the project has a frontend.
 
 **A provable candidate:** describes a user action and what is on screen afterwards. *"Typing in
 the email filter re-renders the list but never narrows it: the input is bound to state that the
@@ -387,7 +387,7 @@ zero, meaning no error path was ever taken. Dead test infrastructure nothing use
 other lenses are flagging — *especially* where a test exists and the bug is real anyway. That
 combination is the signal.
 
-**Load:** `keel:kotlin-spring-testing` or `keel:web-testing`, whichever matches the file.
+**Load:** `keel:kotlin-spring-testing` or `keel:ts-react-testing`, whichever matches the file.
 
 **A provable candidate:** names the test and the production behaviour it fails to catch.
 *A use-case test mocks its port to return a typed persistence error and asserts on it — a value

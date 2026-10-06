@@ -26,7 +26,7 @@ Each lane gets its own worktree, branch (`lane/web-<repo>`), Compose project nam
 
 ## Choosing the layer
 
-Load the `web-testing` skill. Component tests with Vitest, Testing Library and MSW handlers generated from the contract — so a contract change breaks the test rather than passing silently. Parse at least one response per endpoint with the generated zod schema.
+Load the `ts-react-testing` skill. Component tests with Vitest, Testing Library and MSW handlers generated from the contract — so a contract change breaks the test rather than passing silently. Parse at least one response per endpoint with the generated zod schema.
 
 | AC is about | Assert |
 |---|---|

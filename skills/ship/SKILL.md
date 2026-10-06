@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Finish a branch the same way every time: verify, coverage, audit, trace, reviewers in parallel, final human review, then open the PR.
+description: Use when a branch is done and ready for a PR: verify, coverage, audit, trace, reviewers in parallel, the final human review, then open the PR.
 disable-model-invocation: true
 ---
 
