@@ -12,6 +12,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, rmSync
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
+import { createRequire } from 'node:module';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const KEEL_ROOT = resolve(HERE, '..');
@@ -147,6 +148,39 @@ for (const s of flows) {
   planned.push([join(base, 'command', `keel-${s.name}.md`), commandBody(s, names, join(base, 'skills', `keel-${s.name}`))]);
 }
 
+// keel's agents, as OpenCode subagents (`keel-<name>`), on the model chosen for this machine
+// (~/.keel/models.json, the dashboard's agents tab) or the agent's default. OpenCode names a model
+// `anthropic/<id>`, so an alias becomes the newest id of its family; it has no effort setting, and
+// a 1M-context choice applies in Claude Code only. A read-only keel agent is denied edits here too.
+const require_ = createRequire(import.meta.url);
+const models = require_(join(KEEL_ROOT, 'lib', 'models.js'));
+const agentsSrc = join(KEEL_ROOT, 'agents');
+const agentNames = readdirSync(agentsSrc).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3)).sort();
+for (const a of agentNames) {
+  const text = readFileSync(join(agentsSrc, `${a}.md`), 'utf8');
+  const fm = frontmatter(text);
+  const tools = String(fm.tools || '');
+  const readOnly = /Write|Edit/.test(String(fm.disallowedTools || '')) || (tools && !/\b(Write|Edit)\b/.test(tools));
+  const choice = models.effective(a);
+  const model = models.opencodeModel(choice);
+  const pre = (text.match(/^skills:\n((?:\s+- .+\n)+)/m) || [])[1];
+  const preload = pre ? pre.split('\n').map((l) => l.replace(/^\s+-\s+/, '').trim()).filter(Boolean).map((n) => n.replace(/^keel:/, 'keel-')) : [];
+  const desc = rewrite(String(fm.description || `keel ${a}`), names).replace(/\n/g, ' ');
+  planned.push([join(base, 'agents', `keel-${a}.md`), `---
+description: ${JSON.stringify(desc)}
+mode: subagent
+${model ? `model: ${model}\n` : ''}${readOnly ? 'permission:\n  edit: deny\n' : ''}---
+${preload.length ? `\n> Before you start, load ${preload.map((n) => `\`${n}\``).join(', ')} with the \`skill\` tool.\n` : ''}
+${rewrite(body(text), names)}`]);
+}
+const agentRoot = join(base, 'agents');
+if (!dryRun && existsSync(agentRoot)) {
+  for (const f of readdirSync(agentRoot)) {
+    const m = f.match(/^keel-(.+)\.md$/);
+    if (m && !agentNames.includes(m[1])) rmSync(join(agentRoot, f), { force: true });
+  }
+}
+
 // Skills from an older install that keel no longer ships would otherwise linger and be loaded.
 const skillsRoot = join(base, 'skills');
 if (!dryRun && existsSync(skillsRoot)) {
@@ -194,7 +228,7 @@ if (global) {
 }
 
 process.stdout.write(
-  `\n${dryRun ? 'Dry run. ' : ''}${skills.length} skill(s), ${flows.length} command(s) and the enforcement plugin`
+  `\n${dryRun ? 'Dry run. ' : ''}${skills.length} skill(s), ${agentNames.length} agent(s), ${flows.length} command(s) and the enforcement plugin`
   + `${dryRun ? ' would be' : ''} installed ${global ? 'globally' : `into ${base}`}.\n`
   + permissionNote
   + 'Restart OpenCode to load them. Re-run this after updating keel — the skills are copies.\n\n'

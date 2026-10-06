@@ -58,7 +58,7 @@ Flows and state
   keel ask <id> --question "..." [--blocking] | --answer "..." [--by user]
   keel ask list|pending|clear <id>    questions keel will not proceed past
   keel projects [forget <name>]       every keel project on this machine, as the dashboard shows them
-  keel models show|set-all <model> [--effort low|medium|high]   subagent model and effort
+  keel models show|set-all <model>|set <model> <agent> [--effort low|medium|high] [--context 1m]|apply|reset   subagent model, effort and context (also in the dashboard's agents tab)
 
 Project setup
   keel preflight <slug>               prove the machine is ready, then create the branch

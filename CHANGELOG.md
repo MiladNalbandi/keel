@@ -4,6 +4,28 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.78.0
+
+**Choose each agent's model, effort and context — in the dashboard.** A new *agents* page (the
+`agents` button in the header, or a project's *agents* tab) lists every keel agent with its
+default and lets you pick:
+
+- **model** — an alias that follows the newest model (`opus`, `sonnet`, `haiku`), an exact version
+  (Opus 5.5, Sonnet 5.5, Fable 5.1, Haiku 4.5), or `inherit` (same as the main session);
+- **effort** — low, medium or high;
+- **1M context** — the 1M-token variant, for Opus, Sonnet and Fable.
+
+Choices are saved once for the machine in `~/.keel/models.json` (`lib/models.js`) and applied to
+Claude Code's agent files and to OpenCode's. Session start re-applies them, so a plugin update no
+longer resets them; `keel models apply` does it by hand. `keel models set|set-all` take exact
+versions and `--context 1m` and write the same file. Changing goes through the dashboard's
+same-page token check, like the console.
+
+**OpenCode gets keel's agents.** `opencode/install.mjs` installs all of them as `keel-<name>`
+subagents on the chosen model (`anthropic/<id>`); read-only agents are denied edits, and an agent
+that preloads a skill in Claude Code is told to load it. OpenCode has no effort setting, and 1M
+context applies in Claude Code only.
+
 ## 0.77.0
 
 **A review you can act on.** `/keel:review-pr` used to end in verdicts — ✓, ✗, ? — and left the
