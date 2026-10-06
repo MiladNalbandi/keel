@@ -66,7 +66,7 @@ const CSS = `
 .g-edge.m-queue{stroke:var(--warn);stroke-dasharray:5 3}
 .g-edge.m-ext{stroke:var(--faint);stroke-dasharray:2 3}
 .g-edge.m-call{stroke:var(--rail)}
-.g-edge.m-fk{stroke:var(--ok)}
+.g-edge.m-fk{stroke:var(--dg-line)}
 
 /* Selection and hover. The whole point of the picture is seeing what one box touches, so the
    edges that touch it come forward and the rest go quiet. */
@@ -117,6 +117,42 @@ const CSS = `
 .mempty{color:var(--faint);font-size:12px}
 .mlimits{color:var(--faint);font-size:11px;line-height:1.6;margin-top:10px;padding-left:11px;
   border-left:2px solid var(--border)}
+
+/* The diagram look, after keel v2 (JetBrains-style): a tinted header with an icon per kind, a
+   sans title over mono rows, key icons and right-aligned types in tables, rounded orthogonal
+   lines with crow's-foot ends, a soft shadow and a dot grid that moves with the paper. */
+.graph[data-view^="map:"]{background-color:var(--dg-bg);border:1px solid var(--border);border-radius:10px;
+  background-image:radial-gradient(var(--dg-dot) 1px,transparent 1.2px);background-size:22px 22px}
+.mnode .mshadow{fill:var(--dg-shadow)}
+.mnode .mfill{fill:var(--panel)}
+.mnode .mbox{fill:none;stroke:var(--rail);stroke-width:1}
+.mnode:hover .mbox{stroke:var(--faint)}
+.mnode.sel .mbox{stroke:var(--accent);stroke-width:2}
+.mnode.mhot .mbox{stroke:var(--accent);stroke-width:1.6}
+.mnode.mmatch .mbox{stroke:var(--warn);stroke-width:2}
+.mnode.mnomatch{opacity:.3}
+.mhd{fill:var(--panel-2)}
+.mhd.k-app{fill:var(--run-soft)} .mhd.k-data{fill:var(--ok-soft)} .mhd.k-queue{fill:var(--warn-soft)}
+.mhd.k-class{fill:var(--accent-soft)} .mhd.k-ext{fill:var(--panel-2)} .mhd.k-port{fill:var(--panel-2)}
+.msep{stroke:var(--rail);stroke-width:1}
+.mic{color:var(--faint);fill:none}
+.mic.k-app{color:var(--run)} .mic.k-data{color:var(--ok)} .mic.k-queue{color:var(--warn)} .mic.k-class{color:var(--accent)}
+.mnode .mt{font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:12.5px;font-weight:600}
+.mnode .ms,.mnode .mr{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+.mnode .mr{font-size:11px}
+.mnode .mr.mty{fill:var(--faint);font-weight:400}
+.mkpk{color:var(--warn)} .mkfk{color:var(--run)}
+.mm-GET{fill:var(--run);font-weight:600} .mm-POST{fill:var(--ok);font-weight:600}
+.mm-PUT,.mm-PATCH{fill:var(--warn);font-weight:600} .mm-DELETE{fill:var(--bad);font-weight:600}
+.mcrow{fill:none;stroke:var(--dg-line);stroke-width:1.25;stroke-linecap:round}
+.mlabel{stroke:var(--dg-bg)}
+.mnode.mfade{opacity:.3}
+.g-edge.mdim{opacity:.14}
+.msearch{font:inherit;font-size:12px;color:var(--fg);background:var(--panel);border:1px solid var(--border);
+  border-radius:6px;padding:4px 9px;width:220px;max-width:100%;margin:0 0 8px}
+.msearch:focus{outline:none;border-color:var(--accent)}
+.mends{display:inline-flex;gap:14px;align-items:center;color:var(--faint);font-size:11.5px}
+.mends svg{vertical-align:middle}
 `;
 
 const SCRIPT = `
@@ -140,7 +176,7 @@ const SCRIPT = `
     flow: 'Each row is a part of the system. Read the steps left to right.',
     modules: 'Click a module to see the classes inside it.',
     classes: 'Every box is a declaration. The lines are imports, not calls.',
-    er: 'Every box is a table. \\u25aa is a key, \\u2197 points at another table.'
+    er: 'Every box is a table. A yellow key is the primary key; a blue key points at another table. A line ends in a crow\\u2019s foot on the many side and two bars on the one side.'
   };
 
   // A crumb is a name somebody wrote, not a slug. Journeys are called "Authoring a wave and
@@ -167,25 +203,85 @@ const SCRIPT = `
       .catch(function(){ if (mapFor === want){ mapData = { error: true }; draw(); } });
   }
 
+  // Rounded corners on the server's orthogonal lines (M/H/V/L only; anything else is left as is).
+  function roundPath(d){
+    var t = String(d || '').trim().split(' ').filter(function(x){ return x; });
+    var pts = [], i = 0, x = 0, y = 0;
+    while (i < t.length){
+      var c = t[i++];
+      if (c === 'M' || c === 'L'){ x = +t[i++]; y = +t[i++]; }
+      else if (c === 'H'){ x = +t[i++]; }
+      else if (c === 'V'){ y = +t[i++]; }
+      else return d;
+      if (!isFinite(x) || !isFinite(y)) return d;
+      pts.push([x, y]);
+    }
+    if (pts.length < 3) return d;
+    var out = 'M ' + pts[0][0] + ' ' + pts[0][1];
+    for (var k = 1; k < pts.length - 1; k++){
+      var a = pts[k - 1], b = pts[k], c2 = pts[k + 1];
+      var l1 = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]), l2 = Math.abs(c2[0] - b[0]) + Math.abs(c2[1] - b[1]);
+      var r = Math.min(5, l1 / 2, l2 / 2);
+      if (!r){ out += ' L ' + b[0] + ' ' + b[1]; continue; }
+      var p1 = [b[0] - Math.sign(b[0] - a[0]) * r, b[1] - Math.sign(b[1] - a[1]) * r];
+      var p2 = [b[0] + Math.sign(c2[0] - b[0]) * r, b[1] + Math.sign(c2[1] - b[1]) * r];
+      out += ' L ' + p1[0] + ' ' + p1[1] + ' Q ' + b[0] + ' ' + b[1] + ' ' + p2[0] + ' ' + p2[1];
+    }
+    var z = pts[pts.length - 1];
+    return out + ' L ' + z[0] + ' ' + z[1];
+  }
+
+  var MICONS = '<symbol id="mi-app" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect><path d="M2 6.2H14" stroke="currentColor" stroke-width="1.3"></path></symbol>' +
+    '<symbol id="mi-data" viewBox="0 0 16 16"><ellipse cx="8" cy="4" rx="5" ry="2" fill="none" stroke="currentColor" stroke-width="1.3"></ellipse><path d="M3 4V12C3 13.1 5.2 14 8 14S13 13.1 13 12V4M3 8C3 9.1 5.2 10 8 10S13 9.1 13 8" fill="none" stroke="currentColor" stroke-width="1.3"></path></symbol>' +
+    '<symbol id="mi-queue" viewBox="0 0 16 16"><path d="M3 4.5H13M3 8H13M3 11.5H10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></symbol>' +
+    '<symbol id="mi-ext" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.3"></circle><path d="M2.5 8H13.5M8 2.5C6 5 6 11 8 13.5C10 11 10 5 8 2.5" fill="none" stroke="currentColor" stroke-width="1.1"></path></symbol>' +
+    '<symbol id="mi-class" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.3"></circle><path d="M10 6.3A2.6 2.6 0 1 0 10 9.7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></symbol>' +
+    '<symbol id="mi-port" viewBox="0 0 16 16"><rect x="4" y="4" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"></rect></symbol>' +
+    '<symbol id="mk-pk" viewBox="0 0 16 16"><circle cx="5.5" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M8.5 8H14M12 8V10.5M14 8V10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></symbol>' +
+    '<symbol id="mk-fk" viewBox="0 0 16 16"><circle cx="5.5" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M8.5 8H14M12 8V10.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path><path d="M3 13.5H11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></symbol>';
+
+  var METHODS = { GET: 1, POST: 1, PUT: 1, PATCH: 1, DELETE: 1, HEAD: 1, OPTIONS: 1 };
+  var mapQuery = '';
+  function mapMatches(n){
+    return !!mapQuery && String(n.title || '').toLowerCase().indexOf(mapQuery) >= 0;
+  }
+
   function mapBoxBody(n){
     var out = '';
     var y = n.y + 20;
-    out += '<text class="mt" x="' + (n.x + 11) + '" y="' + y + '">' + esc(n.title) + '</text>';
+    var title = String(n.title || '');
+    // An icon only where the server's width leaves room for it: the width is computed from the title
+    // alone, and a box must never draw past its own edge.
+    var room = n.w >= 30 + title.length * 7.1 + (n.drill ? 46 : 10);
+    if (room) out += '<use class="mic k-' + esc(n.kind) + '" href="#mi-' + esc(n.kind) + '" x="' + (n.x + 9) + '" y="' + (n.y + 6) + '" width="15" height="15"></use>';
+    out += '<text class="mt" x="' + (n.x + (room ? 29 : 11)) + '" y="' + y + '">' + esc(title) + '</text>';
     // Marked, so a press on the word itself opens straight away. Without this it fell through to
     // the select-then-open rule on the box, and the first press on a button labelled "open"
     // visibly did nothing.
     if (n.drill) out += '<text class="mz mopen" data-open="' + esc(n.drill) +
       (n.module ? '" data-open-mod="' + esc(n.module) : '') +
-      '" x="' + (n.x + n.w - 11) + '" y="' + y + '" text-anchor="end">open \u203a</text>';
+      '" x="' + (n.x + n.w - 11) + '" y="' + y + '" text-anchor="end">open ›</text>';
     y += 15;
     if (n.sub){ out += '<text class="ms" x="' + (n.x + 11) + '" y="' + y + '">' + esc(n.sub) + '</text>'; y += 15; }
     var rows = n.rows || [];
     for (var i = 0; i < rows.length; i++){
       y += 3;
+      var t = String(rows[i].t || '');
       var flag = rows[i].flag ? ' ' + rows[i].flag : '';
-      var mark = rows[i].flag === 'pk' ? '\\u25aa ' : rows[i].flag === 'fk' ? '\\u2197 ' : '';
-      out += '<text class="mr' + flag + '" x="' + (n.x + 11) + '" y="' + y + '" xml:space="preserve">' +
-        mark + esc(rows[i].t) + '</text>';
+      var gap = n.kind === 'data' ? t.search(/  +/) : -1;
+      if (gap > 0){
+        // A table column: key icon, name, and the type right-aligned at the edge.
+        var key = rows[i].flag === 'pk' || rows[i].flag === 'fk' ? rows[i].flag : null;
+        if (key) out += '<use class="mic mk' + key + '" href="#mk-' + key + '" x="' + (n.x + 9) + '" y="' + (y - 10) + '" width="12" height="12"></use>';
+        out += '<text class="mr' + flag + '" x="' + (n.x + 25) + '" y="' + y + '">' + esc(t.slice(0, gap)) + '</text>' +
+          '<text class="mr mty" x="' + (n.x + n.w - 10) + '" y="' + y + '" text-anchor="end">' + esc(t.slice(gap).trim()) + '</text>';
+      } else {
+        var sp = t.indexOf(' ');
+        var verb = sp > 0 ? t.slice(0, sp) : '';
+        var body = METHODS[verb] ? '<tspan class="mm-' + verb + '">' + esc(verb) + '</tspan>' + esc(t.slice(sp))
+          : (rows[i].flag === 'pk' ? '\\u25aa ' : rows[i].flag === 'fk' ? '\\u2197 ' : '') + esc(t);
+        out += '<text class="mr' + flag + '" x="' + (n.x + 11) + '" y="' + y + '" xml:space="preserve">' + body + '</text>';
+      }
       y += 15;
     }
     return out;
@@ -204,8 +300,11 @@ const SCRIPT = `
             '<path class="mqueue" d="M0 0 L8 4 L0 8 z"></path></marker>' +
             '<marker id="mah-call" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">' +
             '<path class="mcall" d="M0 0 L8 4 L0 8 z"></path></marker>' +
-            '<marker id="mah-fk" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">' +
-            '<path class="mfk" d="M0 0 L8 4 L0 8 z"></path></marker>' +
+            // A foreign key ends in a crow's foot on the many side and two bars on the one side.
+            '<marker id="mah-fk" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto">' +
+            '<path class="mcrow" d="M1 7 L13 1 M1 7 L13 7 M1 7 L13 13"></path></marker>' +
+            '<marker id="mone" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse">' +
+            '<path class="mcrow" d="M6 2 L6 12 M1 2 L1 12"></path></marker>' + MICONS +
             '<marker id="mah-ext" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">' +
             '<path class="mext" d="M0 0 L8 4 L0 8 z"></path></marker>' +
             (demo ? '<pattern id="mhatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
@@ -229,12 +328,15 @@ const SCRIPT = `
         return cls + (e.from === mapSel || e.to === mapSel ? ' mhot' : ' mdim');
       },
       edgeMarker: function(e){ return 'mah-' + e.kind; },
+      edgeMarkerStart: function(e){ return e.kind === 'fk' ? 'mone' : null; },
+      edgePath: function(e){ return roundPath(e.d); },
       edgeLabel: function(e){ return e.label || ''; },
       nodeClass: function(n){
         var touches = mapSel && g.edges.some(function(e){
           return (e.from === mapSel && e.to === n.id) || (e.to === mapSel && e.from === n.id);
         });
         return 'mnode' + (mapSel === n.id ? ' sel' : '') + (n.unsourced ? ' munsourced' : '') +
+          (mapQuery ? (mapMatches(n) ? ' mmatch' : ' mnomatch') : '') +
           (mapSel && mapSel !== n.id && !touches ? ' mfade' : '') +
           (touches ? ' mhot' : '');
       },
@@ -245,8 +347,13 @@ const SCRIPT = `
           ' tabindex="0" role="button"';
       },
       nodeBox: function(n){
-        return '<rect class="mbox" x="' + n.x + '" y="' + n.y + '" width="' + n.w + '" height="' + n.h + '" rx="7"></rect>' +
-          '<rect class="k-' + esc(n.kind) + '" x="' + (n.x + 1) + '" y="' + (n.y + 1) + '" width="' + (n.w - 2) + '" height="3" rx="2"></rect>';
+        var x = n.x, y = n.y, w = n.w, h = n.h, hd = Math.min(27, h - 1);
+        return '<rect class="mshadow" x="' + (x + 1.5) + '" y="' + (y + 2.5) + '" width="' + w + '" height="' + h + '" rx="7"></rect>' +
+          '<rect class="mfill" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="7"></rect>' +
+          '<path class="mhd k-' + esc(n.kind) + '" d="M' + (x + 0.5) + ' ' + (y + hd) + ' V' + (y + 7) + ' Q' + (x + 0.5) + ' ' + (y + 0.5) + ' ' + (x + 7) + ' ' + (y + 0.5) +
+            ' H' + (x + w - 7) + ' Q' + (x + w - 0.5) + ' ' + (y + 0.5) + ' ' + (x + w - 0.5) + ' ' + (y + 7) + ' V' + (y + hd) + ' Z"></path>' +
+          (h > hd + 4 ? '<line class="msep" x1="' + x + '" y1="' + (y + hd) + '" x2="' + (x + w) + '" y2="' + (y + hd) + '"></line>' : '') +
+          '<rect class="mbox" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="7"></rect>';
       },
       nodeBody: mapBoxBody
     });
@@ -441,7 +548,13 @@ const SCRIPT = `
     if (!g || !g.nodes || !g.nodes.length){
       body = '<div class="mempty">' + esc((g && g.empty) || ('Nothing to draw at this level' + (mod ? ' for ' + mod : '') + '.')) + '</div>';
     } else {
-      body = mapFigure(g, Boolean(mapData.demo), level + (mod ? ':' + mod : ''));
+      body = '<input class="msearch" type="search" placeholder="find a box\u2026" title="Enter selects the first match, Esc clears" aria-label="find a box on the map" value="' + esc(mapQuery) + '">' +
+        mapFigure(g, Boolean(mapData.demo), level + (mod ? ':' + mod : ''));
+      if (g.edges.some(function(e){ return e.kind === 'fk'; })){
+        body += '<div class="mends">line ends: ' +
+          '<span><svg width="34" height="14"><path class="mcrow" d="M2 7H32 M20 7 L32 1 M20 7 L32 13"></path></svg> many</span>' +
+          '<span><svg width="34" height="14"><path class="mcrow" d="M2 7H32 M22 2 L22 12 M27 2 L27 12"></path></svg> exactly one</span></div>';
+      }
       if (g.source) body += '<div class="msource">Steps read from ' + esc(g.source) + '. A dashed box is a step with no citation behind it.</div>';
       if (overflow) body += note(overflow + ' more declaration(s) in this module are not drawn.');
     }
@@ -456,6 +569,29 @@ const SCRIPT = `
       mapDetail() +
       renderConsole();
   }
+
+  // Search: typing marks the matching boxes in place, without a redraw that would take the caret
+  // away; Enter selects the first match, which redraws once with it highlighted.
+  app.addEventListener('input', function(e){
+    var el = e.target;
+    if (!el || !el.classList || !el.classList.contains('msearch')) return;
+    mapQuery = String(el.value || '').trim().toLowerCase();
+    var nodes = app.querySelectorAll('.graph .mnode[data-node]');
+    for (var i = 0; i < nodes.length; i++){
+      var t = nodes[i].querySelector('.mt');
+      var hit = !!mapQuery && !!t && String(t.textContent || '').toLowerCase().indexOf(mapQuery) >= 0;
+      nodes[i].classList.toggle('mmatch', hit);
+      nodes[i].classList.toggle('mnomatch', !!mapQuery && !hit);
+    }
+  });
+  app.addEventListener('keydown', function(e){
+    var el = e.target;
+    if (!el || !el.classList || !el.classList.contains('msearch')) return;
+    if (e.key === 'Escape'){ el.value = ''; mapQuery = ''; el.blur(); draw(); return; }
+    if (e.key !== 'Enter') return;
+    var first = app.querySelector('.graph .mnode.mmatch[data-node]');
+    if (first){ mapSel = first.getAttribute('data-node'); el.blur(); draw(); }
+  });
 `;
 
 module.exports = { CSS, SCRIPT };

@@ -39,6 +39,8 @@ function html(consoleToken) {
   --faint:#9b968c; --accent:#7a5cff; --ok:#1f8a4c; --warn:#b26a00; --bad:#c0392b;
   --run:#0b74c4; --rail:#d9d5cc; --shadow:0 1px 2px rgba(0,0,0,.05);
   --accent-soft:#ece6ff; --on-accent:#ffffff;
+  --panel-2:#f1efea; --run-soft:#e2effa; --ok-soft:#e3f3e9; --warn-soft:#fbefdc;
+  --dg-bg:#fbfaf8; --dg-dot:rgba(19,19,20,.09); --dg-shadow:rgba(19,19,20,.07); --dg-line:#a6a29a;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
@@ -46,6 +48,8 @@ function html(consoleToken) {
     --faint:#6b675f; --accent:#a48bff; --ok:#4ec07c; --warn:#e0a13a; --bad:#f0685a;
     --run:#57aeff; --rail:#333338; --shadow:none;
     --accent-soft:#2a2342; --on-accent:#131314;
+    --panel-2:#222225; --run-soft:#142a3d; --ok-soft:#173225; --warn-soft:#3a2a12;
+    --dg-bg:#161618; --dg-dot:rgba(247,246,243,.07); --dg-shadow:rgba(0,0,0,.45); --dg-line:#75716a;
   }
 }
 :root[data-theme="dark"]{
@@ -53,6 +57,8 @@ function html(consoleToken) {
   --faint:#6b675f; --accent:#a48bff; --ok:#4ec07c; --warn:#e0a13a; --bad:#f0685a;
   --run:#57aeff; --rail:#333338; --shadow:none;
   --accent-soft:#2a2342; --on-accent:#131314;
+  --panel-2:#222225; --run-soft:#142a3d; --ok-soft:#173225; --warn-soft:#3a2a12;
+  --dg-bg:#161618; --dg-dot:rgba(247,246,243,.07); --dg-shadow:rgba(0,0,0,.45); --dg-line:#75716a;
 }
 *{box-sizing:border-box}
 body{
@@ -111,8 +117,8 @@ ${uiMap.CSS}
 .graph.pan .g-node{cursor:grab}
 .graph.pan .g-node.dragging{cursor:grabbing}
 .gtools{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin:0 0 6px;font-size:11.5px}
-.gtools button{font:inherit;font-size:11.5px;color:var(--dim);background:var(--card);
-  border:1px solid var(--line);border-radius:99px;padding:2px 10px;cursor:pointer;line-height:1.5}
+.gtools button{font:inherit;font-size:11.5px;color:var(--dim);background:var(--panel);
+  border:1px solid var(--border);border-radius:99px;padding:2px 10px;cursor:pointer;line-height:1.5}
 .gtools button:hover{color:var(--fg);border-color:var(--rail)}
 .gtools .z{min-width:52px;text-align:center;color:var(--faint);font-variant-numeric:tabular-nums}
 .gtools .moved{color:var(--accent)}
@@ -208,7 +214,7 @@ ${uiMap.CSS}
 .q:last-child{margin-bottom:0}
 .q .qq{font-weight:600}
 .q .qb{color:var(--dim);font-size:11.5px;margin-top:2px}
-.rv{padding:6px 0;border-top:1px solid var(--line)} .rv:first-child{border-top:0}
+.rv{padding:6px 0;border-top:1px solid var(--border)} .rv:first-child{border-top:0}
 .rv summary{cursor:pointer;list-style:none} .rv summary::-webkit-details-marker{display:none}
 .rv .qb,.rv .qm{color:var(--dim);font-size:11.5px;margin-top:2px}
 .rv-h b{margin-right:4px} .rv-s{color:var(--dim);font-size:11px;text-transform:uppercase;margin:8px 0 2px}
@@ -217,8 +223,8 @@ ${uiMap.CSS}
 .pill{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid currentColor;margin-left:6px}
 .pill.run{color:var(--accent)}
 .mwrap{overflow-x:auto} .mtable{width:100%;border-collapse:collapse;font-size:12.5px}
-.mtable th{text-align:left;color:var(--dim);font-weight:500;padding:4px 6px;border-bottom:1px solid var(--line)}
-.mtable td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
+.mtable th{text-align:left;color:var(--dim);font-weight:500;padding:4px 6px;border-bottom:1px solid var(--border)}
+.mtable td{padding:6px;border-bottom:1px solid var(--border);vertical-align:top}
 .mtable select{font:inherit;max-width:180px;background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:6px;padding:2px 4px}
 .mtable button{white-space:nowrap} .mtable .faint{font-size:11px}
 .mrow-all td{background:color-mix(in srgb, var(--accent) 6%, transparent)}
@@ -430,8 +436,19 @@ a.pc.wait{border-color:var(--bad)}
       pz.setAttribute('transform', 'translate(' + rnd(view0.x) + ' ' + rnd(view0.y) + ') scale(' + (Math.round(view0.k * 1000) / 1000) + ')');
       var z = wrap.parentNode && wrap.parentNode.querySelector('.gtools .z');
       if (z) z.textContent = Math.round(view0.k * 100) + '%';
+      // The dot grid moves and scales with the drawing, so panning reads as moving the paper.
+      var step = 22 * view0.k; while (step < 14) step *= 2;
+      wrap.style.backgroundSize = rnd(step) + 'px ' + rnd(step) + 'px';
+      wrap.style.backgroundPosition = rnd(view0.x) + 'px ' + rnd(view0.y) + 'px';
       saveView(view, view0);
     }
+    // Actual size, keeping the middle of what is on screen where it is.
+    wrap.__one = function(){
+      var r = wrap.getBoundingClientRect();
+      var cx = (r.width / 2 - view0.x) / view0.k, cy = (r.height / 2 - view0.y) / view0.k;
+      view0.k = 1; view0.x = r.width / 2 - cx; view0.y = r.height / 2 - cy;
+      apply();
+    };
     function fit(){
       var r = wrap.getBoundingClientRect();
       var kw = r.width / (W + 24);
@@ -594,7 +611,9 @@ a.pc.wait{border-color:var(--bad)}
       '<span class="moved" style="display:none">moved</span>' +
       '<button data-g="reset">reset layout</button>' +
       '<button data-g="out">\\u2212</button><span class="z">100%</span><button data-g="in">+</button>' +
-      '<button data-g="fit">fit</button></div>';
+      '<button data-g="fit">fit</button><button data-g="one" title="actual size">1:1</button>' +
+      '<button data-g="svg" title="download the whole drawing as SVG">SVG</button>' +
+      '<button data-g="png" title="download the whole drawing as PNG">PNG</button></div>';
   }
 
   // Called from bind(), after every re-render: the app replaces innerHTML wholesale, so each
@@ -615,6 +634,8 @@ a.pc.wait{border-color:var(--bad)}
         var what = ev.currentTarget.getAttribute('data-g');
         if (what === 'fit') wrap.__fit();
         else if (what === 'reset') wrap.__reset();
+        else if (what === 'one') wrap.__one();
+        else if (what === 'svg' || what === 'png') exportGraph(wrap, what);
         else {
           // Zoom from the middle when it comes from a button rather than the wheel.
           var r = wrap.getBoundingClientRect();
@@ -623,6 +644,55 @@ a.pc.wait{border-color:var(--bad)}
         }
       });
     }
+  }
+
+  // The whole drawing as a file — not the part on screen. The styles live in the page's CSS, so
+  // they are copied onto the clone element by element; without that the file would be unstyled.
+  var EXPORT_PROPS = ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'opacity', 'font-family',
+    'font-size', 'font-weight', 'paint-order', 'stroke-linejoin', 'stroke-linecap', 'display'];
+  function exportGraph(wrap, fmt){
+    var svg = wrap.querySelector('svg');
+    if (!svg) return;
+    var vb = (svg.getAttribute('viewBox') || '0 0 100 100').trim().split(' ').map(Number);
+    var W = vb[2] || 100, H = vb[3] || 100, PAD = 24;
+    var clone = svg.cloneNode(true);
+    var src = svg.querySelectorAll('*'), dst = clone.querySelectorAll('*');
+    for (var i = 0; i < src.length && i < dst.length; i++){
+      var cs = getComputedStyle(src[i]), css = '';
+      for (var j = 0; j < EXPORT_PROPS.length; j++){
+        var v = cs.getPropertyValue(EXPORT_PROPS[j]);
+        if (v) css += EXPORT_PROPS[j] + ':' + v + ';';
+      }
+      dst[i].setAttribute('style', css);
+    }
+    var pz = clone.querySelector('g.pz');
+    if (pz) pz.removeAttribute('transform');
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('viewBox', (-PAD) + ' ' + (-PAD) + ' ' + (W + 2 * PAD) + ' ' + (H + 2 * PAD));
+    clone.setAttribute('width', W + 2 * PAD); clone.setAttribute('height', H + 2 * PAD);
+    var bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('x', -PAD); bg.setAttribute('y', -PAD); bg.setAttribute('width', W + 2 * PAD); bg.setAttribute('height', H + 2 * PAD);
+    bg.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--dg-bg') || '#fff');
+    clone.insertBefore(bg, clone.firstChild);
+    var text = new XMLSerializer().serializeToString(clone);
+    var name = 'keel-' + String(wrap.getAttribute('data-view') || 'graph').split(':').join('-');
+    var save = function(blob, ext){
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = name + '.' + ext;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    };
+    var blob = new Blob([text], { type: 'image/svg+xml' });
+    if (fmt === 'svg') return save(blob, 'svg');
+    var img = new Image();
+    var scale = Math.min(2, 12000 / Math.max(W, H));
+    img.onload = function(){
+      var c = document.createElement('canvas');
+      c.width = Math.round((W + 2 * PAD) * scale); c.height = Math.round((H + 2 * PAD) * scale);
+      var ctx = c.getContext('2d'); ctx.scale(scale, scale); ctx.drawImage(img, 0, 0);
+      c.toBlob(function(b){ if (b) save(b, 'png'); }, 'image/png');
+    };
+    img.src = URL.createObjectURL(blob);
   }
 
   function renderGraph(g, opts){
@@ -655,8 +725,10 @@ a.pc.wait{border-color:var(--bad)}
         ? ' data-from="' + esc(String(e.from)) + '" data-to="' + esc(String(e.to)) + '"' +
           ' data-bend="' + (e.bend == null ? 0.5 : e.bend) + '" data-edge="' + i + '"'
         : '';
+      var start = o.edgeMarkerStart ? o.edgeMarkerStart(e) : null;
       var s = '<path class="' + edgeClass(e) + '"' + edgeAttrs(e) + ends +
-        ' d="' + e.d + '" marker-end="url(#' + edgeMarker(e) + ')"></path>';
+        ' d="' + (o.edgePath ? o.edgePath(e) : e.d) + '" marker-end="url(#' + edgeMarker(e) + ')"' +
+        (start ? ' marker-start="url(#' + start + ')"' : '') + '></path>';
       var label = o.edgeLabel ? o.edgeLabel(e) : '';
       if (label && isFinite(e.lx) && isFinite(e.ly)){
         s += '<text class="mlabel"' + ends + ' x="' + e.lx + '" y="' + e.ly + '" text-anchor="middle">' + esc(label) + '</text>';
@@ -1228,6 +1300,9 @@ ${uiMap.SCRIPT}
       return;
     }
     if (route.view === 'map' || route.view === 'er'){
+      // A live update must not take the caret out of the map's search box mid-word.
+      var fa = document.activeElement;
+      if (fa && fa.classList && fa.classList.contains('msearch')) return;
       app.innerHTML = header(v) + tabs() + views(v) + renderMap(v, route.view, route.crumb);
       bind();
       return;
