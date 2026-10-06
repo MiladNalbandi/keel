@@ -4,6 +4,19 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.79.2
+
+**The layout move finishes the job — found on a real project.** Moving ludus-engine to
+`layout: keel` left three things behind, now handled by `keel upgrade --layout`:
+
+- **Committed files under `.keel/` stay visible.** git's exclude file hides only untracked files, so
+  a `.keel/config.yml` committed earlier went on showing in the team's diff. The move now untracks
+  everything under `.keel/` (`git rm --cached`; the files stay on disk).
+- **The running flow's spec was left behind** when it sat in a folder the config did not name
+  (`docs/specs` while the key said `specs`). That folder now moves too, and the flow follows it.
+- **The advice was `git commit -am`**, which swept unrelated work in progress into the move commit.
+  keel now stages only its own changes, so a plain `git commit` takes the move and nothing else.
+
 ## 0.79.1
 
 **A flow in progress follows its spec when the layout moves it.** `keel upgrade --layout keel`
