@@ -223,6 +223,20 @@ ladder, edit `.keel/config.yml` directly.
 ladder. Add the keel block to CLAUDE.md. Ask before applying test-speed changes (Testcontainers
 reuse, one shared Spring test context).
 
+## 7a. Where keel keeps its files — ask once
+
+Ask with `AskUserQuestion` before committing anything:
+
+| Layout | What the team sees in git |
+|---|---|
+| **repo** (default) | specs, knowledge base, runbook, ADRs and a CLAUDE.md block, committed like code |
+| **keel** | nothing of keel: it all lives under `.keel/`, hidden through `.git/info/exclude` (not even `.gitignore` changes) |
+| **external** | nothing, and the clone holds nothing either: `.keel` links to `~/.keel/projects/<id>/` |
+
+Tests stay in `e2e/` and `smoke/` in every layout. For keel or external: `keel upgrade --layout <name> --write`.
+In those layouts `keel commit setup|docs|memory` records the step in `.keel/state.json` instead of
+committing, because the files are not in git. The choice can change later with the same command.
+
 ## 7b. Commit what the init wrote
 
 ```

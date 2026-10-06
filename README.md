@@ -34,6 +34,19 @@ Kotlin + Spring Boot and TypeScript React are built in; Symfony, Django and plai
 
 Then run `/keel:init` in your project.
 
+## Where keel keeps its files
+
+One line in `.keel/config.yml`, changed with `keel upgrade --layout <name> --write` (it moves what
+exists and shows the moves first):
+
+| `layout:` | Specs, knowledge base, runbook, ADRs | Seen by the team in git? |
+|---|---|---|
+| `repo` (default) | `specs/`, `docs/…`, a `CLAUDE.md` block | yes, committed |
+| `keel` | all under `.keel/` | no — hidden in `.git/info/exclude`; `.gitignore` is not touched |
+| `external` | `~/.keel/projects/<id>/`, linked as `.keel` | no — the clone holds nothing of keel |
+
+E2E and smoke tests are product code and stay in `e2e/` and `smoke/` in every layout.
+
 ## Use it
 
 | I want to… | Type |

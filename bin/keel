@@ -42,6 +42,7 @@ function usageText() {
 Flows and state
   keel init [--write] [--new] [--refresh] [--dev-container] [--stack <name>] [--frontend-stack <name>]
   keel upgrade [--write]              add config keys and state fields a newer keel needs
+  keel upgrade --layout repo|keel|external [--write]   move keel's files: keel = under .keel/, hidden from git
   keel state show|start|phase|ac      inspect or move the flow state
   keel state dep <name> --by user     record a dependency the spec approved
   keel state ac-done                  single-commit loop: confirm the AC passes

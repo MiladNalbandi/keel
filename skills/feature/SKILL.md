@@ -38,6 +38,7 @@ interview ──► mockup + request path ──► numbered ACs ──► [sett
   stop and ask the user instead.
 - Show each piece (mockup, request path, ACs, rules, out of scope) and wait; a revision is shown too.
 - A schema change gets its own `## Migration` section, with a named strategy and rollback.
+- The spec lives in `specs/`, or `.keel/specs/` in layout keel/external — `keel spec new` picks the right one. In those layouts `keel commit docs` records the approval instead of committing.
 - Gate: `keel ask spec-approved --blocking --by feature …`, offered as approve / edit ACs / rewrite a
   section / review first / change order or files / reject. Never answer it yourself.
 - On approval: frontmatter `status: frozen`, `approved`, `frozen`; `keel commit docs SPEC-NNN "spec and plan"`.
