@@ -4,6 +4,26 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.79.0
+
+**Keep keel's files out of the team's diff — `layout: repo | keel | external`.** keel wrote specs,
+a knowledge base, a runbook, ADRs, hunt reports, a compose override and a CLAUDE.md block across
+the repository, and some teams do not want that many changed files. One line in
+`.keel/config.yml` now decides:
+
+- `repo` — as before: committed like code. The default.
+- `keel` — all of it under `.keel/` (`.keel/specs`, `.keel/knowledge`, `.keel/RUNNING.md`,
+  `.keel/adr`, `.keel/hunts`, `.keel/compose.override.yml`, `.keel/CLAUDE.md`), hidden through
+  `.git/info/exclude` — git's per-clone ignore file — so not even `.gitignore` changes. keel's block
+  reaches Claude Code through an `@.keel/CLAUDE.md` import in the uncommitted `CLAUDE.local.md`.
+- `external` — the same, with `.keel` a link to `~/.keel/projects/<id>/`: the clone holds nothing.
+
+`keel upgrade --layout <name>` shows the moves, and `--write` makes them (`lib/layout.js`); it goes
+back the same way. E2E and smoke tests stay in `e2e/` and `smoke/` — they are product code — and
+`.devcontainer/` stays at the root. In a hidden layout `keel commit docs|memory|setup` records the
+step in `.keel/state.json` instead of committing, specs under `.keel/specs/` are still frozen as
+specs, and init asks which layout to use.
+
 ## 0.78.0
 
 **Choose each agent's model, effort and context — in the dashboard.** A new *agents* page (the

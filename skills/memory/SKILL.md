@@ -8,7 +8,7 @@ argument-hint: "[show|sections|reload --section <name>|check|update]"
 
 # keel:memory
 
-`docs/knowledge/` holds what an agent needs to work in this repo: the architecture and its
+`docs/knowledge/` (`.keel/knowledge/` in layout keel or external) holds what an agent needs to work in this repo: the architecture and its
 boundaries, the domain's own vocabulary, the conventions that make new code match its
 neighbours, the data and fixture strategy, and the integrations with their test stand-ins.
 `keel init` builds it; `/keel:ship` refreshes it under a gate.

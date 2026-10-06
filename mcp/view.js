@@ -288,7 +288,7 @@ function buildChecks(cfg, state, head) {
       try { manifests = require('../lib/deps').manifestsChanged(cfg) || []; } catch (e) { manifests = []; }
       if (!manifests.length) { rows.push({ name, state: 'skipped', label: 'not needed — no manifest changed' }); continue; }
     }
-    if (name === 'knowledge' && !fs.existsSync(path.join(cfg.root, 'docs', 'knowledge'))) continue;
+    if (name === 'knowledge' && !fs.existsSync(path.join(cfg.root, (cfg.memory && cfg.memory.dir) || 'docs/knowledge'))) continue;
     let v;
     try { v = gates.verdictState(cfg, file, head); } catch (e) { v = { state: 'none', label: 'unreadable' }; }
     rows.push({ name, state: v.state, label: v.label, verdict: v.verdict || null });

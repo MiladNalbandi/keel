@@ -10,7 +10,7 @@ keel state close
 
 ## The ADR
 
-One per decision that had a genuine alternative — not one per feature. `docs/adr/NNNN-title.md`:
+One per decision that had a genuine alternative — not one per feature. `docs/adr/NNNN-title.md` (`.keel/adr/` in layout keel or external):
 
 - **Context** — the forces, in three sentences.
 - **Decision** — what was chosen, in the present tense.
