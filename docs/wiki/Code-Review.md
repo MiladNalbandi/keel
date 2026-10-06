@@ -20,3 +20,16 @@ Code is reviewed at fixed points, each looking at a bigger slice, each with a na
 `/keel:review` (whole branch) · `/keel:review performance` (one lens) · `/keel:review all` ·
 `/keel:review ac AC-003` · add `--base develop` to compare with another branch.
 It only reports: it never edits code, moves the phase or passes a gate.
+
+## Someone else's PR: `/keel:review-ticket`
+
+`/keel:review-ticket <ticket file or pasted text> <PR# | branch>` checks a change against the
+ticket's acceptance criteria and your `.keel/dod.md`.
+
+```
+keel ticket prep ──► agents by job (1 for a small change) ──► re-check problems ──► keel ticket record
+ script decides what it can                                                    one line, dashboard + chime
+```
+
+Nothing is written but one index line. Add `--comment` to post the result as one PR comment.
+

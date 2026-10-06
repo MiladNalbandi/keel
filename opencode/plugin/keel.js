@@ -20,14 +20,13 @@ const TOOL = {
   bash: 'Bash',
 };
 
-// Seven of keel's eighteen agents can write. OpenCode's `tool.execute.before` does not fire for
+// Seven of keel's nineteen agents can write. OpenCode's `tool.execute.before` does not fire for
 // tool calls made *by* a subagent (open upstream against 1.0.182), so a write that happens inside
 // one is unguarded — the single guarantee keel exists to make, gone. The `task` call itself is made
 // by the primary agent, so this hook *does* see it, and refusing it here is what keeps every write
 // on the agent the guards can still reach.
 const WRITERS = new Set([
   'e2e-author', 'implementer', 'lane-runner', 'librarian', 'prover', 'reproducer', 'test-author',
-  'ticket-reviewer',
 ]);
 
 // Split on whitespace: KEEL_BIN is as likely to be `bun run keel` or `node /path/to/bin/keel` as a

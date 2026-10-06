@@ -708,11 +708,11 @@ a.pc.wait{border-color:var(--bad)}
         ' <span class="pill ' + (r.verdict === 'done' ? 'ok' : r.verdict === 'not-done' ? 'bad' : r.verdict ? 'warn' : 'run') + '">' +
         esc(r.verdict || 'reviewing\u2026') + '</span></div>' +
         '<div class="qm">' + esc(src) + ' \u00b7 ' + r.files + ' file(s), +' + r.added + ' \u2212' + r.removed +
-        (r.chunks > 1 ? ' \u00b7 ' + r.chunks + ' chunks' : '') + '</div>';
+        (r.agents > 1 ? ' \u00b7 ' + r.agents + ' agents' : '') + (r.skipped ? ' \u00b7 ' + r.skipped + ' skipped' : '') + '</div>';
       if (r.status !== 'finished') return '<div class="rv">' + head + '</div>';
       var items = (r.items || []).map(function(it){
         return '<li class="' + cls[it.verdict] + '"><span class="mk">' + mark[it.verdict] + '</span>' +
-          '<span class="iid">' + esc(it.id) + '</span>' + esc(it.text) +
+          '<span class="iid">' + esc(it.id) + '</span>' + esc(it.text) + (it.auto ? ' <span class="faint">(script)</span>' : '') +
           (it.evidence && it.verdict !== 'met' ? '<div class="qb">' + esc(it.evidence) + '</div>' : '') + '</li>';
       }).join('');
       var finds = (r.findings || []).map(function(x){
@@ -726,7 +726,7 @@ a.pc.wait{border-color:var(--bad)}
         (finds ? '<div class="rv-s">findings</div><ul class="rv-l">' + finds + '</ul>' : '') + '</details>';
     }).join('');
     return card('ticket reviews', v.reviews.length + ' recent', body +
-      note('keel ticket start \u2192 keel:ticket-reviewer \u2192 keel ticket verdict. Checklist: the ticket plus .keel/dod.md.'));
+      note('keel ticket prep \u2192 keel:ticket-reviewer \u2192 keel ticket record. Checklist: the ticket plus .keel/dod.md. (script) marks an item a check decided.'));
   }
 
   function renderAcs(v){

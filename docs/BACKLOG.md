@@ -158,6 +158,13 @@ check, the PR-diff reviewability, the sha-versioning, and the ability to work wi
 present — and it would not save the time, because the cost is five agents reading the tree, not the
 file writes.
 
+### keel's agents on OpenCode
+
+`opencode/install.mjs` installs skills and commands, never `agents/*.md`, so a flow that starts a
+keel agent runs single-agent on OpenCode (`/keel:review-ticket` says so in its text). Generating
+`.opencode/agent/<name>.md` from each agent's frontmatter would give OpenCode the same parallel
+reviewers; the model tier (`sonnet`, `opus`) has no OpenCode equivalent and would need a mapping.
+
 ### `keel models` cannot reach `maxTurns` or `tools`
 
 `model` and `effort` are settable. The same frontmatter-rewriting mechanism would cover the other two.

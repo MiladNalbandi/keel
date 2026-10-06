@@ -1,6 +1,6 @@
 # Definition of done
 
-<!-- The team's checklist. `keel ticket start` checks every review against each item below, plus
+<!-- The team's checklist. `keel ticket prep` checks every review against each item below, plus
      the "Definition of done" / "Acceptance criteria" list in the ticket itself. One item per line.
      Edit it once for your team; keep items short and checkable from the code. -->
 

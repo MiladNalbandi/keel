@@ -51,7 +51,7 @@ removes skills and commands keel no longer ships.
 This is the part to read before trusting it.
 
 OpenCode's `tool.execute.before` **does not fire for tool calls made inside a subagent** spawned
-through the `task` tool. Reported upstream against 1.0.182 and open. Seven of keel's eighteen
+through the `task` tool. Reported upstream against 1.0.182 and open. Seven of keel's nineteen
 agents can write — `e2e-author`, `implementer`, `lane-runner`, `librarian`, `prover`, `reproducer`,
 `test-author` — so on OpenCode their writes would reach disk unchecked. That is the one guarantee
 keel exists to make.
@@ -60,7 +60,7 @@ keel exists to make.
 agent, so the hook does see it: spawning a write-capable keel agent while a flow is running is
 refused, which keeps every write on the agent the guards can still reach. Read-only agents —
 `explorer`, `reviewer`, `investigator`, `hunter`, `security-auditor`, `arch-surveyor`,
-`code-reviewer`, `ac-reviewer`, `dependency-triager`, `setup-doctor`, `bulk-reader` — spawn freely.
+`code-reviewer`, `ac-reviewer`, `ticket-reviewer`, `dependency-triager`, `setup-doctor`, `bulk-reader` — spawn freely.
 
 Two of those seven were already opt-in: `loops.red_author` and `loops.green_author` default to
 `main` (`lib/config.js`), so `implementer` and `test-author` do not run unless a project asks.
