@@ -4,6 +4,18 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.74.0
+
+**`/keel:review-ticket` is lean.** One `keel ticket prep` call now does everything a script can:
+it drops lockfiles and generated files, ranks files by risk, decides checklist items it can prove
+(a secret, a disabled test, debug output or a TODO, no database change) with `file:line`, routes
+every other item to its files, and plans the agents. Agents split by **job**, not by diff chunk,
+so none judges items it cannot see; a small change gets one agent. Problems are re-checked before
+they are reported. Results come back on stdin through `keel ticket record`. A review used to write
+6+ files; it now writes **one line** to `.keel/reviews.jsonl`. `keel:ticket-reviewer` is read-only,
+so OpenCode spawns it freely, and the skill runs single-agent where the agent does not exist.
+The secret scan also knows Stripe live keys.
+
 ## 0.73.0
 
 **OpenCode: the flows start at once, and the reference skills exist.** Each OpenCode command used to

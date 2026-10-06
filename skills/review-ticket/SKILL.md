@@ -1,45 +1,58 @@
 ---
 name: review-ticket
-description: Review someone's code — a GitHub PR or a branch — against a ticket and the team's definition of done. Prepares everything without a model, judges with one Sonnet agent per diff chunk in parallel, and shows the result on the dashboard with a sound.
+description: Review someone's code — a GitHub PR or a branch — against a ticket and the team's definition of done. One CLI call prepares everything and decides what a script can; read-only agents judge the rest in parallel; unconfirmed problems are dropped; the result goes to the terminal and the dashboard. Writes no working files.
 disable-model-invocation: true
-argument-hint: "<ticket file, or paste the ticket> <PR number | branch> [--base <ref>]"
+argument-hint: "<ticket file, or paste the ticket> <PR number | branch> [--base <ref>] [--comment]"
 ---
 
 # keel:review-ticket — $ARGUMENTS
 
-Read-only for the code under review. It does not need a running keel flow.
+Read-only for the code under review. No keel flow needed. Do not write files: everything moves
+through the pack, the prompts and stdin.
 
-## 1. The ticket
-
-- A **file path** → use it.
-- **Pasted text** → write it unchanged to `.keel/reviews/inbox.md` and use that path.
-- Nothing given → ask for it. Do not review without a ticket: the checklist comes from it.
-
-## 2. Prepare — no model, one command
+## 1. Prepare — one command, no model
 
 ```
-keel ticket start --ticket <file> --pr <n>
-keel ticket start --ticket <file> --branch <name> [--base <ref>]
+keel ticket prep --ticket <file> --pr <n>                       # a ticket file
+keel ticket prep --ticket - --branch <name> [--base <ref>] <<'EOF'
+<the pasted ticket, unchanged>
+EOF
 ```
 
-A number is a PR (fetched with `gh`, no checkout); anything else is a branch. It reads the ticket's
-"Definition of done" / "Acceptance criteria" list and the team's `.keel/dod.md` (creating a
-starter on first use — tell the user to edit it once), saves the diff, and splits a large one into
-chunks. Show its output as it is. If it says the ticket has no done list, say so: the review will
-then judge the team checklist only.
+A number is a PR, anything else a branch. No ticket given → ask for one. If prep stops (empty
+diff, closed or draft PR, docs only, lockfiles only), show why and stop. Otherwise keep the pack it
+prints in mind and **do not re-read** what it already gives you: items, ranked files, the `read`
+commands, `AUTO` verdicts (decided — never re-judge them) and the `plan`.
 
-## 3. Judge — one agent per chunk, all in one message
+## 2. Judge — the agents in the pack's plan, all in one message
 
-Start one `keel:ticket-reviewer` per chunk **in a single message**, so they run in parallel. Give
-each only: the review id and its chunk number. Nothing about what you expect — a reviewer told
-where to look stops looking elsewhere.
+Start one `keel:ticket-reviewer` per line of the plan, **in a single message**. Each prompt gets:
+the review id, its job (`all`, `ticket`, `team` or `bugs`), the `read` line, its item lines from
+the pack (text + `files`), and the file list by number. Nothing about what you expect to find.
 
-## 4. Report
+**No `keel:ticket-reviewer` (OpenCode)?** Do the jobs yourself, one after another, the same way.
 
-When they are done, run `keel ticket verdict TR-nnn` (the last agent usually already has) and show
-its output as it is: the verdict, every item that is not met or unclear, and every blocking finding.
-Do not repeat the met items — the dashboard has the full table. The dashboard updates by itself and
-plays a sound when the review finishes.
+## 3. Validate — only the problems
 
-**Do not fix anything, comment on the PR or push.** If the user wants the findings posted to the PR
-or fixed, that is a separate request.
+For every `not-met` item and every `blocking` finding the agents return, start one more
+`keel:ticket-reviewer` with job `check` and that single claim, all in one message. `rejected` →
+drop the finding, or turn the item into `unclear`. Nothing to check → skip this step. (OpenCode:
+re-read each claim's lines yourself.)
+
+## 4. Record — one command
+
+Pipe every result line (items, findings, one `S |` summary line) into:
+
+```
+keel ticket record TR-nnn <<'EOF'
+T1 | met | src/Order.kt:42 | rejects a negative quantity
+F | blocking | src/Order.kt:57 | total ignores the discount
+S | One sentence on the change.
+EOF
+```
+
+It refuses a missing item and names it; add the line rather than guessing (`--partial` marks the
+rest unclear). Show its output as it is. The dashboard updates and chimes.
+
+**Do not fix anything or push.** With `--comment`, post the recorded summary as **one** PR comment
+(`gh pr comment <n> --body …`) — nothing else.
