@@ -402,7 +402,11 @@ function buildTools(cfg) {
 
 // Ticket reviews (keel ticket / /keel:review-pr). Independent of any flow, so on both pages.
 function buildReviews(cfg) {
-  try { return require('../lib/ticket').list(cfg).slice(0, 5); } catch (e) { return []; }
+  try {
+    const t = require('../lib/ticket');
+    // The same to-do shape the terminal prints, so the card and the CLI never disagree.
+    return t.list(cfg).slice(0, 5).map((r) => (r.status === 'finished' ? Object.assign({}, r, { report: t.report(r) }) : r));
+  } catch (e) { return []; }
 }
 
 function build(cwd, opts = {}) {

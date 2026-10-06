@@ -216,6 +216,9 @@ ${uiMap.CSS}
 .rv-l .mk{display:inline-block;width:16px;font-weight:700} .rv-l .iid{color:var(--dim);margin-right:6px;font-size:11px}
 .pill{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid currentColor;margin-left:6px}
 .pill.run{color:var(--accent)}
+.rv .todo{font-size:12px;margin-top:2px} .rv-s.bad{color:var(--bad)} .rv-s.warn{color:var(--warn)}
+.rv-next{margin:4px 0 6px 18px;padding:0;font-size:12.5px} .rv-next li{padding:1px 0}
+.rv-done summary{cursor:pointer;color:var(--dim);font-size:11.5px;margin-top:8px}
 .q .qm{color:var(--faint);font-size:11.5px;margin-top:3px}
 .bl{border-left:3px solid var(--bad);padding:2px 0 2px 12px;margin-bottom:10px}
 .bl:last-child{margin-bottom:0}
@@ -697,24 +700,6 @@ a.pc.wait{border-color:var(--bad)}
       note('Blocking questions stop the flow until answered. keel records them in .keel/questions.json.'));
   }
 
-  // Lint, build and pattern notes: minor, in their own block so they never read as the verdict.
-  function renderQuality(r){
-    var q = r.quality || {}, b = q.build || {};
-    var at = function(x){ return x.file ? '<code>' + esc(x.file) + (x.line ? ':' + esc(x.line) : '') + '</code> ' : ''; };
-    var rows = (b.checks || []).map(function(c){
-      var bad = c.kind === 'compile' && !c.ok && c.issues.length;
-      var head = '<li class="' + (c.ok ? 'ok' : bad ? 'bad' : 'warn') + '"><span class="mk">' + (c.ok ? '\u2713' : bad ? '!' : '\u00b7') + '</span>' +
-        esc(c.name) + (c.ok ? '' : c.issues.length ? ' \u2014 ' + c.issues.length + ' in changed files' : ' \u2014 failed, not in changed files') +
-        (c.note ? '<div class="qb">' + esc(c.note) + '</div>' : '') + '</li>';
-      return head + c.issues.slice(0, 5).map(function(x){ return '<li class="warn"><span class="mk"></span>' + at(x) + esc(x.text) + '</li>'; }).join('');
-    }).join('');
-    if (b.note) rows += '<li class="warn"><span class="mk">\u00b7</span>' + esc(b.note) + '</li>';
-    rows += (q.notes || []).map(function(x){
-      return '<li class="warn"><span class="mk">\u00b7</span>' + at(x) + (x.rule ? '<span class="iid">' + esc(x.rule) + '</span>' : '') + esc(x.text) + '</li>';
-    }).join('');
-    return rows ? '<div class="rv-s">quality \u2014 minor, only a compile error blocks</div><ul class="rv-l">' + rows + '</ul>' : '';
-  }
-
   function renderReviews(v){
     if (!v.reviews || !v.reviews.length) return '';
     var mark = { met: '\u2713', 'not-met': '\u2717', unclear: '?' };
@@ -727,25 +712,45 @@ a.pc.wait{border-color:var(--bad)}
         esc(r.verdict || 'reviewing\u2026') + '</span></div>' +
         '<div class="qm">' + esc(src) + ' \u00b7 ' + r.files + ' file(s), +' + r.added + ' \u2212' + r.removed +
         (r.agents > 1 ? ' \u00b7 ' + r.agents + ' agents' : '') + (r.skipped ? ' \u00b7 ' + r.skipped + ' skipped' : '') + '</div>';
-      if (r.status !== 'finished') return '<div class="rv">' + head + '</div>';
-      var items = (r.items || []).map(function(it){
-        return '<li class="' + cls[it.verdict] + '"><span class="mk">' + mark[it.verdict] + '</span>' +
-          '<span class="iid">' + esc(it.id) + '</span>' + esc(it.text) + (it.auto ? ' <span class="faint">(script)</span>' : '') +
-          (it.evidence && it.verdict !== 'met' ? '<div class="qb">' + esc(it.evidence) + '</div>' : '') + '</li>';
+      if (r.status !== 'finished' || !r.report) return '<div class="rv">' + head + '</div>';
+      var rp = r.report;
+      var where = function(w){ return w ? '<code>' + esc(w) + '</code> ' : ''; };
+      var todo = function(t){ return t ? '<div class="todo">to do: ' + esc(t) + '</div>' : ''; };
+      var section = function(title, cls, rows){
+        return rows ? '<div class="rv-s ' + cls + '">' + title + '</div><ul class="rv-l">' + rows + '</ul>' : '';
+      };
+      var missing = rp.missing.map(function(x){
+        return '<li class="bad"><span class="mk">\u2717</span><span class="iid">' + esc(x.id) + '</span>' + esc(x.title) +
+          '<div class="qb">' + esc(x.problem) + (x.script ? ' (script)' : '') + '</div>' + todo(x.todo) + '</li>';
       }).join('');
-      var finds = (r.findings || []).map(function(x){
-        return '<li class="' + (x.severity === 'blocking' ? 'bad' : 'warn') + '"><span class="mk">' + (x.severity === 'blocking' ? '!' : '\u00b7') + '</span>' +
-          (x.file ? '<code>' + esc(x.file) + (x.line ? ':' + esc(x.line) : '') + '</code> ' : '') + esc(x.text) + '</li>';
+      var fix = rp.mustFix.map(function(x){
+        return '<li class="bad"><span class="mk">!</span>' + where(x.where) + esc(x.problem) + todo(x.todo) + '</li>';
       }).join('');
-      // The newest review is open; older ones fold away.
+      var check = rp.check.map(function(x){
+        return '<li class="warn"><span class="mk">?</span><span class="iid">' + esc(x.id) + '</span>' + esc(x.title) +
+          '<div class="qb">' + esc(x.problem) + '</div>' + todo(x.todo) + '</li>';
+      }).join('');
+      var nice = rp.nice.map(function(x){
+        return '<li class="warn"><span class="mk">\u00b7</span>' + where(x.where) + (x.rule ? '<span class="iid">' + esc(x.rule) + '</span>' : '') +
+          esc(x.problem) + todo(x.todo) + '</li>';
+      }).join('');
+      var done = rp.done.length ? '<details class="rv-done"><summary>\u2713 done (' + rp.done.length + ')</summary><ul class="rv-l">' +
+        rp.done.map(function(x){ return '<li class="ok"><span class="mk">\u2713</span><span class="iid">' + esc(x.id) + '</span>' + esc(x.title) + '</li>'; }).join('') +
+        '</ul></details>' : '';
+      var next = rp.next.length ? '<ol class="rv-next">' + rp.next.map(function(n){ return '<li>' + esc(n) + '</li>'; }).join('') + '</ol>'
+        : '<div class="ok">nothing to do \u2014 ready to merge</div>';
+      // The newest review is open; older ones fold away. Next steps first: that is what the reader came for.
       return '<details class="rv"' + (i === 0 ? ' open' : '') + '><summary>' + head + '</summary>' +
-        (r.summary ? '<div class="qb">' + esc(r.summary) + '</div>' : '') +
-        '<ul class="rv-l">' + items + '</ul>' +
-        (finds ? '<div class="rv-s">findings</div><ul class="rv-l">' + finds + '</ul>' : '') +
-        renderQuality(r) + '</details>';
+        (rp.summary ? '<div class="qb">' + esc(rp.summary) + '</div>' : '') +
+        '<div class="rv-s">next steps \u2014 ' + rp.doneCount + ' of ' + rp.total + ' done</div>' + next +
+        section('missing \u2014 from the ticket or the definition of done', 'bad', missing) +
+        section('must fix \u2014 bugs and build errors', 'bad', fix) +
+        section('check by hand \u2014 the code cannot show it', 'warn', check) +
+        section('nice to have \u2014 minor, does not block', '', nice) +
+        done + (rp.notes.length ? '<div class="qb">' + rp.notes.map(esc).join('<br>') + '</div>' : '') + '</details>';
     }).join('');
     return card('ticket reviews', v.reviews.length + ' recent', body +
-      note('keel ticket prep \u2192 keel:ticket-reviewer \u2192 keel ticket record. Checklist: the ticket plus .keel/dod.md. (script) marks an item a check decided.'));
+      note('Checklist: the ticket plus .keel/dod.md. (script) marks a problem a check proved. Nothing here is shared with the author unless you choose to.'));
   }
 
   function renderAcs(v){

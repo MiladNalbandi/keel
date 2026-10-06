@@ -37,8 +37,8 @@ In **one message**:
   tools, and keeps only messages that name a changed file. It can take minutes; the agents do not
   wait for it.
 
-**No `keel:ticket-reviewer` (OpenCode)?** Run the build first, then do the jobs yourself, one
-after another, the same way.
+**No `keel:ticket-reviewer` (OpenCode)?** Load `keel-review-practices` with the skill tool (the
+agent has it preloaded), run the build first, then do the jobs yourself, one after another.
 
 ## 3. Validate — only the problems
 
@@ -54,14 +54,17 @@ Pipe every result line (items, findings, quality notes, one `S |` summary line) 
 ```
 keel ticket record TR-nnn <<'END'
 T1 | met | src/Order.kt:42 | rejects a negative quantity
-F | blocking | src/Order.kt:57 | total ignores the discount
-Q | src/Order.kt:30 | like OrderService.kt | validation belongs in a Validator here
+T2 | not-met | src/Order.kt:57 | the total can go below zero | keep it at 0 or more
+F | blocking | src/Order.kt:57 | total ignores the discount | subtract the discount first
+Q | src/Order.kt:30 | like OrderService.kt | validation is inline | move it into a Validator
 S | One sentence on the change.
 END
 ```
 
 It refuses a missing item and names it; add the line rather than guessing (`--partial` marks the
-rest unclear). Show its output as it is. The verdict counts the ticket, the definition of done and
+rest unclear). **Show its output as it is** — it is already the easy report: next steps first, then
+what is missing, what must be fixed, what to check by hand, what is nice to have, and what is done.
+Do not re-summarise it. The verdict counts the ticket, the definition of done and
 blocking bugs; the **quality** section (lint, patterns, language rules) is minor and never changes
 it — except a compile error in a changed file, which makes it not done. If the build is still
 running, say so; it adds its section to the same review when it finishes, and the dashboard updates.

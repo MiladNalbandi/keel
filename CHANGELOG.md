@@ -4,6 +4,24 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.77.0
+
+**A review you can act on.** `/keel:review-pr` used to end in verdicts — ✓, ✗, ? — and left the
+reader to work out what was missing and what to do. Every problem now carries a **to do**: the
+agents answer `id | verdict | where | what is wrong | what to do`, and the problems the script
+proves (a secret, a disabled test, debug output) come with their own. One report shape
+(`ticket.report`) feeds the terminal, the PR comment and the dashboard card alike: **next steps**
+first, in order, then *missing*, *must fix*, *check by hand*, *nice to have*, and *done*, folded.
+
+**The reviewer now reviews the way the best review skills do.** A new skill, `keel:review-practices`,
+is preloaded into `keel:ticket-reviewer` (frontmatter `skills:`). It is written for keel from the two
+most-installed review skills of 2026 — Matt Pocock's `code-review` and Addy Osmani's
+`code-review-and-quality`, both MIT, credited in the file: spec and standards kept apart, scope
+creep reported, tests read first, the repo's documented standards overriding a Fowler smell
+baseline, five axes for bugs, honest severities, and a fix for every problem. The pack now names
+the repo's own standards files (`CONTRIBUTING.md`, `CODING_STANDARDS.md`, a style guide,
+`docs/knowledge/conventions.md`) read at the base.
+
 ## 0.76.0
 
 **`/keel:review-pr` checks code quality too — and the reviewer decides what the author sees.**
