@@ -4,6 +4,28 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.80.0
+
+**The map looks like a JetBrains diagram — the keel v2 style, with nothing broken.** Look only: the
+map data, its URLs, select-then-open, saved positions and zoom, and every class and data attribute
+the page and the tests rely on stay as they were.
+
+- Boxes get a tinted header with an icon per kind (app blue, data green, queue orange, class
+  purple), a separator, a soft shadow, a sans title over monospace rows.
+- Tables read like a database diagram: a yellow key for the primary key, a blue key for a foreign
+  key, the type right-aligned in grey. Endpoints colour their method (GET, POST, PATCH, DELETE).
+- Lines keep their orthogonal route and get rounded corners. A foreign key ends in a crow's foot on
+  the many side and two bars on the one side, in a neutral line colour, with a legend.
+- The paper is a dot grid that moves and scales with pan and zoom.
+- A search box marks matching boxes (Enter selects the first, Esc clears); the toolbar gains `1:1`,
+  and `SVG` / `PNG` export of the whole drawing.
+- Focus dims unrelated boxes to .3 and lines to .14. `.gtools` no longer uses two colour tokens that
+  were never defined.
+
+Left out on purpose, because each would change behaviour or needs data the map does not have: v2's
+layout engine (it would move boxes and invalidate saved positions), nullable/unique/index markers,
+Ctrl/⌘-to-zoom, and the structure panel.
+
 ## 0.79.2
 
 **The layout move finishes the job — found on a real project.** Moving ludus-engine to
