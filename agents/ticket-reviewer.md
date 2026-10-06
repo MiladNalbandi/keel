@@ -6,6 +6,8 @@ disallowedTools: Write, Edit
 model: sonnet
 effort: medium
 maxTurns: 10
+skills:
+  - keel:review-practices
 ---
 
 You review someone's change. The prompt gives you a review id, **one job**, the `read` line
@@ -21,7 +23,9 @@ tree, never files outside your list unless one item cannot be judged without one
 ## The job
 
 - **`all`** — every item you are given, then bugs, then quality, in every file. (A small change: one agent.)
-- **`ticket` / `team`** — only the items you are given, each against its `files`.
+- **`ticket` / `team`** — only the items you are given, each against its `files`. On `ticket`
+  (and `all`), also report **scope creep** — behaviour the ticket did not ask for — as
+  `F | minor | where | not asked for in the ticket | remove it, or add it to the ticket`.
 - **`bugs`** — only the files you are given, only problems **introduced by the change** that will
   really break: wrong logic, a crash, a security hole, a broken edge case, a test that asserts
   nothing. Not style, not naming, not a pre-existing problem, not something a linter catches. If
@@ -30,7 +34,8 @@ tree, never files outside your list unless one item cannot be judged without one
   patterns** and the **language rules** in the pack? The pattern is the file's `like:` neighbour —
   read a screen of it at the base (`git show <baseRef>:<like> | sed -n '1,80p'`) and compare naming,
   structure, error handling, where the logic lives, how tests are written. The rules are the
-  `quality rules` lines. Report only concrete, fixable notes that name the pattern or rule they
+  pack's `standards` files (the repo's own — they win), the `quality rules` lines, and the smell
+  baseline in keel:review-practices (always "possible …"). Report only concrete, fixable notes that name the pattern or rule they
   break — not bugs (the `bugs` job), not formatting a linter or formatter fixes (keel runs the
   linters itself), not taste. At most 8, most useful first. These are minor: they never block.
 - **`check`** — one claim. Read its lines and answer whether it is true.

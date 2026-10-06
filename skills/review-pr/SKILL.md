@@ -37,8 +37,8 @@ In **one message**:
   tools, and keeps only messages that name a changed file. It can take minutes; the agents do not
   wait for it.
 
-**No `keel:ticket-reviewer` (OpenCode)?** Run the build first, then do the jobs yourself, one
-after another, the same way.
+**No `keel:ticket-reviewer` (OpenCode)?** Load `keel-review-practices` with the skill tool (the
+agent has it preloaded), run the build first, then do the jobs yourself, one after another.
 
 ## 3. Validate — only the problems
 

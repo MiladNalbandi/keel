@@ -13,6 +13,15 @@ proves (a secret, a disabled test, debug output) come with their own. One report
 (`ticket.report`) feeds the terminal, the PR comment and the dashboard card alike: **next steps**
 first, in order, then *missing*, *must fix*, *check by hand*, *nice to have*, and *done*, folded.
 
+**The reviewer now reviews the way the best review skills do.** A new skill, `keel:review-practices`,
+is preloaded into `keel:ticket-reviewer` (frontmatter `skills:`). It is written for keel from the two
+most-installed review skills of 2026 — Matt Pocock's `code-review` and Addy Osmani's
+`code-review-and-quality`, both MIT, credited in the file: spec and standards kept apart, scope
+creep reported, tests read first, the repo's documented standards overriding a Fowler smell
+baseline, five axes for bugs, honest severities, and a fix for every problem. The pack now names
+the repo's own standards files (`CONTRIBUTING.md`, `CODING_STANDARDS.md`, a style guide,
+`docs/knowledge/conventions.md`) read at the base.
+
 ## 0.76.0
 
 **`/keel:review-pr` checks code quality too — and the reviewer decides what the author sees.**
