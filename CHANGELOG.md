@@ -4,6 +4,25 @@ Design §22 lists this file and it never existed — which is why the version sa
 across nine commits and four whole stages, until the only way to tell one build from another
 was to grep the source for a function name.
 
+## 0.76.0
+
+**`/keel:review-pr` checks code quality too — and the reviewer decides what the author sees.**
+
+- **Build and lint, no model.** `keel ticket build TR-nnn` checks the reviewed code out into a
+  throwaway git worktree (never the user's tree; installed `node_modules`/`vendor` are linked in),
+  runs the project's compile/typecheck and the stack's pre-push lint tools (not Sonar), and keeps
+  only messages that name a changed file. A failure that names none is reported as an existing
+  problem or a missing dependency, never blamed on the change. The skill runs it in the background
+  while the agents judge.
+- **Codebase patterns and language rules.** A new `quality` job compares each changed file with an
+  existing neighbour at the base (`like:` in the pack) and with keel:sonar's rules for its language,
+  and answers in `Q |` lines.
+- **Minor by default.** Lint and quality notes sit in their own section and never change the
+  verdict — except a compile or typecheck error in a changed file, which makes it not done.
+- **Private unless shared.** The review stays in `.keel/reviews.jsonl` (gitignored). `keel ticket
+  comment TR-nnn --include …` builds a PR comment from only the chosen sections — by default the
+  verdict, what is not done and what must be fixed — and the skill shows it and asks before posting.
+
 ## 0.75.0
 
 **Clearer names.** `/keel:review-ticket` is now **`/keel:review-pr`**: it reviews a PR, and the
