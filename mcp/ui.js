@@ -697,6 +697,24 @@ a.pc.wait{border-color:var(--bad)}
       note('Blocking questions stop the flow until answered. keel records them in .keel/questions.json.'));
   }
 
+  // Lint, build and pattern notes: minor, in their own block so they never read as the verdict.
+  function renderQuality(r){
+    var q = r.quality || {}, b = q.build || {};
+    var at = function(x){ return x.file ? '<code>' + esc(x.file) + (x.line ? ':' + esc(x.line) : '') + '</code> ' : ''; };
+    var rows = (b.checks || []).map(function(c){
+      var bad = c.kind === 'compile' && !c.ok && c.issues.length;
+      var head = '<li class="' + (c.ok ? 'ok' : bad ? 'bad' : 'warn') + '"><span class="mk">' + (c.ok ? '\u2713' : bad ? '!' : '\u00b7') + '</span>' +
+        esc(c.name) + (c.ok ? '' : c.issues.length ? ' \u2014 ' + c.issues.length + ' in changed files' : ' \u2014 failed, not in changed files') +
+        (c.note ? '<div class="qb">' + esc(c.note) + '</div>' : '') + '</li>';
+      return head + c.issues.slice(0, 5).map(function(x){ return '<li class="warn"><span class="mk"></span>' + at(x) + esc(x.text) + '</li>'; }).join('');
+    }).join('');
+    if (b.note) rows += '<li class="warn"><span class="mk">\u00b7</span>' + esc(b.note) + '</li>';
+    rows += (q.notes || []).map(function(x){
+      return '<li class="warn"><span class="mk">\u00b7</span>' + at(x) + (x.rule ? '<span class="iid">' + esc(x.rule) + '</span>' : '') + esc(x.text) + '</li>';
+    }).join('');
+    return rows ? '<div class="rv-s">quality \u2014 minor, only a compile error blocks</div><ul class="rv-l">' + rows + '</ul>' : '';
+  }
+
   function renderReviews(v){
     if (!v.reviews || !v.reviews.length) return '';
     var mark = { met: '\u2713', 'not-met': '\u2717', unclear: '?' };
@@ -723,7 +741,8 @@ a.pc.wait{border-color:var(--bad)}
       return '<details class="rv"' + (i === 0 ? ' open' : '') + '><summary>' + head + '</summary>' +
         (r.summary ? '<div class="qb">' + esc(r.summary) + '</div>' : '') +
         '<ul class="rv-l">' + items + '</ul>' +
-        (finds ? '<div class="rv-s">findings</div><ul class="rv-l">' + finds + '</ul>' : '') + '</details>';
+        (finds ? '<div class="rv-s">findings</div><ul class="rv-l">' + finds + '</ul>' : '') +
+        renderQuality(r) + '</details>';
     }).join('');
     return card('ticket reviews', v.reviews.length + ' recent', body +
       note('keel ticket prep \u2192 keel:ticket-reviewer \u2192 keel ticket record. Checklist: the ticket plus .keel/dod.md. (script) marks an item a check decided.'));
