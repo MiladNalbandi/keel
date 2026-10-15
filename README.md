@@ -7,6 +7,10 @@
 
 # keel
 
+> **keel v2 is the next version: [MiladNalbandi/keel-v2](https://github.com/MiladNalbandi/keel-v2).**
+> It runs the same test-first flows in a web dashboard, reads this plugin's `.keel/` projects as they are (all three
+> layouts), and works from Claude Code through `keel2 mcp`. keel v1 (this plugin) gets fixes only from now on.
+
 <!-- No version number here on purpose: .claude-plugin/plugin.json holds it and CHANGELOG.md is the history. -->
 
 A Claude Code plugin that keeps an AI coding agent on a strict, test-first workflow.
